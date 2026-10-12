@@ -50,4 +50,21 @@ Orijinal projenin bu makinede Editor'da ve gerçek Android cihazda çalıştığ
 7. Ses/titreşim ayarı hem PlayerPrefs'te hem JSON kayıtta.
 8. Arayüz metinleri sabit İngilizce; yerelleştirme yok.
 - Gözlem: Cihaz testinde seviye 9'da 5, seviye 31'de 3 yeniden başlatma — zorluk sıçraması olabilir.
+  - **Düzeltme:** Zorluk değil. Kullanıcı Restart (ve diğer butonları) **kasıtlı olarak** art arda basarak test etti (L9: 3 sn'de 5, L31: 0,7 sn'de 3 Restart). Hızlı art arda basmaya karşı koruma (debounce) ileride eklenebilecek bir iyileştirme olarak not edildi; mevcut davranış bir kullanıcı hatası değildir.
 - Yayın için açık kalanlar: imzalama, gizlilik politikası/destek e-postası, gerçek ekran görüntüleri, Play Console beyanları.
+
+### Cihaz testi logcat gözlemleri (ikinci inceleme)
+- Seviye süreleri L9–L41 arası 6–25 sn, 6–13 hamle; tasarım hedefi (≤20: 30–60 sn, 21–100: 60–180 sn) karşılanmıyor.
+- Extra Cloud dev build'de fiilen sınırsız (sahte reklam anında dolduruyor; L18'de 2 sn içinde 3 kez — kullanıcının kasıtlı buton testi).
+- Her geçersiz hamlede `Handheld.Vibrate()` 500 ms titreşim — uzun/sert.
+
+### Kullanıcı yorumu (Galaxy S24 FE testi sonrası)
+0. **Test notu:** Restart, Extra Cloud, Shuffle vb. butonlara hızlı art arda basmalar kullanıcının **kasıtlı buton testi**dir; yanlışlıkla basma veya zorluk kaynaklı değildir. Hızlı basmaya karşı koruma eklenmesi güzel bir özellik olabilir.
+1. **Zorluk / tekrar:** Mantık anlaşıldıktan sonra zorluk hissedilmiyor, bölümler hızlıca geçiliyor. 15. seviyeden sonraki üretilen bölümler kendini tekrarlıyor gibi; basit bir matematikle aynı veya çok benzer hamlelerle geçilebiliyor.
+2. **World butonu:** Basınca ne olduğu anlaşılmıyor.
+3. **Buton hizalaması:** Alt butonlar 3+3 ortalı olabilecekken 4 üst / 4 alt yuvalı ızgarada üst sıranın 1.'si, alt sıranın 3.'sü boş bırakılmış gibi kaymış.
+   - Koddan teyit (`GameplayOverlay.cs`): üst sıra -130 / +130 / +390, alt sıra -390 / -155 / +350.
+4. **Renk (en dikkat çeken):** Bulut arka planı ekran arka planıyla çakışıyor, göz ayırt edemiyor; birkaç ton daha belirgin olmalı.
+   - Koddan teyit: bulut `(0.93, 0.97, 1.0)` ≈ gökyüzü üstü `(0.92, 0.97, 1.0)`.
+5. **Menü ekranları:** Continue / World / Settings açıkken arkadaki oyun görünmemeli.
+   - Koddan teyit: paneller ekranın ~%84'ünü kaplıyor (anchor 0.08–0.92).
