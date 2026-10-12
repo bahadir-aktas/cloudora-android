@@ -13,7 +13,7 @@ namespace Cloudora.UI
         public static void AddSkyGradient(Canvas canvas)
         {
             if (canvas.transform.Find("SkyGradient") != null) return;
-            var go = new GameObject("SkyGradient", typeof(RectTransform), typeof(SkyGradientGraphic));
+            var go = new GameObject("SkyGradient", typeof(RectTransform), typeof(CanvasRenderer), typeof(SkyGradientGraphic));
             go.transform.SetParent(canvas.transform, false);
             go.transform.SetAsFirstSibling();
             RectTransform rect = go.GetComponent<RectTransform>();
