@@ -34,6 +34,8 @@ namespace Cloudora.Puzzle
         private BoosterManager _boosterManager;
         private int _moveCount;
         private int _shuffleUseCount;
+        private int _baseCloudCount;
+        private const int MaxExtraCloudsPerLevel = 2;
         private ISaveService _saveService;
         private SaveData _saveData;
         private IAnalyticsService _analytics;
@@ -109,11 +111,13 @@ namespace Cloudora.Puzzle
             System.TimeSpan remaining = _lifeManager.TimeUntilNext(now);
             string countdown = remaining == System.TimeSpan.Zero ? string.Empty : $"{(int)remaining.TotalMinutes:00}:{remaining.Seconds:00}";
             _overlay.SetLives(_lifeManager.Lives, countdown);
+            _overlay.SetRestartCost(GetRestartCost());
         }
 
         public void RestartLevel()
         {
-            if (_inputLocked)
+            // Seviye bittiyse Restart yok sayılır (aksi halde can harcanıp seviye ikinci kez tamamlanabiliyordu).
+            if (_inputLocked || _isCompleted)
             {
                 return;
             }
@@ -131,7 +135,10 @@ namespace Cloudora.Puzzle
             }
 
             StopAllCoroutines();
+            // Seviye tanımında olmayan (Shuffle'a henüz katılmamış) ekstra bulutlar Restart sonrası boş olarak korunur.
+            int extraCount = Mathf.Max(0, _containers.Count - _currentLevel.clouds.Length);
             LoadState(_currentLevel.CreateBoard());
+            AddExtraClouds(extraCount);
             _analytics.Track(AnalyticsEvents.LevelRestarted, LevelParams());
             SaveProgress();
         }
@@ -143,11 +150,11 @@ namespace Cloudora.Puzzle
             _currentLevel = levelNumber <= AuthoredLevelCatalog.Count
                 ? AuthoredLevelCatalog.Get(levelNumber)
                 : LevelGenerator.Generate(levelNumber);
+            _baseCloudCount = _currentLevel.clouds.Length;
             LoadState(_currentLevel.CreateBoard());
             _overlay.SetLevelInfo(_currentLevel.levelId, _currentLevel.worldId);
             _overlay.SetTutorialCue(_currentLevel.tutorialCue);
             _overlay.SetShuffleAvailable(_currentLevel.generated);
-            _boardLayout.Configure(_currentLevel.clouds.Length, _currentLevel.capacity);
             _worldScreen.Refresh(_progression.CurrentWorld, _progression.HighestCompletedLevel);
             _mainMenu?.SetProgress(_currentLevel.worldId, _currentLevel.levelId);
             _attemptBlocked = !_lifeManager.CanBeginAttempt(System.DateTime.UtcNow, _currentLevel.levelId <= 5);
@@ -217,7 +224,10 @@ namespace Cloudora.Puzzle
                 cloud.Initialize(_currentLevel.capacity, levelData[i], HandleCloudClicked);
                 _containers.Add(cloud);
             }
+            // Restart/Shuffle extra bulutları kaldırır; ızgara gerçek bulut sayısına göre yeniden boyutlanmalı.
+            _boardLayout.Configure(_containers.Count, _currentLevel.capacity);
             _modifierRuntime.Initialize(_currentLevel, _containers.ToArray());
+            RefreshExtraButton();
         }
 
         private void HandleCloudClicked(CloudContainerView clickedCloud)
@@ -285,7 +295,7 @@ namespace Cloudora.Puzzle
                 if (!_isCompleted && !HasLegalMove())
                 {
                     _analytics.Track(AnalyticsEvents.LevelFailed, Params("level", _currentLevel.levelId, "reason", "no_moves", "move_count", _moveCount));
-                    _overlay.ShowBlock("No Moves", "Use Undo, Extra Cloud, or Safe Shuffle");
+                    _overlay.ShowBlock("No Moves", BuildNoMovesHint());
                 }
             }
 
@@ -387,19 +397,23 @@ namespace Cloudora.Puzzle
         private void UseExtraCloud()
         {
             if (_inputLocked || _attemptBlocked || _isCompleted) return;
+            // Limit kontrolü hak/reklam harcanmadan önce yapılır.
+            if (ExtraCloudCount >= MaxExtraCloudsPerLevel)
+            {
+                // Shuffle yalnızca üretilmiş seviyelerde açık; kilitliyken önerilmez.
+                _overlay.ShowBlock("Sky Is Full", _currentLevel.generated
+                    ? "Extra clouds used up for this level. Try Undo or Shuffle."
+                    : "Extra clouds used up for this level. Try Undo.");
+                return;
+            }
             if (!_boosterManager.TryUseExtraCloud())
             {
                 RequestReward(RewardedPlacement.ExtraCloud, () => _boosterManager.GrantExtraCloud(), "Extra Cloud Refilled", "Reward granted. Tap Extra again.");
                 return;
             }
 
-            CloudContainerView cloud = Instantiate(cloudPrefab, boardRoot);
-            cloud.name = $"Cloud_{_containers.Count + 1}_Extra";
-            cloud.Initialize(_currentLevel.capacity, System.Array.Empty<WeatherType>(), HandleCloudClicked);
-            _containers.Add(cloud);
+            AddExtraClouds(1);
             _undoHistory.Clear();
-            _boardLayout.Configure(_containers.Count, _currentLevel.capacity);
-            _modifierRuntime.UpdateClouds(_containers.ToArray());
             _overlay.HideBlock();
             RefreshMetaUI();
             _analytics.Track(AnalyticsEvents.ExtraCloudUsed, LevelParams());
@@ -420,12 +434,69 @@ namespace Cloudora.Puzzle
                 return;
             }
 
-            _currentLevel = LevelGenerator.Generate(_currentLevel.levelId, _currentLevel.seed + (++_shuffleUseCount * 997));
+            // Ekstra bulutlar korunur ve karıştırmaya dahil edilir; yeni tahtanın parçası olurlar.
+            // Sayı, seviyenin orijinal bulut sayısına göre hesaplanır (önceki Shuffle'lar tanıma ekstra bulut katmış olabilir).
+            int extraCount = ExtraCloudCount;
+            _currentLevel = LevelGenerator.Generate(_currentLevel.levelId, _currentLevel.seed + (++_shuffleUseCount * 997), extraCount);
             LoadState(_currentLevel.CreateBoard());
             _overlay.HideBlock();
             RefreshMetaUI();
             _analytics.Track(AnalyticsEvents.SafeShuffleUsed, LevelParams());
             SaveProgress();
+        }
+
+        // Seviyenin orijinal bulut sayısına göre şu an tahtada olan ekstra bulutlar (Shuffle'a katılmış olanlar dahil).
+        private int ExtraCloudCount => Mathf.Max(0, _containers.Count - _baseCloudCount);
+
+        private void RefreshExtraButton() => _overlay.SetExtraAvailable(ExtraCloudCount < MaxExtraCloudsPerLevel);
+
+        private void AddExtraClouds(int count)
+        {
+            if (count <= 0) return;
+            for (int i = 0; i < count; i++)
+            {
+                CloudContainerView cloud = Instantiate(cloudPrefab, boardRoot);
+                cloud.name = $"Cloud_{_containers.Count + 1}_Extra";
+                cloud.Initialize(_currentLevel.capacity, System.Array.Empty<WeatherType>(), HandleCloudClicked);
+                _containers.Add(cloud);
+            }
+            _boardLayout.Configure(_containers.Count, _currentLevel.capacity);
+            _modifierRuntime.UpdateClouds(_containers.ToArray());
+            RefreshExtraButton();
+        }
+
+        // Restart'ın bedeli: RestartLevel'daki can kurallarıyla aynı.
+        private RestartCost GetRestartCost()
+        {
+            if (_isCompleted || _currentLevel.levelId <= 5) return RestartCost.Free;
+            if (!_attemptBlocked && _moveCount == 0) return RestartCost.Free;
+            if (!_attemptBlocked && _lifeManager.Lives > 0) return RestartCost.Life;
+            return _adService.IsAvailable ? RestartCost.Ad : RestartCost.NoLives;
+        }
+
+        // "No Moves" yalnızca o an gerçekten kullanılabilen seçenekleri yazar; reklamla dolacaklar "(ad)" ile işaretlenir.
+        private string BuildNoMovesHint()
+        {
+            bool ad = _adService.IsAvailable;
+            var options = new List<string>();
+            bool anyAd = false;
+            void Add(string name, bool usable, int charges)
+            {
+                if (!usable) return;
+                if (charges > 0) options.Add(name);
+                else if (ad) { options.Add(name + " (ad)"); anyAd = true; }
+            }
+            Add("Undo", _undoHistory.Count > 0, _boosterManager.UndoCharges);
+            Add("Extra Cloud", ExtraCloudCount < MaxExtraCloudsPerLevel, _boosterManager.ExtraCloudCharges);
+            Add("Shuffle", _currentLevel.generated, _boosterManager.SafeShuffleCharges);
+            RestartCost restart = GetRestartCost();
+            if (restart == RestartCost.Ad) { options.Add("Restart (ad)"); anyAd = true; }
+            else if (restart != RestartCost.NoLives) options.Add("Restart");
+
+            if (options.Count == 0) return "Wait for the next life to regenerate.";
+            string list = options.Count == 1 ? options[0]
+                : string.Join(", ", options.GetRange(0, options.Count - 1)) + " or " + options[options.Count - 1];
+            return anyAd ? "Use " + list + ".\n(ad) = watch an ad first" : "Use " + list + ".";
         }
 
         private bool HasLegalMove()
@@ -474,7 +545,7 @@ namespace Cloudora.Puzzle
         private void RefreshMetaUI()
         {
             if (_overlay != null)
-                _overlay.SetBoosters(_boosterManager.UndoCharges, _boosterManager.ExtraCloudCharges, _boosterManager.SafeShuffleCharges);
+                _overlay.SetBoosters(_boosterManager.UndoCharges, _boosterManager.ExtraCloudCharges, _boosterManager.SafeShuffleCharges, _adService.IsAvailable);
         }
 
         private void SaveProgress()

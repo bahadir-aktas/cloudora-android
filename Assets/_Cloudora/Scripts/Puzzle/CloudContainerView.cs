@@ -56,10 +56,13 @@ namespace Cloudora.Puzzle
                 _visualPrepared = true;
                 _background.sprite = CloudoraVisuals.CloudVessel;
                 _background.type = Image.Type.Sliced;
-                _background.color = new Color(0.93f, 0.97f, 1f, 0.96f);
+                _background.color = new Color(0.99f, 1f, 1f, 1f);
                 Shadow shadow = GetComponent<Shadow>() ?? gameObject.AddComponent<Shadow>();
-                shadow.effectColor = new Color(0.15f, 0.28f, 0.42f, 0.16f);
-                shadow.effectDistance = new Vector2(0f, -7f);
+                shadow.effectColor = new Color(0.12f, 0.24f, 0.40f, 0.30f);
+                shadow.effectDistance = new Vector2(0f, -8f);
+                if (!TryGetComponent(out Outline outline)) outline = gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0.30f, 0.45f, 0.65f, 0.35f);
+                outline.effectDistance = new Vector2(2f, -2f);
                 _normalBackgroundColor = _background.color;
             }
         }
@@ -187,7 +190,7 @@ namespace Cloudora.Puzzle
                 if (visualIndex < emptySlotCount)
                 {
                     slotImage.color =
-                        new Color(1f, 1f, 1f, 0.08f);
+                        new Color(0.82f, 0.88f, 0.95f, 0.55f);
                     _slotLabels[visualIndex].text = string.Empty;
 
                     continue;
@@ -218,7 +221,7 @@ namespace Cloudora.Puzzle
                     new Color(0.20f, 0.55f, 1f),
 
                 WeatherType.Snow =>
-                    new Color(0.82f, 0.94f, 1f),
+                    new Color(0.72f, 0.87f, 1f),
 
                 WeatherType.Wind => new Color(0.56f, 0.84f, 0.78f),
                 WeatherType.Moon => new Color(0.56f, 0.49f, 0.95f),
@@ -237,9 +240,9 @@ namespace Cloudora.Puzzle
                 _background.color =
                     Color.Lerp(
                         _normalBackgroundColor,
-                        Color.white,
-                        0.35f);
-                transform.localScale = Vector3.one * 1.04f;
+                        new Color(1f, 0.86f, 0.45f),
+                        0.45f);
+                transform.localScale = Vector3.one * 1.06f;
             }
             else
             {
