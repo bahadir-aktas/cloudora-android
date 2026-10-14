@@ -12,22 +12,19 @@ namespace Cloudora.Level
         public BoardFrame Frame { get; }
         public ScoreWindow Window { get; }
         public LevelCandidate Primary { get; }
-        public IReadOnlyList<LevelCandidate> Backups { get; }
 
-        public V3LevelResult(int level, DifficultyBand band, BoardFrame frame, ScoreWindow window,
-            LevelCandidate primary, IReadOnlyList<LevelCandidate> backups)
+        public V3LevelResult(int level, DifficultyBand band, BoardFrame frame, ScoreWindow window, LevelCandidate primary)
         {
             Level = level;
             Band = band;
             Frame = frame;
             Window = window;
             Primary = primary;
-            Backups = backups;
         }
     }
 
     // Bir parçanın bölümlerini kurar: her çerçeve için adayları ölçer, bant aralıklarını dağılımdan çıkarır,
-    // her bölüme aralıktan (öğretici yazıya uygun, parçada tekrar etmeyen) bir tahta + Shuffle yedeklerini seçer.
+    // her bölüme aralıktan (öğretici yazıya uygun, parçada tekrar etmeyen) bir tahta seçer.
     // Aynı banttaki bölümler parça içinde aralığın alt ucundan üst ucuna doğru hafifçe zorlaşır.
     public static class V3LevelBuilder
     {
@@ -68,21 +65,17 @@ namespace Cloudora.Level
                 occurrences[slot] = occurrence + 1;
                 float target = window.Min + (occurrence + 0.5f) / total * (window.Max - window.Min);
 
-                int backups = V3LevelPlan.ShuffleBackupCount(level);
                 List<LevelCandidate> ranked = pools[frame.ToString()]
                     .Where(c => window.Contains(c.Score) && !used.Contains(c.CanonicalKey) && DemonstratesCue(level, c))
                     .OrderBy(c => Math.Abs(c.Score - target))
                     .ThenBy(c => c.Seed)
                     .ToList();
-                if (ranked.Count < 1 + backups)
-                    throw new InvalidOperationException(
-                        $"Level {level} ({band}, {frame}): only {ranked.Count} candidate(s) in {window}, need {1 + backups}.");
+                if (ranked.Count == 0)
+                    throw new InvalidOperationException($"Level {level} ({band}, {frame}): no candidate in {window}.");
 
                 LevelCandidate primary = ranked[0];
-                List<LevelCandidate> chosenBackups = ranked.Skip(1).Take(backups).ToList();
                 used.Add(primary.CanonicalKey);
-                foreach (LevelCandidate backup in chosenBackups) used.Add(backup.CanonicalKey);
-                results.Add(new V3LevelResult(level, band, frame, window, primary, chosenBackups));
+                results.Add(new V3LevelResult(level, band, frame, window, primary));
             }
             return results;
         }

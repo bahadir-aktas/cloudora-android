@@ -11,10 +11,8 @@ namespace Cloudora.Level
         public float Score { get; }
         public int OptimalMoves { get; }
         public string Board { get; }
-        public string[] Backups { get; }
 
-        public V3LevelEntry(int level, DifficultyBand band, int capacity, int seed, float score, int optimalMoves,
-            string board, params string[] backups)
+        public V3LevelEntry(int level, DifficultyBand band, int capacity, int seed, float score, int optimalMoves, string board)
         {
             Level = level;
             Band = band;
@@ -23,7 +21,6 @@ namespace Cloudora.Level
             Score = score;
             OptimalMoves = optimalMoves;
             Board = board;
-            Backups = backups;
         }
 
         public WeatherType[][] CreateBoard() => V3BoardText.Parse(Board);

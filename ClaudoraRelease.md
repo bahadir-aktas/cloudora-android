@@ -4,6 +4,86 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 00:05 — v3.1 telefon testi geçti; yerel commit (etiketsiz)
+- **Logcat (00:00–00:04, "Cloudora v3"):** Çökme/ANR/exception yok (yalnızca bilinen `AssetPackManager` ve Profiler mesajları).
+  - L16: 2 bulut içi Shuffle (+ reklamla dolum) → tamamlandı +10 coin. L17 +10, L18 +15 (Zor) ✔.
+  - L19: 3 hamlede başarısızlık ✔ → Retry ✔ → yine başarısızlık → reklamla devam `rewound_moves=2` ✔ (Editor ve hesapla aynı) → Undo'lar ve reklamla Undo dolumu ✔ → başarısızlık → reklamla devam `rewound_moves=2` ✔ → ekstra bulut eklenmiş tahtada (2 Extra) Shuffle'lar: bulut 0, 1, 3 ✔.
+  - Logdan görülemeyenler: "AD +1" can butonu (`placement=Life` yok — kullanılmamış ya da can doluyken "Lives Full"), seçim modunda boş alana dokunarak iptal (analytics'e yazılmıyor) — kullanıcıya soruldu.
+- **Commit:** `bahadir-claude-versions` üzerine "v3.1" ara commit'i (etiketsiz; etiket sırası kullanıcıya soruldu). Push yok. Commit dışı: `ProjectSettings.asset`, `.vscode/`.
+
+## 2026-10-15 00:00 — v3.1 telefona kuruldu
+- **Build:** `com.yigityvz.cloudora.v3`, `result=Succeeded`, 0 hata/0 uyarı; `ProjectSettings.asset` geri döndü ✔. `adb install -r` (yalnızca v3) → Success; kayıt korunarak açıldı: `level_started level=16` ✔ (telefondaki v3 kaydında coin alanı yok → 0).
+- Logcat kaydediliyor (scratchpad `logcat-v31.txt`).
+
+## 2026-10-14 23:57 — Editor testi kullanıcı teyitleri; telefona geçiliyor
+- **Kullanıcı:** Coinle devam butonu kapalıydı, basınca bir şey olmadı ✔. "AD +1" can butonu denenmedi. Shuffle'a tekrar basınca iptal ediliyor ✔; boş bulutta uyarı veriyor ✔; boş alana basma denenmedi.
+- Editor normal yolla kapatıldı; telefon bağlı. v3 derlemesi başlatıldı.
+
+## 2026-10-14 23:54 — v3.1 Editor testi: çalışıyor, exception yok
+- **Kullanıcı:** Testleri bitirdi, çalışıyorlar gibi.
+- **Editor.log:** Exception yok (yalnızca ilgisiz lisans token mesajı).
+  - **Shuffle (L16):** 13 başarılı bulut içi karıştırma (bulut 0, 1, 3, 4), her birinde hak düştü (`remaining=0`), hak bitince sahte reklamla dolum ✔.
+  - **Extra:** 2 kullanım (limit) ✔.
+  - **Coin:** L16 +10, L17 +10, L18 +15 (Zor) → kayıtta 35 ✔.
+  - **L19 başarısızlık:** 3 hamlede `level_failed reason=no_moves` ✔ → `level_retried` (can 5→4) ✔ → Undo ×3 → tekrar başarısızlık → reklamla devam `level_continued method=ad rewound_moves=2` ✔ (hesaplanan "2 hamle geri" ile birebir) → tekrar başarısızlık → `level_retried` (can 4→3) ✔.
+  - Kayıt: L19, can 3, coin 35 ✔.
+- **Logdan görülemeyenler:** coinle devam (35 < 40, buton kapalı olmalı), "AD +1" can butonu (log'da `placement=Life` yok), Shuffle iptal/ret mesajları (analytics'e yazılmıyor) — kullanıcıya soruldu.
+
+## 2026-10-14 23:48 — L19 başarısızlık senaryosu hesaplandı (kod değişikliği yok)
+- Eski `LevelGenerator` (.NET `System.Random` dahil) Python'da taklit edildi (scratchpad `l19_nomoves.py`, geçici). Çıkan L19 tahtası 13.10 v2 testindeki ekran tahtasıyla ve o günkü 3 hamlelik diziyle birebir aynı → taklit doğrulandı.
+- L19 (alttan üste; `*` Güneş, `///` Yağmur, `+` Kar): 1 `[* * +]`, 2 `[/// /// /// +]`, 3 `[+]`, 4 `[/// * + *]`. No Moves: 3→1 (+), 4→3 (*), 2→4 (+).
+- Çözülebilirlik: başlangıç ✓, 1. hamle sonrası ✓, 2. ve 3. hamle sonrası ✗ → "Devam" 2 hamle geri gidip 1. hamle sonrasına dönmeli (yalnızca 1 hamle geri gitmenin yetmediğini gösteren iyi bir test).
+
+## 2026-10-14 23:43 — v3.1 Editor testi hazırlığı
+- Kapat-aç açığı ve geçici "AD +1" butonu tasarım dokümanı §15'e (açık konular) eklendi; kullanıcı kararı bekleniyor ("aklında dursun").
+- Editor kaydı: L16, 5 can, Shuffle 1, Undo 3, Extra 1; `coins` alanı henüz yok → ilk açılışta 0 olarak yüklenir. Sıfırlama yapılmadı (Shuffle 16'da açık, test için uygun).
+- Unity Editor açıldı; derleme hatasız.
+
+## 2026-10-14 23:39 — Geçici "reklam izle → +1 can" butonu; uygulamayı kapatma senaryosu incelendi
+- **İstek (kullanıcı):** Sağ üste, reklam izlermiş gibi can veren bir buton (geliştirme sürecinde lazım; ileride değişecek).
+- **Önce test:** `V31GameplayTests.LifeAdButtonSitsNextToLivesAtTopRight` (sağ üstte, can göstergesinin altında). **Kod:** `GameplayOverlay.cs` `CreateLifeAdButton` (turuncu hap, kalp ikonu + "AD +1", (430, −122)); başarısızlık ekranı ve mesajların da üstünde kalsın diye en son oluşturuluyor. `PuzzleController.WatchAdForLife`: can 5 ise "Lives Full", değilse ödüllü reklam (`RewardedPlacement.Life`) → +1 can ve can 0 kilidini açar. Release'te reklam olmadığı için "Reward Unavailable" der. Testler 93/93.
+- **Kullanıcı sorusu (canı/coin'i yok, reklam istemiyor, oyunu kapattı → tekrar açınca ne olur):** Koddan: kayıtta yalnızca bölüm numarası tutulur, tahta ve başarısızlık durumu tutulmaz. Açılışta bölüm sıfırdan yüklenir; can 0 olduğu için "Out of Lives" çıkar; can kapalıyken de zamanla dolar; can gelince kilit kendiliğinden kalkar ve bölüm **can harcanmadan** sıfırdan oynanır. Bu, "Retry (−1 can)"ı atlatan bir açık: canı olan oyuncu da başarısızlık ekranında uygulamayı kapatıp açarak ücretsiz yeniden başlayabilir. Çözüm seçenekleri kullanıcıya soruldu.
+
+## 2026-10-14 23:31 — v3.1 uygulandı: bulut içi Shuffle, Restart kaldırıldı, başarısızlık ekranı, coin; testler 92/92
+- **Önce testler — yeni `Tests/Editor/V31GameplayTests.cs` (14 test):** Shuffle (değişmeyen bulutlar reddedilir, özel bulutlara dokunmaz, yalnızca seçilen bulut değişir ve içeriği aynı kalır, sonuç her zaman çözülebilir — 1 boş bulutlu çerçevede 100+ karıştırma, güvenli diziliş yoksa açık ret, seed'e göre deterministik), "devam" (en yeni çözülebilir durum), coin (bant ödülleri, devam bedeli, cüzdan, kayıt + eski kayıt/negatif değer), arayüz (Restart yok, Extra·Undo·Shuffle üstte hizalı, World/Menu aralarında ortalı; başarısızlık ekranı tam ekran ve üç seçenek durumları), Shuffle'ın 16'da bölüm numarasıyla açılması.
+- **Yeni kod:** `Scripts/Level/CloudShuffler.cs` (`CloudShuffler` + `FailRecovery`; çözücüyle güvenlik kontrolü), `Scripts/Progression/CoinEconomy.cs` (Orta 10 / Zor 15 / Çok zor 20 / 101+ 10 coin; devam 40; başlangıç 0; `CoinWallet`).
+- **Değişen kod:**
+  - `PuzzleController.cs`: Restart, Restart bedeli, akıllı No Moves metni ve can-reklamı yolu kaldırıldı. No Moves → başarısızlık ekranı (can ile sıfırdan — ekstra bulutlar silinir, 1–5 ücretsiz, süre sayacı sıfırlanır; reklam veya 40 coin ile çözülebilen son duruma dönüş, geçmişte yoksa satın alınmış ekstralar korunarak bölüm başına). Shuffle: bas → seçim modu (seçili bulut bırakılır, "Select a cloud to shuffle"), buluta dokun → güvenli karıştırma, hak o anda düşer, Undo geçmişi temizlenir; tekrar basmak/boş yere dokunmak/diğer butonlar iptal eder; uygun olmayan bulutta mesaj, hak düşmez. Açılma: `IsShuffleUnlocked` (bölüm ≥ 16). Bölüm sonunda coin kazanılır ve kaydedilir. Bitmiş bölümde Undo engellendi (coin'in iki kez kazanılmaması için). "Out of Lives" mesajı Restart'sız.
+  - `GameplayOverlay.cs`: Restart butonu/rozeti ve `RestartCost` kaldırıldı; yeni buton düzeni; sol üstte coin göstergesi; Shuffle yönerge satırı; bölüm sonu "+N coins"; tam ekran "No Moves" başarısızlık paneli (Retry / Watch Ad / Continue N coins).
+  - `SaveData.cs` + `LocalJsonSaveService.cs`: `coins` alanı (negatif → 0; eski kayıtlarda 0). `IAdService.cs`: `RewardedPlacement.Continue`. `AnalyticsEvents.cs`: `level_restarted` kaldırıldı; `level_retried`, `level_continued`, `coins_earned`, `coins_spent` eklendi. `ModifierRuntime.cs`: `ProtectedClouds()`.
+  - **Geri alınan v2 kodu:** `LevelGenerator.Generate`'teki `extraEmptyClouds` (eski Shuffle'ın ekstra bulutlara dağıtımı).
+  - **Kaldırılan v3 Shuffle yedekleri:** `V3LevelPlan.ShuffleBackups/ShuffleBackupCount`, kurucudaki yedek seçimi, `V3LevelEntry.Backups`, araçtaki yedek yazımı, ilgili test. (`LevelCandidateSelector`'ın genel "yedek aday" parametresi araç testlerinde kullanıldığı için kaldı.) Veri yeniden üretildi: tahtalar aynı, yalnızca başlık satırı değişti.
+- **Mutasyon:** (A) Shuffle'ın çözülebilirlik kontrolü kapatıldı → 2 test, (B) "devam" her zaman en son duruma → 1 test başarısız ✔; geri alındı, 92/92.
+- **Bilinen sınırlar (kullanıcıya bildirildi):** Çözücü modifier'ları bilmiyor → 101+ (eski sistem) bölümlerde Shuffle/devam güvenliği yaklaşık; çok büyük tahtalarda durum sınırı aşılırsa Shuffle "güvenli karıştırma yok" der. Kazanılamaz ama hamle yapılabilir durumda otomatik başarısızlık yok (kullanıcı kararı; menüden baştan başlatma ileride). Reklamla can alma şu an hiçbir yerde yok (kullanıcı: başka yere taşınacak).
+- Kontrolcü ve arayüz akışları birim testle değil, Editor/telefon testiyle doğrulanacak. Hiçbir şey commit'lenmedi.
+
+## 2026-10-14 23:05 — v3.1 kararları netleşti (kod değişikliği yok)
+- **Kullanıcı yanıtları:** (A) Kazanılamaz ama hamle yapılabilir durumda otomatik başarısızlık yok — oyuncu Undo/Shuffle/Extra kullanır ya da ileride eklenecek "menüden baştan başlat"ı seçer. (B) "Devam" çözüme ulaşılabilen son duruma döner. (C) Reklamla can alma başka yere taşınacak. (D/7) Shuffle + Restart'ın kaldırılması + başarısızlık ekranı + coin şimdi yapılacak, **v3.1** olarak commit'lenecek; push onayla. (1) No Moves seçenekleri: can, reklam, coin. (3) Coin sayıları Claude belirler, sonra düzenlenir; başlangıç coini ileride tutorial görevinde. (4) 1–5'te bölüme başlamak ve can ile baştan başlamak can götürmez. (5) Üst sıra Extra·Undo·Shuffle, alt sıra World ve Menu aralarına ortalı, satırlar hizalı. (6) Baştan başlamada ekstra bulutlar silinir.
+- Tasarım dokümanı §6b kararlarla yeniden yazıldı.
+
+## 2026-10-14 22:55 — Plan: Restart kalkıyor (can hariç), No Moves = başarısızlık + coin (kod değişikliği yok)
+- **Kullanıcı:** Restart'la ilgili, başka şeyi etkilemeyen bütün özellikler kaldırılacak; can sistemi kalacak. No Moves'ta bölüm başarısız sayılır; o ekranda Undo/Extra/Shuffle sunulmaz. Seçenekler: (1) 1 can kaybedip baştan, (2) X coin veya reklamla son hamleden devam (dönülen durumda en az bir çözüm yolu olmalı). Coin şimdilik bölüm sonlarında kazanılır. "3 seçenek" denildi, 2'si verildi.
+- **İnceleme:** Kaldırılacaklar, kalacaklar ve kararı gereken noktalar kullanıcıya sunuldu (aşağıdaki maddeler cevaplarla netleşecek). Kritik bulgular: (a) bugünkü No Moves yalnızca "hiç legal hamle yok" durumunu yakalıyor; legal hamle varken çözülemez duruma düşen oyuncu Restart olmadan kalıcı takılır; (b) bir hamle geri gitmek her zaman çözülebilir duruma dönmez; (c) can 0 iken açılan bölümde reklamla can almanın tek yolu bugün Restart butonu; (d) kapsam: v3 "yalnızca zorluk" olarak tanımlanmıştı — Shuffle/Restart/coin değişikliklerinin hangi versiyona gireceği soruldu.
+- Tasarım dokümanına §6b eklendi.
+
+## 2026-10-14 22:45 — Shuffle kuralları netleşti; Restart'ın bağlı olduğu her şey incelendi (kod değişikliği yok)
+- **Shuffle yanıtları (kullanıcı):** güvenli sonuç (çözülebilir + mutlaka değişsin) çok önemli; karıştırılınca değişmeyen bulutlar seçilemez; hak karıştırma yapılınca düşer, Shuffle'a tekrar basmak/boş yere dokunmak iptal eder; Shuffle Undo ile geri alınamaz, sonrasında Undo geçmişi temizlenir ve buton söner (eskisi gibi); açılma koşulu bölüm ≥ 16; modifier'lı bulutlar dokunulmaz. Tasarım §6'ya işlendi.
+- **Koddan:** Orijinal Shuffle'da `LoadState` Undo geçmişini temizleyip butonu söndürüyordu (kullanıcının "eskisinde olduğu gibi" dediği davranış).
+- **Restart:** Kullanıcı Restart'ı kaldırmayı düşünüyor; Restart'ın ilişkili olduğu senaryolar/eylemler koddan çıkarıldı ve kullanıcıya sunuldu. Kritik bulgu: canlar yalnızca Restart'ta harcanıyor (`LifeManager.TryConsumeRetry` tek çağıran `RestartLevel`); Restart kalkarsa can sistemi işlevsiz kalır. Ayrıca Restart, çıkmaza giren oyuncunun tek garantili çıkış yolu.
+
+## 2026-10-14 22:38 — Karar: Shuffle bulut içi karıştırmaya dönüşecek (kod değişikliği yok)
+- **Kullanıcı:** Karışıklık olmuş; Shuffle konuşulan şekilde güncellenecek: Shuffle'a basınca bir bulut seçilmesi istenir; seçilen bulut kendi içinde karıştırılır ve oyun devam eder. Basıldığında seçili bir bulut varsa seçim kaldırılır. Önceki inceleme listesinde sorun görmedi.
+- **Koddan:** Undo tüm tahta anlık görüntüsüyle çalışıyor (`PuzzleSnapshot`) → karıştırma kolayca geri alınabilir yapılabilir; seçim `_selectedCloud`/`ClearSelection` ile.
+- **Tasarım dokümanı §6** yeni Shuffle tasarımıyla yeniden yazıldı; yedek seed, "ekstra bulutlar boş kalsın", v2 "ekstralara dağıt" ve Shuffle sınırı notu geçersiz sayıldı. Açık sorular kullanıcıya soruldu.
+
+## 2026-10-14 22:30 — Shuffle ile ilgili tüm değişikliklerin incelenmesi (kod değişikliği yok)
+- **Kullanıcı:** Arkadaşının Shuffle tasarım amacı bir bulutu kendi içinde karıştırmakmış; kullanıcı bunu bilmeden bütün tahtayı dağıtan bir davranış ve ek kısıtlar yaptırdığını düşünüyor. Tüm Shuffle değişikliklerinin bulunup anlatılması istendi.
+- **Bulgu (çakışma, kullanıcıya bildirildi):** Ana yazarın orijinal kodu (`a18a3e4`) ve takım reposundaki güncel `cloudora-yigit` dalı (`7388052`, yerel kopya 14.10 öğleden sonra güncellenmişti) Shuffle'ı zaten **bütün tahtayı yeni seed'le yeniden üreterek** yapıyor (`LevelGenerator.Generate(levelId, seed + n*997)`); "bulut içi karıştırma" kodda ve dokümanlarda yok (`PROJECT_PROGRESS.md` Phase 8: "Safe Shuffle replaces generated boards only with a newly validated deterministic board"). 1–15'te kilit, hak/reklam, seed dizisi, Restart'ın karıştırılmış tahtaya dönmesi de orijinalden.
+- **Bizim yaptıklarımız (v2):** ekstra bulutların Shuffle'da korunup dağıtıma katılması (`LevelGenerator.Generate` `extraEmptyClouds` parametresi, `_baseCloudCount`), art arda Shuffle hatası düzeltmesi, Restart'ın ekstra bulutları koruması, ızgara düzeltmesi, Extra limiti mesajında Shuffle önerisi (kilitliyken önerilmez), akıllı No Moves'ta Shuffle seçeneği, köşe rozeti/AD. **v3 (bugün):** yedek seed kararı ve kodu (`V3LevelPlan.ShuffleBackups/ShuffleBackupCount`, kurucuda yedek seçimi, veri dosyasında `Backups`, test), "ekstra bulutlar boş kalsın" kararı, Shuffle sayısı sınırı notu; oyuna henüz bağlanmadı (1–15'te Shuffle kilitli).
+
+## 2026-10-14 22:27 — Ara commit atıldı: `b0b2f13`
+- `bahadir-claude-versions` @ `b0b2f13` "v3 (devam): 1-15 bolumlerin zorluk duzenlemesi" (27 dosya). Etiket yok, push yok; uzaktaki dallar `ebd0576`'da. Commit'siz kalanlar: `ProjectSettings.asset`, `.vscode/` (bilerek) ve bu kayıt.
+
 ## 2026-10-14 22:26 — Ara commit (yerel): v3 devam — 1–15 zorluk düzenlemesi
 - **Karar (kullanıcı):** Şu anki durum yerele kaydedilsin. `bahadir-claude-versions` dalına etiketsiz ara commit; push yok. v3 etiketi 1–100 tamamlanıp testler geçince son commit'e konacak.
 - **Commit'e girenler:** v3 aracı ve veri (`Scripts/Level/` altında 8 yeni dosya), `Editor/V3LevelTool.cs`, testler (`LevelToolTests.cs`, `V3LevelBuildTests.cs`), tüm `.meta` dosyaları, değişen `AuthoredLevelCatalog.cs`, `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md`, bu dosya.

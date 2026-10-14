@@ -9,7 +9,6 @@ namespace Cloudora.Level
     {
         public const int LastLevel = 100;
         public const int ShuffleUnlockLevel = 16;
-        public const int ShuffleBackups = 2; // Shuffle sayısı sınırı ileride tartışılacak (tasarım §6).
 
         public static V3Part PartFor(int level)
         {
@@ -51,12 +50,6 @@ namespace Cloudora.Level
                 V3Part.Adaptation => new BoardFrame(4, 3, 2),
                 V3Part part => throw new NotSupportedException($"V3 part {part} (level {level}) is not designed yet.")
             };
-        }
-
-        public static int ShuffleBackupCount(int level)
-        {
-            Check(level);
-            return level >= ShuffleUnlockLevel ? ShuffleBackups : 0;
         }
 
         // Bandın, parçadaki aday zorluk dağılımında kapladığı yüzdelik dilim (puana göre sıralı).

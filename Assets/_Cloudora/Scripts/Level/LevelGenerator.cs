@@ -14,14 +14,12 @@ namespace Cloudora.Level
             WeatherType.Moon, WeatherType.Lightning
         };
 
-        // extraEmptyClouds: oyuncunun Extra Cloud ile eklediği bulutlar; Safe Shuffle bunlara da dağıtım yapar.
-        public static LevelDefinition Generate(int levelNumber, int? seedOverride = null, int extraEmptyClouds = 0)
+        public static LevelDefinition Generate(int levelNumber, int? seedOverride = null)
         {
             int capacity = levelNumber <= 20 ? 4 : levelNumber <= 60 ? 5 : levelNumber <= 125 ? 6 : 7;
             int typeCount = Math.Min(WeatherOrder.Length, 3 + Math.Max(0, levelNumber - 16) / 35);
             int emptyCount = levelNumber % 10 == 9 ? 1 : 2;
             if (levelNumber >= 41 && levelNumber <= 80) emptyCount = Math.Max(2, emptyCount) + 1;
-            emptyCount += Math.Max(0, extraEmptyClouds);
             int seed = seedOverride ?? DeterministicSeed(levelNumber);
             int shuffleDepth = BalanceProfile.ShuffleDepth(levelNumber);
 

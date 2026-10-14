@@ -54,8 +54,7 @@ namespace Cloudora.Tests.Editor
         [Test]
         public void BoardsAreDistinctAcrossAllParts()
         {
-            List<string> keys = Parts().SelectMany(Part)
-                .SelectMany(r => new[] { r.Primary }.Concat(r.Backups)).Select(c => c.CanonicalKey).ToList();
+            List<string> keys = Parts().SelectMany(Part).Select(r => r.Primary.CanonicalKey).ToList();
             Assert.That(keys.Distinct().Count(), Is.EqualTo(keys.Count));
         }
 
@@ -124,14 +123,6 @@ namespace Cloudora.Tests.Editor
         }
 
         [Test]
-        public void ShuffleBackupsOnlyFromSixteen()
-        {
-            foreach (V3LevelResult result in Parts().SelectMany(Part)) Assert.That(result.Backups, Is.Empty, $"level {result.Level}");
-            Assert.That(V3LevelPlan.ShuffleBackupCount(15), Is.EqualTo(0));
-            Assert.That(V3LevelPlan.ShuffleBackupCount(16), Is.GreaterThan(0));
-        }
-
-        [Test]
         public void BuildIsDeterministic()
         {
             foreach (V3Part part in Parts())
@@ -176,7 +167,6 @@ namespace Cloudora.Tests.Editor
                     Assert.That(entry.Band, Is.EqualTo(result.Band));
                     Assert.That(entry.Capacity, Is.EqualTo(result.Frame.Capacity));
                     Assert.That(entry.Board, Is.EqualTo(V3BoardText.Format(result.Primary.Board)));
-                    Assert.That(entry.Backups, Is.EqualTo(result.Backups.Select(b => V3BoardText.Format(b.Board)).ToArray()));
                     Assert.That(entry.Score, Is.EqualTo(result.Primary.Score).Within(1e-4f));
                     Assert.That(entry.OptimalMoves, Is.EqualTo(result.Primary.Result.Metrics.OptimalMoves));
                 }

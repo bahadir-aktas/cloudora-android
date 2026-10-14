@@ -14,6 +14,7 @@ namespace Cloudora.Services
         public int undoCharges = 3;
         public int extraCloudCharges = 1;
         public int safeShuffleCharges = 1;
+        public int coins = Progression.CoinEconomy.StartingCoins;
         public bool soundEnabled = true;
         public bool hapticsEnabled = true;
         public bool[] tutorialFlags = new bool[15];

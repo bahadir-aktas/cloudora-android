@@ -60,10 +60,36 @@ Döngüler: 1–5, 6–10, 11–15, 16–20, … (her döngünün son bölümü 
 - Extra Cloud seviye başına en fazla 2, No Moves, can sistemi vb. mevcut kurallar değişmez.
 - Çakışma çıkarsa kullanıcıya sorulur.
 
-## 6. Shuffle ve zorluk
-- Shuffle sonrası tahtanın zorluğu bölümün zorluğuyla **örtüşmeli**. Bunun için her bölümde önceden ölçülmüş **yedek seed**'ler tutulur; Shuffle bunları kullanır.
-- **Ekstra bulutlar (karar, 2026-10-14):** Shuffle yedek tahtayı olduğu gibi yükler; oyuncunun Extra Cloud ile eklediği bulutlar boş olarak kalır. Zorluk ölçüldüğü gibi kalır, bölüm dengesi bozulmaz. (v2'deki "Shuffle ekstra bulutlara da dağıtır" davranışının yerini alır.)
-- **Not (ileride tartışılacak):** Shuffle sayısının bölüm başına yedek seed sayısıyla sınırlanması gerekebilir (ör. 2 yedek seed → o bölümde en fazla 2 Shuffle).
+## 6. Shuffle — yeni tasarım: bulut içi karıştırma (karar, 2026-10-14)
+- **Neden:** Kullanıcıya göre ana yazarın asıl amacı bir bulutu kendi içinde karıştırmaktı. Kodda (orijinal `a18a3e4` dahil) Shuffle bütün tahtayı yeni seed'le yeniden üretiyordu; bu karışıklık v2 ve v3 kararlarına taşındı. Yeni tasarımla değiştirilecek.
+- **Davranış:**
+  1. Shuffle'a basılınca oyun bir bulut seçilmesini ister.
+  2. Shuffle'a basıldığında zaten seçili bir bulut varsa o seçim kaldırılır.
+  3. Seçilen bulut kendi içinde karıştırılır; oyun aynı tahtayla devam eder (bulut sayısı ve diğer bulutlar değişmez).
+- **Shuffle 16. bölümde açılır** (§5, değişmedi).
+- **Geçersiz kalan eski kararlar:** her bölüm için yedek seed (bölüm tahtası artık değişmiyor), "Shuffle'da ekstra bulutlar boş kalsın" ve "Shuffle ekstra bulutlara da dağıtır" (v2), Shuffle sayısını yedek seed sayısıyla sınırlama notu. İlgili kodlar kaldırılacak/geri alınacak.
+- **Kurallar (kullanıcı yanıtları, 2026-10-14):**
+  1. **Güvenli:** Karıştırma sonucu tahta mutlaka çözülebilir kalır (çıkmaza sokan sonuç kabul edilmez) ve bulutun sırası mutlaka değişir (oyuncu hakkının karşılığını almalı).
+  2. **Seçilemeyen bulutlar:** boş, tek renkli, tek elemanlı (karıştırılınca değişmeyenler) seçilemez; hak düşmez.
+  3. **Hak ve iptal:** Hak, bulut seçilip karıştırma yapılınca düşer; seçim modundayken Shuffle'a tekrar basmak veya boş yere dokunmak iptal eder; ekranda "bir bulut seç" yazısı çıkar.
+  4. **Undo:** Shuffle Undo ile geri alınamaz. Shuffle'dan sonra Undo geçmişi temizlenir ve Undo butonu söner (eski Shuffle'daki gibi); sonraki hamleler yine geri alınabilir.
+  5. **Açılma koşulu:** bölüm ≥ 16 (önceki "üretilmiş bölüm" koşulu yerine; Shuffle olmayan bölümler karışmasın, kod daha temiz).
+  6. **Özel bulutlar:** Modifier'lı bulutlar (Frozen, Locked vb.; 101+) Shuffle'dan etkilenmez — dokunulmaz.
+  - Restart'la ilgili sorular (Restart'ın döneceği tahta, karıştırmanın hamle sayılması) kullanıcı Restart'ı kaldırmayı düşündüğü için beklemede.
+
+## 6b. v3.1: Restart kalkıyor, "No Moves = başarısızlık", coin (karar, 2026-10-14)
+- **Sürüm:** Shuffle'ın yeniden tasarımı (§6), Restart'ın kaldırılması, başarısızlık ekranı ve coin **v3.1** olarak şimdi yapılır ve commit'lenir; push kullanıcı onayıyla, vakti gelince.
+- **Restart:** Restart ve ona bağlı, başka şeyi etkilemeyen bütün özellikler kaldırılır (buton, can rozeti, ilgili mesajlar, Restart'ın ekstra bulutları koruması, `level_restarted`). **Can sistemi kalır.**
+- **No Moves = bölüm başarısız** (tetikleyici değişmez: hiç legal hamle kalmaması). Bu ekranda Undo / Extra Cloud / Shuffle sunulmaz. Üç seçenek:
+  1. **Can:** 1 can kaybederek bölüme sıfırdan başlamak (ekstra bulutlar silinir).
+  2. **Reklam:** reklam izleyerek devam.
+  3. **Coin:** coin vererek devam.
+  - "Devam" = **çözüme ulaşılabilen son duruma** dönmek (gerekirse birkaç hamle geri); orada en az bir doğru yol mutlaka vardır.
+- **Hamle yapılabiliyor ama kazanılamıyorsa** (çıkmaz, No Moves tetiklenmez): oyuncu Undo / Shuffle / Extra Cloud kullanabilir veya ileride eklenecek "menüden bölümü baştan başlat" seçeneğini kullanır. Not: Hakları ve reklamı olmayan oyuncu, menü seçeneği eklenene kadar bu durumda takılabilir.
+- **1–5 (tutorial):** Bölüme başlamak ve "can ile baştan başlamak" can götürmez.
+- **Reklamla can alma:** başka bir yere taşınacak (ileride). Restart üzerinden olan yol kalkar.
+- **Coin (ilk ayar, sonra düzenlenecek):** bölüm sonunda kazanılır; başlangıç coini ileride tutorial görevinde verilecek (şimdilik 0).
+- **Buton düzeni:** üst sıra Extra · Undo · Shuffle; alt sıra World (Extra ile Undo'nun tam ortası) · Menu (Undo ile Shuffle'ın tam ortası); satırlar hizalı.
 
 ## 7. Modifier'lar
 - **İlk 100 bölümde şimdilik modifier olmayacak** (daha stabil çalışmak için). Temaya özel özellikler belirlenince eklenecek.
@@ -121,6 +147,8 @@ Test geri bildirimine göre zorluk ölçütleri revize edilir; ardından sonraki
 - **Coin sistemi (kullanıcı, 2026-10-14):** Oyuna coin sistemi eklenecek. Detaylar (nasıl kazanılacağı, nereye harcanacağı, booster/can/reklam ekonomisiyle ilişkisi) henüz belirlenmedi. İlgili: `GELISTIRME_ONERILERI.md` G3 (booster ekonomisi). Not: Coin ile alınan booster'lar (Extra Cloud, Shuffle, Undo) bölüm zorluğunu etkiler; tasarlanırken v3 zorluk dengesi göz önünde tutulmalı.
 
 ## 15. Açık konular
+- **Kapat-aç açığı (2026-10-14, karar bekliyor):** Kayıtta yalnızca bölüm numarası var; başarısızlık ekranındayken uygulama kapatılıp açılırsa bölüm can harcanmadan sıfırdan başlar ("Retry −1 can" atlatılır). Seçenekler: (a) başarısızlığı (ve "devam" için tahta + geçmişi) kaydedip açılışta ekranı geri getirmek — önerilen; (b) başarısız bölüm yarıda bırakılınca 1 can düşmek; (c) şimdilik bırakmak. Kullanıcı: "aklında dursun".
+- **Geçici geliştirme butonu:** sağ üstte "AD +1" (reklam izle → +1 can); ileride yeri/şekli değişecek, reklamla can alma asıl yerine taşınacak.
 - **Öğretici yazılar fark edilmiyor (kullanıcı, 2026-10-14):** 1–5 testlerinde L1–L5'teki yazılar ("Tap a cloud", "Groups move together"…) hiç dikkat çekmedi, göze çarpmadı. Tutorial ileride ayrıca ele alınacak; o zaman yazıların görünürlüğü (konum, boyut, vurgu) düzeltilmeli. v3'te dokunulmadı.
 - Shuffle sayısı sınırı (bkz. §6).
 - Temaların adları, tasarımları ve özellikleri.
