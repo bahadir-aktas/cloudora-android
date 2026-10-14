@@ -4,6 +4,226 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-14 22:26 — Ara commit (yerel): v3 devam — 1–15 zorluk düzenlemesi
+- **Karar (kullanıcı):** Şu anki durum yerele kaydedilsin. `bahadir-claude-versions` dalına etiketsiz ara commit; push yok. v3 etiketi 1–100 tamamlanıp testler geçince son commit'e konacak.
+- **Commit'e girenler:** v3 aracı ve veri (`Scripts/Level/` altında 8 yeni dosya), `Editor/V3LevelTool.cs`, testler (`LevelToolTests.cs`, `V3LevelBuildTests.cs`), tüm `.meta` dosyaları, değişen `AuthoredLevelCatalog.cs`, `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md`, bu dosya.
+- **Girmeyenler:** `ProjectSettings/ProjectSettings.asset` (Unity format değişikliği, her zamanki gibi), `.vscode/`.
+- Son test durumu: 80/80 EditMode.
+
+## 2026-10-14 22:23 — Karar: 2. parça kabul edildi → 1–15 tamamlandı
+- **Kullanıcı:** Aynı bölümleri 2. kez çözmenin etkisi büyük; oyunun başı olduğu için radikal zorluk artışı olmaması daha iyi. İleride yavaş yavaş artış konacak, parçaların kendi içinde de. → Seçenek (a): 2. parça olduğu gibi kabul.
+- Tasarım dokümanı: §2'ye "artış hızı" ilkesi, §13'e 6–15 "tamamlandı".
+- **Durum:** 1–15 tamamlandı, loglandı. Dosyalar diskte kayıtlı ama **git'e commit'lenmedi** (son commit hâlâ `ebd0576`); kullanıcıya bildirildi.
+
+## 2026-10-14 22:20 — 2. parça (6–15) telefon testi analizi
+- **Kullanıcı:** L10'da başka bir şeye daldığı için süre uzadı, zorluktan değil.
+- **Logcat (22:16–22:19):** Çökme/exception yok. 22:19:52 `remove task` = kullanıcı uygulamayı kapattı (normal). L9 sonrası `interstitial_opportunity` (Editor'la aynı).
+  | Bölüm | Bant | En kısa | Telefon hamle (fazla) | Süre | Editor fazla | Ort. fazla |
+  |---|---|---|---|---|---|---|
+  | 6 | Orta | 6 | 8 (+2) | 66,9 sn* | +1 | 1,5 |
+  | 7 | Orta | 10 | 10 (0) | 9,8 sn | 0 | 0 |
+  | 8 | Zor | 8 | 10 (+2) | 11,2 sn | +2 | 2 |
+  | 9 | Orta | 6 | 7 (+1) | 10,1 sn | +1 | 1 |
+  | 10 | Çok zor | 10 | 12 (+2) | 28,0 sn** | +3 | 2,5 |
+  | 11 | Orta | 10 | 11 (+1) | 12,9 sn | 0 | 0,5 |
+  | 12 | Orta | 7 | 8 (+1) | 8,5 sn | +2 | 1,5 |
+  | 13 | Zor | 9 | 10 (+1) | 11,5 sn | +1 | 1 |
+  | 14 | Orta | 7 | 8 (+1) | 9,8 sn | +1 | 1 |
+  | 15 | Çok zor | 10 | 11 (+1) | 12,0 sn | +1 | 1 |
+  \*L6 süresi uygulama açılışından itibaren (kullanıcının başlamasını bekleme dahil). \*\*L10: kullanıcı dalgınlığı.
+- **Değerlendirme:** İki testin ortalamasında Orta 0,92 < Zor 1,5 < Çok zor 1,75 fazla hamle → desen ortalamada tutuyor. 1. döngü (6–10) net; 2. döngüde (11–15) Zor/Çok zor Orta'lardan zayıf ayrışıyor — alışma etkisi ve/veya ölçümün bu tahtalarda insanı tam yakalamaması (sanal oyuncu L15'i en zor ölçtü: 2,51; insanlar 1). Öneri ve karar kullanıcıya soruldu.
+- Logcat kaydı durduruldu.
+
+## 2026-10-14 22:16 — 2. parça için v3 derlendi ve telefondaki v3'ün üzerine kuruldu
+- Editor normal yolla kapatıldı; telefon bağlı. **Build:** `com.yigityvz.cloudora.v3`, `result=Succeeded`, 0 hata/0 uyarı; `ProjectSettings.asset` geri döndü ✔.
+- `adb install -r` (yalnızca v3) → Success. Kayıt silinmedi: v3 kaydı önceki telefon testinden L6'da → açılışta `level_started level=6 seed=350 difficulty=15.12644` (yeni 2. parça tahtası) ✔.
+- Logcat kaydediliyor (scratchpad `logcat-v3-part2.txt`).
+
+## 2026-10-14 22:08 — Not: coin sistemi eklenecek (kullanıcı)
+- Kullanıcı isteğiyle tasarım dokümanına (`Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` yeni §14 "İleride eklenecek özellikler") not edildi: oyuna coin sistemi eklenecek; detaylar belirlenmedi; v3 kapsamı dışında. Projede ayrı bir "tasarım klasörü" yok — not, aktif tasarım dokümanına yazıldı (kullanıcıya bildirildi). Eski §14 "Açık konular" §15 oldu.
+
+## 2026-10-14 22:05 — 2. parça (6–15) Unity Editor testi: exception yok
+- **Editor.log:** L6→L15 tamamlandı, seed'ler veri dosyasıyla aynı; exception yok. L9 sonrası `interstitial_opportunity` (reklam politikası, normal). L16 eski sistemle açıldı.
+  | Bölüm | Bant | En kısa | Hamle | Fazla | Süre |
+  |---|---|---|---|---|---|
+  | 6 | Orta | 6 | 7 | 1 | 8,4 sn |
+  | 7 | Orta | 10 | 10 | 0 | 9,1 sn |
+  | 8 | Zor | 8 | 10 | 2 | 12,0 sn |
+  | 9 | Orta | 6 | 7 | 1 | 7,6 sn |
+  | 10 | Çok zor | 10 | 13 | 3 | 18,5 sn |
+  | 11 | Orta | 10 | 10 | 0 | 12,2 sn |
+  | 12 | Orta | 7 | 9 | 2 | 10,3 sn |
+  | 13 | Zor | 9 | 10 | 1 | 9,6 sn |
+  | 14 | Orta | 7 | 8 | 1 | 11,8 sn |
+  | 15 | Çok zor | 10 | 11 | 1 | 15,7 sn |
+- **Değerlendirme:** 1. döngüde (6–10) desen net (Zor 12 sn, Çok zor 18,5 sn / 3 fazla). 2. döngüde Çok zor yine en uzun (15,7 sn) ama Zor (L13) Orta'lardan ayrışmıyor; L12 (Orta) 2 fazla hamleyle oynandı. 10 hamlelik Orta'lar (L7, L11) hatasız oynandı → uzunluk tek başına zorluk yaratmıyor, puanın bu tahtaları Orta saymasıyla uyumlu. Süreler 1. parçadan (3–8 sn) belirgin şekilde yüksek → birikimli artış ✓. Kullanıcının hissi soruldu.
+
+## 2026-10-14 21:57 — v3 2. parça (6–15, Alışma) kuruldu; testler 80/80
+- **Çerçeve ölçümü (yeni puanla):** cap4/c3/e2 puan p10 13,1 · p50 16,4 · p90 19,9 · en yüksek 21,8 → varsayılan bant dilimleriyle 1. parçadan yumuşak geçiş.
+- **Önce testler — `V3LevelBuildTests.cs` yeniden yazıldı (tüm tasarlanmış parçalar için):** çerçeve + desen (1–5 ve 6–15), parçalar arası tahta tekrarı yok, döngü içinde Orta < Zor < Çok zor, aynı bant parça içinde kolaylaşmaz (alışma), bant aralıkları çakışmaz, **parça geçişi birikimli ama sıçramasız** (yeni parçanın Orta'ları öncekinin Orta'larından zor; ilk Orta ≤ önceki parçanın son bölümü ×1,10), öğretici yazılar/çerçeve 1–15'te aynı, 16+ eski sistemde. Veri yokken 2 test (veri, katalog) beklendiği gibi başarısız; kurucu testleri 2. parça için de geçti.
+- **Kod:** `AuthoredLevelCatalog.cs` — 1–15'in tamamı `V3LevelData`'dan (öğretici yazılar 1–5, 10, 15 aynı); kullanılmayan eski tahta kodu kaldırıldı (eski tahtalar git'te, v2). `V3LevelTool.cs` — kurulacak parçalara `Adaptation` eklendi. Veri yeniden üretildi (1–5 değişmedi); önceki veri scratchpad'de yedekli.
+- **Seçilen 6–15 (en kısa hamle / sanal fazla / puan):** L6 Orta 6/1,16/15,13 · L7 Orta 10/1,23/15,46 · L8 Zor 8/1,72/18,12 · L9 Orta 6/1,41/15,78 · L10 Çok zor 10/1,94/20,24 · L11 Orta 10/1,60/16,13 · L12 Orta 7/1,37/16,47 · L13 Zor 9/1,78/18,79 · L14 Orta 7/1,65/16,80 · L15 Çok zor 10/2,51/21,35. Bant aralıkları: Orta [15,0–17,0], Zor [17,8–19,1], Çok zor [19,7–22,0]. L6 (15,13) ≤ L5 (15,44) → sıçrama yok; Orta'lar 15,13 → 16,80 artan.
+- **Gözlem (kullanıcıya bildirildi):** L7 ve L11 "Orta" ama en kısa çözümleri 10 hamle (Çok zor'larla aynı uzunlukta); hamlelerin çoğu doğrudan ilerlettiği için puanları düşük. Testte "uzun" hissettirip hissettirmediğine bakılacak.
+- Editor kaydı zaten L6'da (önceki Editor testinden) → sıfırlama gerekmiyor.
+
+## 2026-10-14 21:56 — Kullanıcı notu: öğretici yazılar fark edilmiyor; 2. parçaya başlandı
+- **Kullanıcı:** İlk 5 bölümde uyarı/yazı varsa hiç dikkat etmedi, gözüne çarpmadı. Tutorial ileride ele alınacağı için v3'te dokunulmadı; tasarım dokümanı §14'e not edildi.
+- Kullanıcı onayıyla 2. parça (6–15, Alışma) çalışmasına başlandı.
+
+## 2026-10-14 21:52 — 1. parça (1–5) telefon testi geçti → 1. parça tamamlandı
+- **Kullanıcı:** Normal kullanıcı gibi, biraz düşünerek oynadı. Alıştığı için ekstra kolay gelmiş olabilir; ileride kullanıcıların da alışması göz önünde bulundurulabilir (tasarım dokümanına not edildi).
+- **Logcat (21:48–21:51):** Çökme/exception yok (yalnızca bilinen Profiler soket mesajı).
+  | Bölüm | Bant | En kısa | Hamle | Fazla | Süre |
+  |---|---|---|---|---|---|
+  | 1 | Orta | 4 | 4 | 0 | 152 sn* |
+  | 2 | Orta | 4 | 4 | 0 | 5,6 sn |
+  | 3 | Zor | 5 | 6 | 1 | 6,2 sn |
+  | 4 | Orta | 4 | 5 | 1 | 6,2 sn |
+  | 5 | Çok zor | 7 | 8 | 1 | 7,5 sn |
+  \*L1 süresi, uygulama açıldıktan sonra kullanıcının oynama tarzını sorup cevap beklediği zamanı da içeriyor; zorluk ölçüsü değil.
+- Logcat kaydı durduruldu. Tasarım dokümanı §13: 1. parça "tamamlandı".
+
+## 2026-10-14 21:48 — Yeni 1–5 Editor testi geçti; v3 yeniden derlendi, v3'ün üzerine kuruldu, v3 kaydı sıfırlandı
+- **Editor.log (hızlı oyun, exception yok):**
+  | Bölüm | Bant | En kısa | Hamle | Fazla | Süre | Sanal fazla |
+  |---|---|---|---|---|---|---|
+  | 1 | Orta | 4 | 5 | 1 | 5,0 sn | 0,39 |
+  | 2 | Orta | 4 | 5 | 1 | 3,5 sn | 0,62 |
+  | 3 | Zor | 5 | 7 | 2 | 5,0 sn | 1,19 |
+  | 4 | Orta | 4 | 5 | 1 | 3,2 sn | 0,86 |
+  | 5 | Çok zor | 7 | 9 | 2 | 6,6 sn | 1,53 |
+  Desen insan verisinde net: Orta'larda 1, Zor/Çok zor'da 2 fazla hamle; en uzun süre Çok zor. Sanal oyuncu sıralaması aynı.
+- Claude'un açtığı Editor normal yolla kapatıldı. **Build:** `com.yigityvz.cloudora.v3` "Cloudora v3", `result=Succeeded`, 0 hata/0 uyarı; `ProjectSettings.asset` geri döndü ✔. Not: çıktı silinip yeniden derlenmesine rağmen APK 64,3 MB (öncekiler ~45 MB) — v2'de görülen Gradle paketleme boyutu durumu; içerik etkilenmedi (açılış teyitli).
+- **Kurulum:** `adb install -r` (yalnızca v3'ün üzerine) → Success; `pm clear com.yigityvz.cloudora.v3` (yalnızca v3 verisi; v1/v2'ye dokunulmadı) → Success. Açılış: `Product Name: Cloudora v3`, `game_started`, `level_started level=1 seed=26 difficulty=10.3775` → yeni L1 ✔.
+- Logcat kaydediliyor (scratchpad `logcat-v3-part1b.txt`).
+
+## 2026-10-14 21:42 — Yeni 1–5 için Editor testi hazırlığı
+- **Netleştirme (kullanıcı sorusu üzerine):** 1–5'in hepsi değişmedi (1, 3, 4 yeni; 2, 5 aynı). Telefondaki v3 APK'sı kalibrasyondan önce derlendi → yeni tahtalar için yeniden derleme + v3'ün üzerine kurulum + v3 kaydının sıfırlanması gerekiyor. Kullanıcı kararı: önce Editor testi, sonra v3 derlemesi.
+- Editor kaydı (L6'da, 21:14) `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-v3-part1-kayit-20261014-2140\`'e yedeklendi (SHA-256 eşleşti), asıl dosyalar kaldırıldı → L1'den başlar.
+- Unity Editor projeyle açıldı; derleme hatasız.
+
+## 2026-10-14 21:38 — Kalibrasyon: "sanal oyuncu" ölçümü eklendi, 1–5 yeni puanla yeniden seçildi
+- **Kullanıcı:** Hızlı oynarken doğru hamleleri görememiş olabilir; L5'te (Çok zor) hamlelerin karmaşıklığı belirgin şekilde arttı, "farklı bir şey yapıyormuşum gibi" hissettirdi. Kalibrasyon denensin, sonuca göre 1–5 yeniden oluşturulabilir.
+- **Önce testler (`LevelToolTests.cs`, +5):** puanın sanal oyuncu ölçümleriyle artması, bariz tahtada fazla hamle olmaması, aralık kontrolleri, 1 boş bulutta 2 boş buluta göre daha sık takılma, 14.10 cihaz verisiyle uyum (L4 ve L5 > L2), mantıklı oyuncunun rastgele oyuncudan belirgin şekilde az fazla hamle yapması.
+- **`PuzzleSolver.cs`:** Sanal oyuncu — ileriyi hesaplamadan, hamlelere çekicilik puanı vererek (bulutu tamamla +4, aynı renge istifle +2, karışık buluttan boş buluta aç +1, tamamlanmış bulutu boz −4, grubu böl −1, az önceki duruma dön ≈−3) olasılıkla oynar; her tahta 200 kez, deterministik ve bulut sırasından bağımsız. Yeni ölçütler `NaiveExcessMoves` (ortalama fazla hamle) ve `NaiveFailureRate` (çıkmaz/hamle sınırı); puana ağırlıkları 1,5 ve 10. Testler için `NaivePlayerStyle.Random` karşılaştırma ayarı.
+- **`V3LevelTool.cs`:** menü `Cloudora/V3/Kalibrasyon Raporu` (oyundaki bölümleri güncel ölçümle yeniden ölçer).
+- **Eski 1–5 tahtalarının kalibrasyonu (sanal fazla hamle → kullanıcının Editor/telefon fazlası):** L1 0,65 → 0/– · L2 0,62 → 1/0 · L3 1,16 → 1/1 · L4 0,81 → 3/2 · L5 1,53 → 2/1. Ölçüm L3 ve L5'in zorluğunu ve L4'ün L1/L2'den zor olduğunu yakalıyor; L4'ün insanlarda L3'ü geçmesini yakalamıyor (veri az ve hızlı oyun gürültülü).
+- **Yeni seçim:** L1 Orta `SSSR/RRSR` 4 hamle puan 10,38 (değişti) · L2 Orta `SRSS/SRRR` 4 hamle 11,55 (aynı) · L3 Zor `RRSS/SRSR` 5 hamle 13,69 (değişti) · L4 Orta `RRSS/RSSR` 4 hamle 11,91 (değişti) · L5 Çok zor `RSRS/RSRS` 7 hamle 15,44 (aynı). Bant aralıkları: Orta [10,3–12,4], Zor [12,8–14,6], Çok zor [15,2–16,4]. Önceki veri dosyası scratchpad'de yedekli (`V3LevelData.Generated.v1.cs`).
+- **Testler:** 75/75. Mutasyon (sanal oyuncunun tercihleri kapatıldı) ilk turda yalnızca veri testiyle yakalandı → "mantıklı > rastgele" testi eklendi → aynı mutasyon artık 2 testle yakalanıyor; geri alındı, 75/75.
+
+## 2026-10-14 21:26 — 1. parça telefon testi analizi: geçti; L4 gözlemi
+- **Kullanıcı:** L1'de özellik denemeleri (çalışıyor mu); L2–L5 "en hızlı ve en az hamlede" gerçek veri için oynandı.
+- **Logcat (21:22–21:25, "Cloudora v3"):** Çökme/ANR/C# exception yok. Yalnızca bilinen dev build mesajları (`AssetPackManager`, Profiler soketi "Failed to set blocking mode"). 21:25:51 `Killing … remove task` = kullanıcı son uygulamalardan kapattı (normal).
+- **L1 denemeleri:** 7 Restart (can gitmedi — L1–5 kuralı ✔), Undo 3→0 → ödüllü reklam → yeniden dolum ✔, Extra Cloud 2 kez (seviye limiti) ✔; sonunda 6 hamlede (en kısa = 6) tamamlandı.
+- **Hızlı oyun verisi:**
+  | Bölüm | Bant | En kısa | Telefon | Fazla | Süre | (Editor fazlası) |
+  |---|---|---|---|---|---|---|
+  | 2 | Orta | 4 | 4 | 0 | 3,3 sn | 1 |
+  | 3 | Zor | 5 | 6 | 1 | 7,6 sn | 1 |
+  | 4 | Orta | 5 | 7 | 2 | 6,5 sn | 3 |
+  | 5 | Çok zor | 7 | 8 | 1 | 6,0 sn | 2 |
+- **Gözlem (kullanıcıya bildirildi):** L4 (Orta) iki testte de en çok fazla hamle yapılan bölüm — etiketinden zor oynuyor; puan formülü bu tahtayı olduğundan kolay ölçüyor olabilir. Kalibrasyon önerisi sunuldu.
+- Logcat kaydı durduruldu.
+
+## 2026-10-14 21:22 — "Cloudora v3" dev APK derlendi, v1/v2'nin yanına kuruldu ve başlatıldı
+- Telefon bağlandı (`R5CXA3032LP`); telefonda v1 (`com.yigityvz.cloudora`) ve v2 (`com.yigityvz.cloudora.v2`) duruyor.
+- Claude'un 21:05'te açtığı Unity Editor normal yolla kapatıldı (`CloseMainWindow`, zorlama yok); proje kilidi kalktı.
+- **Build:** `CLOUDORA_BUILD dev identity override id=com.yigityvz.cloudora.v3 name=Cloudora v3` → `result=Succeeded`, 0 hata, 0 uyarı, ~4,5 dk. Çıktı `Builds/Android/Cloudora-v3-dev.apk` (45.383.918 bayt, git dışı). `ProjectSettings.asset` paket adı/isim `com.yigityvz.cloudora`/"Cloudora"ya geri döndü ✔ (dosyadaki `M` durumu eski Unity format değişikliği).
+- **Kurulum:** `adb install` (‑r yok, yeni paket) → Success. Telefonda üç paket: v1, v2, v3.
+- **İlk açılış (logcat):** `Product Name: Cloudora v3`, `game_started save_schema=2`, `level_started level=1 seed=6 difficulty=10.1` → sıfır kayıtla, v3 tahtasıyla başladı. Tek hata satırı bilinen zararsız `AssetPackManager` kontrolü.
+- Logcat dosyaya kaydediliyor (scratchpad `logcat-v3-part1.txt`, geçici).
+
+## 2026-10-14 21:15 — 1. parça (1–5) Unity Editor testi geçti
+- **Kullanıcı:** 1. bölüm uzun değil. Zor ve Çok zor diğerlerinden bir tık daha zor; genel olarak kolay — oyunun başı için sorun yok ✔. Ekran kaydı alınmış ama Unity Game görünümü kayda çıkmamış.
+- **Editor.log:** Exception yok. Sıfır kayıtla `game_started` → L1–L5 tamamlandı, tahtalar/seed'ler veri dosyasıyla aynı (seed 6, 10, 3, 2, 5).
+  | Bölüm | Bant | En kısa | Oyuncu hamlesi | Süre |
+  |---|---|---|---|---|
+  | 1 | Orta | 6 | 6 | 16,5 sn |
+  | 2 | Orta | 4 | 5 | 10,5 sn |
+  | 3 | Zor | 5 | 6 | 8,9 sn |
+  | 4 | Orta | 5 | 8 (10 Restart) | 48,3 sn |
+  | 5 | Çok zor | 7 | 9 | 15,0 sn |
+- L4'teki 10 Restart, kullanıcının bilinen test tarzı gereği kasıtlı buton testi olarak değerlendirildi (L1–5'te Restart can götürmez). Süreye Restart'lar dahil (bilinen sorun: Restart süre sayacını sıfırlamıyor).
+- Sıradaki: telefon testi (Editor kapatılıp telefon bağlanınca "Cloudora v3" derlenip kurulacak).
+
+## 2026-10-14 21:06 — Editor testi için hazırlık: kayıt sıfırlandı (yedekli), Unity Editor açıldı
+- Kullanıcı Editor'ı kapattı; Editor'da 1–5 testi için gerekenler incelendi.
+- **Koddan:** Kayıt `Application.persistentDataPath/cloudora-save.json` (Editor'da `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\`); bozulursa `.bak`'tan yüklenir. Başlangıç bölümü kayıttan (`useDebugStartLevel` sahnede kayıtlı değil → kapalı). Tek sahne `02_Gameplay`.
+- **Editor kaydı v2 testinden L30'daydı** (en yüksek tamamlanan 29, can 4) → 1–5 görülemezdi.
+- **Yapıldı:** `cloudora-save.json` ve `.bak` aynı klasördeki `yedek-v2-kayit-20261014\`'e kopyalandı (SHA-256 eşleşti), sonra asıl dosyalar kaldırıldı → oyun varsayılan kayıtla L1'den başlar. Ses/titreşim ayarları (PlayerPrefs) etkilenmedi. Geri almak için yedekteki iki dosya üst klasöre kopyalanır.
+- Unity Editor projeyle açıldı; derleme hatasız (`error CS` yok).
+
+## 2026-10-14 21:03 — Kararlar: v3 telefonda ayrı uygulama; dünya listesi 16–30 ile; v3 dev APK derlemesi başlatıldı
+- **Karar (kullanıcı):** v3 telefona ayrı uygulama olarak kurulacak (`com.yigityvz.cloudora.v3`, "Cloudora v3"); v1/v2'nin üzerine güncelleme yok.
+- **Karar (kullanıcı):** Dünya listesinin yeni aralıklara/geçici adlara geçirilmesi 16–30 (geçiş teması) kurulumuyla birlikte yapılacak.
+- `adb devices`: telefon bağlı değil — derleme yapılıyor, kurulum telefon bağlanınca.
+- Derleme: `GRADLE_USER_HOME=C:\Dev\gradle-cloudora`, `CLOUDORA_DEV_APP_ID=com.yigityvz.cloudora.v3`, `CLOUDORA_DEV_PRODUCT_NAME="Cloudora v3"`, `CLOUDORA_BUILD_OUTPUT=Builds/Android/Cloudora-v3-dev.apk` → `Build-Android.ps1 -Mode dev`.
+- **Sonuç: derleme başlamadan durdu (Unity çıkış kodu 1).** Sebep: aynı dakikada (21:03) Unity Hub ve Unity Editor bu projeyle açılmıştı (proje kilidi, `Temp/UnityLockfile`). Editor Claude tarafından açılmadı ve kapatılmadı. Not: Açık Editor'ın menüsünden derleme yapılırsa ortam değişkenleri olmadığı için paket `com.yigityvz.cloudora` olur ve telefondaki v1'in üzerine gider — bu yüzden derleme Editor kapandıktan sonra komut satırından yapılacak.
+
+## 2026-10-14 20:38 — v3 1. parça (1–5, Tanıtım) kuruldu; testler geçti, Unity/telefon testi bekleniyor
+- **Yöntem (önce test):** Yeni `Tests/Editor/V3LevelBuildTests.cs` (14 test) → kod → veri dosyası boşken 4 veri testi beklendiği gibi başarısız → veri üretildi → 70/70 geçti. Veri dosyası elle bozulunca `GeneratedDataMatchesBuilder` yakaladı (dosya geri yüklendi, yeniden 70/70).
+- **Yeni/değişen kod:**
+  - `Scripts/Level/V3LevelPlan.cs`: parça aralıkları, bölüm çerçevesi (1–5: kapasite 4/2 renk/2 boş; 6–15: 4/3/2; diğer parçalar henüz tasarlanmadığı için bilerek hata verir), Shuffle yedeği sayısı (16+'da 2; sınır tartışması açık), bant yüzdelik dilimleri (Orta %30–60, Zor %70–85, Çok zor %90–100).
+  - `Scripts/Level/V3LevelBuilder.cs`: parçayı kurar — adayları ölçer, bant aralıklarını dağılımdan çakışmasız çıkarır, parçada tekrar etmeyen ve öğretici yazıyı gerçekten gösteren tahtayı seçer (L3 grup hamlesi, L4 boş buluta hamle); aynı banttaki bölümler parça içinde hafifçe zorlaşır.
+  - `Scripts/Level/V3BoardText.cs` (tahtanın kısa metni), `Scripts/Level/V3LevelData.cs` + araçla üretilen `V3LevelData.Generated.cs`.
+  - `Editor/V3LevelTool.cs`: menü `Cloudora/V3/Bölüm Verisini Üret` + batch.
+  - `Scripts/Level/AuthoredLevelCatalog.cs`: 1–5 tahtaları artık `V3LevelData`'dan; öğretici yazılar, kapasite, dünya kimliği, "elle tasarlanmış" durumu (Shuffle kilitli) ve L1–5 Restart kuralı aynı. 6–15 eski tahtalarla duruyor.
+- **Seçilen tahtalar (alttan üste, iki dolu + iki boş bulut):** L1 Orta `SRRS/SRRS` 6 hamle puan 10,10 · L2 Orta `SRSS/SRRR` 4 hamle 10,63 · L3 Zor `SRSS/RRSR` 5 hamle 11,90 · L4 Orta `RSRS/RRSS` 5 hamle 11,17 · L5 Çok zor `RSRS/RSRS` 7 hamle 13,14. Bant aralıkları: Orta [9,8–11,2], Zor [11,4–12,4], Çok zor [13,0–13,8].
+- **Gözlem (kullanıcıya bildirildi):** L1'in en kısa çözümü 6 hamle (L2: 4) ama puanı daha düşük, çünkü hamlelerinin çoğu doğrudan ilerletiyor.
+- Hiçbir şey commit'lenmedi.
+
+## 2026-10-14 20:28 — v3 kararları: boş bulut geçişi ve Shuffle + ekstra bulutlar (kod değişikliği yok)
+- **Karar 1 (kullanıcı, a):** 1–15'te boş bulut sayısı çerçeveye dahil, hep 2 kalır. 1 boş bulut kademeli olarak geçiş temasında (16+) gelir — "2 bulut olması, yavaşça 1'e düşmesi daha iyi geçiş olur".
+- **Karar 2 (kullanıcı, a):** Shuffle ölçülmüş yedek tahtayı yükler; Extra Cloud ile eklenen bulutlar boş olarak kalır. Zorluk ölçüldüğü gibi kalır, bölüm dengesi bozulmaz. Bu, v2'deki "Shuffle ekstra bulutlara da dağıtır" davranışının yerini alacak (v3'te uygulanacak).
+- **Dosya:** `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` §6 ve §11 güncellendi.
+
+## 2026-10-14 19:46 — v3 bölüm aracı: önce testler, sonra araç; testler ve hata yakalama denemesi geçti
+- **Sıra (kullanıcı isteği):** Önce olası hatalar için testler, sonra araç, testleri çalıştır, aracı yeniden kontrol et.
+- **Testler — yeni `Assets/_Cloudora/Tests/Editor/LevelToolTests.cs` (24 test):** çözücü (çözülmüş/tek hamle/çözümsüz tahta, hatalı girdi, girdiyi değiştirmeme, çözümün oyunun `PuzzleRules`'ıyla tekrar oynatılıp çözmesi, en kısa çözümün oyunun kurallarıyla çalışan bağımsız bir referans BFS ile birebir aynı çıkması, bulut sırasından bağımsızlık, determinizm, durum sınırı, oran aralıkları, puan yönü), aday üretici (çerçeveye birebir uyum, determinizm, Python ile bağımsız hesaplanmış sabit rastgele dizi), seçici (hedef aralık, farklı yedekler, merkeze en yakın seçim, hedefe ulaşılamazsa/yedek eksikse açık başarısızlık, sınır aşımı, geçerli `LevelDefinition`), 1–100 planı (O,O,Z,O,ÇZ deseni, parça sınırları, parça sonları "Çok zor").
+- **Araç — yeni dosyalar (`Assets/_Cloudora/Scripts/Level/`):** `PuzzleSolver.cs` (tam durum uzayı araması; ölçütler: en kısa çözüm, ulaşılabilir durum, çıkmaz durum oranı, ilerleten/tuzak hamle oranı, ortalama seçenek, birleşik puan), `LevelCandidateFactory.cs` (`BoardFrame` + elle tasarlanmış bölümlerle aynı biçimde aday dağıtımı), `DeterministicRandom.cs` (SplitMix64; platformdan bağımsız), `LevelCandidateSelector.cs` (hedef aralık + Shuffle yedekleri), `V3LevelPlan.cs` (parçalar ve desen). Editor: `Assets/_Cloudora/Editor/V3LevelTool.cs` (menü `Cloudora/V3/Aday Raporu` + batch rapor → `Logs/v3-candidates.csv`, `Logs/v3-candidate-summary.txt`). Oyun koduna henüz bağlanmadı; mevcut oyun davranışı değişmedi.
+- **Sonuç:** 56/56 EditMode testi geçti (24 yeni + 32 mevcut).
+- **Hata yakalama denemesi (mutasyon):** (1) çözücüde renk kuralı kapatıldı → 5 test başarısız oldu ✔; (2) kanonik anahtardaki sıralama kapatıldı → bulut sırası testi başarısız oldu ✔. İkisi de geri alındı, temiz kod yeniden 56/56.
+- **Bulunan ve düzeltilen sorun:** Metin tabanlı durum anahtarı büyük durum uzaylarında çok yavaştı (mutasyonlu test turu 25+ dk). Anahtar sayılara paketlendi, hamle başına dizi kopyası kaldırıldı → temiz test turu ~25 sn. Uzun süren ilk mutasyon turu durduruldu (Unity süreçleri kapatıldı).
+- **Aday raporu (300 aday/çerçeve, toplam 26 sn):** en büyük çerçeve cap6/c5/e2 300 adayda 6 sn, en fazla 18.982 durum. Bulgular kullanıcıya sunuldu (cap4/c2/e2'de yalnızca 37 farklı tahta; 2 boş bulutlu çerçevelerde çıkmaz/tuzak hamle yok, zorluk yalnızca çözüm uzunluğu ve yanıltıcılıktan geliyor; 1 boş bulutta tuzaklar ve çözümsüz tahtalar ortaya çıkıyor).
+- Yeni C# dosyaları CRLF'ye normalize edildi. Hiçbir şey commit'lenmedi.
+
+## 2026-10-14 18:56 — v3: ilk 15 bölüm kararı, test planı ve zorluk ilkesi dokümana eklendi (kod değişikliği yok)
+- **Karar (kullanıcı):** 1–15 aynı çerçevede kalır (kurallar, kapasite, renk sayısı, öğretici yazılar, tutorial kayıtları, Restart/Shuffle); yalnızca tahtalar çok sayıda aday denenip ölçülerek seçilir.
+- **Test planı:** 1–5, 6–15, 16–30 → parça bitince Unity + telefon; 31–60 → telefon testi, tüm bölümler bitirilmez; 61–100 → kalınan yerden devam, birkaç bölüm.
+- **İlke (kullanıcı, her zaman):** Zorluk etiketleri temalar ilerledikçe aynı şeyi ifade etmez; parça ölçekleri dengeli, geçişlerde ani sıçrama yok.
+- **Dosya:** `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` (§2 ilke, §11 ilk 15 bölüm, §12 test planı).
+
+## 2026-10-14 18:46 — v3 tasarım soruları yanıtlandı, doküman güncellendi (kod değişikliği yok)
+- **`Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md`** kullanıcı yanıtlarıyla yeniden yazıldı: "Kolay" yok (en düşük Orta); zorluk göreli/birikimli; döngüler 1–5, 6–10…; parçalar 1–5 Tanıtım, 6–15 Alışma, 16–30 Geçiş teması, 31–60 Tema 2, 61–100 Tema 3 (geçici adlar, 1–15 tema sayılmaz); Shuffle 16'da açılır; L1–5 Restart can götürmez (kalır); Shuffle için yedek seed (Shuffle sayısı sınırı ileride tartışılacak); 1–100'de şimdilik modifier yok, eski atamalar dokümanda arşivlendi; zorluk ölçütlerini Claude ayarlar, kullanıcı test eder; zorluk sembolü v3'te ama zorluk çalışmasından sonra; ayrı dal yok, testler geçerse v3 + onaylı push.
+- **Açık:** İlk 15 bölüme dokunulup dokunulmayacağı (analiz kullanıcıya sunuldu).
+
+## 2026-10-14 18:28 — v3 planı: 1–100 zorluk yeniden tasarımı tanımlandı (kod değişikliği yok)
+- **Kullanıcı tanımı:** İlk 100 bölüm, yapı/mantık değişmeden, zorluğu belirli bölümlere dağıtılarak yeniden oluşturulacak. Desen her 5 bölümde: Orta, Orta, Zor, Orta, Çok zor. Yöntem: tablo + ölçülmüş, seçilmiş seed. Aralıklar: 0–5 tanıtım, 5–15 alışma/Shuffle/tutorial, 15–30 ilk tema (tanıtım), 30–60 ilk gerçek tema, 60–100 2. tema; temalar henüz belirsiz. Öneri: zorluk sembolü.
+- **Yeni dosya:** `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` (tanım + açık sorular). Henüz commit'lenmedi.
+- **Koddan teyit:** L1–5'te Restart kapalı değil, can harcamıyor (`levelId <= 5`); Shuffle yalnızca üretilmiş bölümlerde (`_currentLevel.generated`), yani şu an 16+.
+- Kullanıcıya açık sorular soruldu.
+
+## 2026-10-14 18:12 — Tema/bölüm/zorluk dokümanı PDF olarak yerele kaydedildi
+- Claude Docs dokümanı A4 PDF olarak dışa aktarıldı → `C:\Dev\ClaudeProjects\Android-Cloudora\Cloudora-Temalar-Bolumler-Zorluk.pdf` (223.572 bayt). Repo dışında, git'e girmez.
+- Not: Bu makinede PDF önizleme aracı (poppler) yok; sayfalar görsel olarak kontrol edilmedi, dosya bütünlüğü (boyut + `%PDF` başlığı) doğrulandı.
+
+## 2026-10-14 18:08 — Tema/bölüm/zorluk dokümanı hazırlandı (kod değişikliği yok)
+- **İstek:** Temalar (world), bölüm aralıkları, zorluk ilerleyişi ve toplam bölüm sayısı dokümanlardan çıkarılıp tek dokümanda toplansın.
+- **Bulgu:** Dokümanlar yalnızca özet veriyor ("13 dünya, 1–400"); ayrıntılar koddan alındı (`WorldCatalog.cs`, `LevelGenerator.cs`, `BalanceProfile.cs`, `DifficultyCalculator.cs`, `AuthoredLevelCatalog.cs`, `ContentValidationTool.cs`).
+- **Sonuç:** 13 tema / 1–400; 15 el yapımı + 16'dan itibaren seed ile sınırsız üretim (400 sonrası Celestial Rift); kapasite 4→7, tür sayısı 3→6 (51/86/121), modifier'lar 41'den itibaren, tema içi Kolay/Orta/Zor/Çok zor/Final dalgası.
+- **Bildirilen tutarsızlıklar:** Rainy Coast "Wind" ama modifier yok; Ember Valley "Combinations" ama yalnızca Rainbow; 201–400'deki 4 temanın kural adları farklı, mekaniği aynı; 400 sonrası `endless-skies` katalogda yok; zorluk puanı modifier'ları saymıyor.
+- **Doküman:** Claude Docs — https://claude.ai/code/artifact/0e5fbdf6-e5b8-414c-a3f5-9e0a59baca8a
+
+## 2026-10-14 13:21 — GitHub repo durumu incelendi (değişiklik yok)
+- Kullanıcının reposu `bahadir-aktas/cloudora-android` fork değil. 2026-10-12'de VS Code, takım reposunun clone'unu yayınlarken repoyu otomatik oluşturdu (git reflog: `clone: from yigityvz/cloudora-android`, ardından `codex/phase2-15` → `main`).
+- Takım reposunun default branch'i `cloudora-yigit`. Kullanıcı bu repoda collaborator (push yetkisi var). Commit e-postası GitHub hesabına bağlı.
+- `yigityvz/cloudora-android-1`: arkadaşın 2026-10-14 12:15'te kullanıcının reposunu fork'lamış (bizim push'lardan önce, `0c967b1`'de kalmış). Claude tarafından oluşturulmadı. Silme kararı arkadaşta.
+
+## 2026-10-14 13:16 — README'de Contributors bölümü (repo linkleri satırıyla birlikte) en üste taşındı (kullanıcı isteği)
+- **Dosya:** `README.md`
+- **Önce:** Contributors bölümü ve altındaki repo linkleri satırı README'nin en altındaydı. **Sonra:** İkisi birlikte `# Cloudora` başlığının hemen altında, tanıtım paragrafından önce, ilk bakışta görünsün diye. Ardından kullanıcı isteğiyle `# Cloudora` başlığı Contributors bloğunun altına alındı. Yeni sıra: Contributors → linkler → `# Cloudora` → "Fix the sky" paragrafı. Metin değişmedi. (İlk denemede sadece link satırı taşınmıştı; kullanıcı bölümün tamamını istedi, düzeltildi.)
+- **Durum:** Kullanıcı onayıyla commit edildi ve iki repoya push edildi (`upstream cloudora-bahadir` + `origin main`, force yok). Bu kayıt v3'e kadar yerelde kalacak.
+
 ## 2026-10-14 13:12 — README'ye repo bağlantıları satırı eklendi (kullanıcı seçimi: "Tek cümle")
 - **Dosya:** `README.md`, Contributors listesinin altı.
 - **Eklenen:** Takım reposu (`yigityvz/cloudora-android`), `cloudora-bahadir` branch'i ve aynası (`bahadir-aktas/cloudora-android`) için linkler. Metin her iki repoda da doğru okunacak şekilde tarafsız yazıldı.
@@ -18,7 +238,7 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 ## 2026-10-14 12:40 — ClaudoraRelease.md takım reposuna eklenmek üzere hazırlandı (kullanıcı kararı)
 - **Karar (kullanıcı):** Bu log dosyası artık yerelde kalmayacak, `cloudora-bahadir` branch'ine eklenecek. 12 Ekim'deki "yalnızca yerel" kararının yerine bu geçerli. Bundan sonra dosya **her yeni versiyonla birlikte** (v3, v4…) commitlenecek; push için her seferinde onay alınacak.
 - **Gizlilik düzenlemesi:** 2026-10-12 22:00 kaydındaki kullanıcı klasörü yolu `%USERPROFILE%\.gradle` olarak değiştirildi ve kullanıcı adında Türkçe karakter olduğunu belirten bir not eklendi.
-- **Yapıldı (kullanıcı onayıyla):** `.git/info/exclude` içinden `ClaudoraRelease.md` satırı kaldırıldı → commit `135ecb3` → `upstream cloudora-bahadir`'e push (413c39a..135ecb3, force yok). `git ls-remote` ile doğrulandı. Bu satırdaki güncelleme yerelde duruyor, bir sonraki versiyon commit'iyle gidecek.
+- **Yapıldı (kullanıcı onayıyla):** `.git/info/exclude` içinden `ClaudoraRelease.md` satırı kaldırıldı → commit `135ecb3` → `upstream cloudora-bahadir`'e push (413c39a..135ecb3, force yok). `git ls-remote` ile doğrulandı. (Bu kaydın son hali, bir seferlik istisna olarak `26c35ff` ile push edildi.)
 
 ## 2026-10-14 12:35 — v2, takım reposundaki `cloudora-bahadir` branch'ine push edildi (kullanıcı onayıyla)
 - **Kural değişikliği (kullanıcı):** "Asla push yapma" kuralı "push yalnızca kullanıcının açık onayıyla, her seferinde yeniden onay alınarak yapılır" şeklinde güncellendi.
