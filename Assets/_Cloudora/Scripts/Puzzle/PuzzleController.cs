@@ -97,6 +97,7 @@ namespace Cloudora.Puzzle
             _boardLayout = boardRoot.GetComponent<AdaptiveBoardLayout>();
             if (_boardLayout == null) _boardLayout = boardRoot.gameObject.AddComponent<AdaptiveBoardLayout>();
             LoadLevel(_progression.CurrentLevel);
+            RestoreFailState();
             _mainMenu = MainMenuController.Create(canvas, _currentLevel.worldId, _currentLevel.levelId, _worldScreen.Toggle,
                 () => _feedback.SoundEnabled, value => { _feedback.SoundEnabled = value; SaveProgress(); },
                 () => _feedback.HapticsEnabled, value => { _feedback.HapticsEnabled = value; SaveProgress(); });
@@ -145,6 +146,33 @@ namespace Cloudora.Puzzle
             CancelShuffleSelection();
             ClearSelection();
             _overlay.ShowFail(CurrentFailOptions());
+            SaveProgress(); // başarısızlık kayda yazılır: kapatıp açmak ekranı atlatmaz
+        }
+
+        // Uygulama "No Moves" ekranındayken kapandıysa: aynı tahta ve Undo geçmişiyle ekran geri gelir.
+        private void RestoreFailState()
+        {
+            FailRecord record = _saveData.failRecord;
+            if (record == null || !record.TryRestore(_currentLevel.levelId, out WeatherType[][] board,
+                    out List<(WeatherType[][] Board, ModifierData[] Modifiers)> history))
+                return;
+
+            LoadState(board);
+            for (int i = history.Count - 1; i >= 0; i--)
+                _undoHistory.Push(new PuzzleSnapshot { board = history[i].Board, modifiers = history[i].Modifiers });
+            _moveCount = record.moveCount;
+            _attemptBlocked = false; // deneme zaten başlamıştı; can 0 olsa da devam seçenekleri kullanılabilir
+            _overlay.HideBlock();
+            _overlay.SetUndoAvailable(_undoHistory.Count > 0);
+            EnterFailState();
+        }
+
+        private FailRecord CaptureFailRecord()
+        {
+            PuzzleSnapshot[] history = _undoHistory.ToArray(); // en yeniden en eskiye
+            var entries = new List<(WeatherType[][] Board, ModifierData[] Modifiers)>(history.Length);
+            foreach (PuzzleSnapshot snapshot in history) entries.Add((snapshot.board, snapshot.modifiers));
+            return FailRecord.Capture(_currentLevel.levelId, CaptureSnapshot().board, entries, _moveCount);
         }
 
         // 1 can harcayarak bölümü sıfırdan başlatır (ekstra bulutlar silinir). 1–5'te can gitmez.
@@ -679,6 +707,7 @@ namespace Cloudora.Puzzle
             _saveData.extraCloudCharges = _boosterManager.ExtraCloudCharges;
             _saveData.safeShuffleCharges = _boosterManager.SafeShuffleCharges;
             _saveData.coins = _coinWallet.Coins;
+            _saveData.failRecord = _failed && _currentLevel != null ? CaptureFailRecord() : new FailRecord();
             _saveData.soundEnabled = _feedback.SoundEnabled;
             _saveData.hapticsEnabled = _feedback.HapticsEnabled;
             _saveData.lastGeneratedSeed = _currentLevel != null ? _currentLevel.seed : 0;

@@ -174,6 +174,72 @@ namespace Cloudora.Tests.Editor
             System.IO.Directory.Delete(directory, true);
         }
 
+        // ---------- Başarısızlığın kaydı (kapat-aç açığı kapalı) ----------
+
+        [Test]
+        public void FailRecordRoundTripsThroughSave()
+        {
+            WeatherType[][] board = { new[] { S, S, R, R }, new[] { R, R, S }, new[] { S }, E() };
+            WeatherType[][] previous = { new[] { S, S, R, R }, new[] { R, R, S, S }, E(), E() };
+            WeatherType[][] start = { new[] { S, S, R, R }, new[] { R, R, S }, E(), new[] { S } };
+            var frozen = new Cloudora.Modifiers.ModifierData { type = Cloudora.Modifiers.ModifierType.Frozen, cloudIndex = 3, counter = 1 };
+            var history = new List<(WeatherType[][], Cloudora.Modifiers.ModifierData[])>
+            {
+                (previous, new[] { frozen }),
+                (start, Array.Empty<Cloudora.Modifiers.ModifierData>())
+            };
+
+            string directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "cloudora-fail-test-" + Guid.NewGuid().ToString("N"));
+            string path = System.IO.Path.Combine(directory, "save.json");
+            SaveData data = SaveData.Defaults();
+            data.failRecord = FailRecord.Capture(19, board, history, 3);
+            new LocalJsonSaveService(path).Save(data);
+            SaveData loaded = new LocalJsonSaveService(path).Load();
+            System.IO.Directory.Delete(directory, true);
+
+            Assert.That(loaded.failRecord.IsEmpty, Is.False);
+            Assert.That(loaded.failRecord.moveCount, Is.EqualTo(3));
+            Assert.That(loaded.failRecord.TryRestore(19, out WeatherType[][] restored, out var restoredHistory), Is.True);
+            Assert.That(Text(restored), Is.EqualTo(Text(board)));
+            Assert.That(restoredHistory.Select(h => Text(h.Board)), Is.EqualTo(new[] { Text(previous), Text(start) }), "newest first");
+            Assert.That(restoredHistory[0].Modifiers.Single().type, Is.EqualTo(Cloudora.Modifiers.ModifierType.Frozen));
+            Assert.That(restoredHistory[0].Modifiers.Single().counter, Is.EqualTo(1));
+            Assert.That(restoredHistory[1].Modifiers, Is.Empty);
+        }
+
+        [Test]
+        public void FailRecordIsIgnoredWhenItDoesNotFit()
+        {
+            WeatherType[][] board = { new[] { S, R }, new[] { R, S }, E() };
+            var none = new List<(WeatherType[][], Cloudora.Modifiers.ModifierData[])>();
+            Assert.That(new FailRecord().IsEmpty, Is.True);
+            Assert.That(new FailRecord().TryRestore(19, out _, out _), Is.False);
+            Assert.That(FailRecord.Capture(19, board, none, 1).TryRestore(20, out _, out _), Is.False, "other level");
+
+            FailRecord corrupt = FailRecord.Capture(19, board, none, 1);
+            corrupt.board = "SX/";
+            Assert.That(corrupt.TryRestore(19, out _, out _), Is.False, "unreadable board");
+
+            WeatherType[][] fewerClouds = { new[] { S, R }, new[] { R, S } };
+            FailRecord mismatched = FailRecord.Capture(19, board,
+                new List<(WeatherType[][], Cloudora.Modifiers.ModifierData[])> { (fewerClouds, Array.Empty<Cloudora.Modifiers.ModifierData>()) }, 1);
+            Assert.That(mismatched.TryRestore(19, out _, out _), Is.False, "history cloud count differs");
+        }
+
+        [Test]
+        public void OldSavesLoadWithoutFailRecord()
+        {
+            string directory = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "cloudora-fail-old-" + Guid.NewGuid().ToString("N"));
+            string path = System.IO.Path.Combine(directory, "save.json");
+            System.IO.Directory.CreateDirectory(directory);
+            System.IO.File.WriteAllText(path, "{\"schemaVersion\":2,\"currentLevel\":19,\"lives\":3}");
+            SaveData loaded = new LocalJsonSaveService(path).Load();
+            System.IO.Directory.Delete(directory, true);
+            Assert.That(loaded.currentLevel, Is.EqualTo(19));
+            Assert.That(loaded.failRecord, Is.Not.Null);
+            Assert.That(loaded.failRecord.IsEmpty, Is.True);
+        }
+
         // ---------- Arayüz: buton düzeni ve başarısızlık ekranı ----------
 
         [Test]

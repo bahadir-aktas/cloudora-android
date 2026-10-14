@@ -19,6 +19,7 @@ namespace Cloudora.Services
         public bool hapticsEnabled = true;
         public bool[] tutorialFlags = new bool[15];
         public int lastGeneratedSeed;
+        public FailRecord failRecord = new();
 
         public static SaveData Defaults() => new();
     }

@@ -4,6 +4,29 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 00:18 — Başarısızlık kaydı Editor testi geçti; v3.1'e ek commit
+- **Kullanıcı:** Yeniden açınca (menüde Continue) başarısızlık ekranı geliyor, can harcanmıyor ✔; Watch Ad 2 hamle geri aldı ✔; Retry sıfırladı ✔.
+- **Editor.log:** Exception yok. L19 başarısızlık → kapat/aç ×2 (ekran geri geldi, ek analytics yok) → reklamla devam `rewound_moves=2` ✔ (geçmiş de doğru kaydedilmiş) → başarısızlık → kapat/aç → `level_retried` ✔. Kayıt: can 3→2, coin 35, `failRecord.level=0` (Retry sonrası temizlendi) ✔.
+- Telefonda bu özellik ayrıca denenmedi.
+- **Commit:** `bahadir-claude-versions` üzerine "v3.1: başarısızlık kaydı" (etiketsiz, push yok).
+
+## 2026-10-15 00:12 — Başarısızlık kaydı için Editor testi hazırlığı
+- Editor kaydı: L19, can 3, coin 35 (sıfırlama gerekmedi). Unity Editor açıldı; derleme hatasız.
+
+## 2026-10-15 00:11 — Kapat-aç açığı kapatıldı: başarısızlık kayda yazılıyor (karar a)
+- **Karar (kullanıcı):** Seçenek (a) — başarısızlık kaydedilsin, açılışta ekran aynı seçeneklerle geri gelsin; "devam" için tahta ve geçmiş de kaydedilsin. Test edilecek, ardından push'a geçilecek.
+- **Önce testler (`V31GameplayTests.cs`, +3):** kayıt dosyası üzerinden gidiş-dönüş (tahta, en yeniden en eskiye Undo geçmişi, modifier durumu, hamle sayısı), uymayan kaydın yok sayılması (boş, başka bölüm, okunamayan tahta, bulut sayısı tutmayan geçmiş), eski kayıtların sorunsuz açılması.
+- **Kod:** yeni `Scripts/Services/FailRecord.cs` (`FailRecord`, `FailedSnapshot`; tahtalar `V3BoardText` biçiminde). `SaveData.failRecord` (+ yüklemede null/negatif → boş). `PuzzleController`: `EnterFailState` kayda yazar; `SaveProgress` başarısızsa kaydı yakalar, değilse temizler (Retry/devam sonrası); açılışta `RestoreFailState` — kayıt bu bölüme aitse tahta + geçmiş + hamle sayısı geri yüklenir, can kilidi kaldırılır (deneme zaten başlamıştı), başarısızlık ekranı açılır.
+- **Testler:** 96/96. Mutasyon (kayıt Undo geçmişini yazmıyor) → 2 test başarısız ✔; geri alındı, 96/96.
+- Kontrolcü akışı (kapat → aç) Editor/telefon testiyle doğrulanacak.
+
+## 2026-10-15 00:09 — "Menüdeki reklam" notu kontrol edildi (kod değişikliği yok)
+- **Kullanıcı:** "Menüdeki reklamı kullandım." Ana menüde reklam yok (`MainMenuController`: Continue/World/Settings). Logcat'te ödüllü reklam yerleri: Continue ×2, SafeShuffle ×6, Undo ×2, ExtraCloud ×1; `placement=Life` yok. Büyük olasılıkla başarısızlık ekranındaki "Watch Ad" (Continue) kastedildi — iki kullanım da çalıştı. Sağ üstteki "AD +1" ya hiç kullanılmadı ya da can doluyken basıldı ("Lives Full", log'a yazılmaz; can L19 Retry'ına kadar 5'ti). Kullanıcıya soruldu.
+
+## 2026-10-15 00:06 — v3.1 commit'i: `0026a1d`
+- `bahadir-claude-versions` @ `0026a1d` "v3.1: bulut ici Shuffle, Restart kaldirildi, basarisizlik ekrani, coin" (22 dosya). Etiket yok, push yok; uzak dallar `ebd0576`'da.
+- **Düzeltme:** Commit mesajında ve 23:31 kaydında `V31GameplayTests` için yazılan test sayısı yanlış. Doğrusu: 23:31'de 13 test, "AD +1" testiyle 14; toplam 93 (önceki 80 − kaldırılan yedek testi 1 + 14). Commit değiştirilmedi (amend kuralı).
+
 ## 2026-10-15 00:05 — v3.1 telefon testi geçti; yerel commit (etiketsiz)
 - **Logcat (00:00–00:04, "Cloudora v3"):** Çökme/ANR/exception yok (yalnızca bilinen `AssetPackManager` ve Profiler mesajları).
   - L16: 2 bulut içi Shuffle (+ reklamla dolum) → tamamlandı +10 coin. L17 +10, L18 +15 (Zor) ✔.
