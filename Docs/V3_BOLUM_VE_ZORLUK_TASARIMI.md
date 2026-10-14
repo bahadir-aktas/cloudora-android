@@ -35,7 +35,7 @@ Döngüler: 1–5, 6–10, 11–15, 16–20, … (her döngünün son bölümü 
 - **Zorluk ölçütlerini Claude belirler**, kullanıcı test eder; geri bildirime göre revize edilir.
 
 ### Araç (2026-10-14, testli)
-- Kod: `Scripts/Level/PuzzleSolver.cs`, `LevelCandidateFactory.cs`, `LevelCandidateSelector.cs`, `DeterministicRandom.cs`, `V3LevelPlan.cs`; Editor `Editor/V3LevelTool.cs`; testler `Tests/Editor/LevelToolTests.cs`.
+- Kod (oyunla birlikte derlenen): `Scripts/Level/PuzzleSolver.cs`, `CloudShuffler.cs`, `DeterministicRandom.cs`, `BoardFrame.cs`, `V3LevelPlan.cs`, `V3BoardText.cs`, `V3LevelData*.cs`. Yalnızca Editor (APK'ya girmez, 2026-10-15'te taşındı): `Editor/LevelCandidateFactory.cs`, `Editor/LevelCandidateSelector.cs`, `Editor/V3LevelBuilder.cs`, `Editor/V3LevelTool.cs`; testler `Tests/Editor/LevelToolTests.cs`.
 - Ölçütler: en kısa çözüm (hamle), ulaşılabilir durum sayısı, çıkmaz durum oranı, en kısa yollar üzerinde ilerleten hamle oranı ve tuzak (çıkmaza götüren) hamle oranı, ortalama seçenek; bunlardan birleşik **puan** (ağırlıklar ilk ayar, testlerle kalibre edilecek).
 - Sınırlar: modifier'sız tahtalar (1–100 kararıyla uyumlu), en fazla 12 bulut; çok büyük tahtalar durum sınırını aşarsa "ölçülemedi" sayılır ve seçilmez.
 - İlk rapor bulguları: 2 boş bulutlu çerçevelerde çıkmaz/tuzak hamle oluşmuyor (zorluk yalnızca çözüm uzunluğu ve yanıltıcılıktan); 1 boş bulutta tuzaklar ve çözümsüz tahtalar ortaya çıkıyor (çözümsüzler araçta elenir). 1–5 çerçevesinde (kapasite 4, 2 renk, 2 boş) yalnızca 37 farklı tahta var; çözüm uzunluğu 3–7 hamle.

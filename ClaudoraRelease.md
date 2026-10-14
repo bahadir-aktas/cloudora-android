@@ -4,6 +4,17 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 00:31 — Bölüm aracının yalnızca-Editor parçaları Editor klasörüne taşındı; push onayı alındı
+- **Kullanıcı:** APK'ya girmesi gerekmiyorsa düzgün klasörleme yapılsın; ardından iki etiketle birlikte iki repoya push edilebilir (onay).
+- **Kontrol:** Oyun kodunda bu parçalardan yalnızca `BoardFrame` kullanılıyordu (`V3LevelPlan.FrameFor`).
+- **Yapılan:** Yeni `Scripts/Level/BoardFrame.cs` (oyun tarafı; renk sınırı `MaxColors = 6`, eskiden `LevelCandidateFactory.Colors`'a bağlıydı). `git mv` ile (geçmiş ve `.meta` GUID'leri korunarak) `LevelCandidateFactory.cs`, `LevelCandidateSelector.cs`, `V3LevelBuilder.cs` → `Assets/_Cloudora/Editor/`. Tasarım dokümanı §3 ve crVersion v3.1'e not.
+- **Doğrulama:** 96/96 EditMode; veri üretim aracı Editor'dan çalıştı, `V3LevelData.Generated.cs` değişmedi.
+- **Plan:** Commit → yerel `v3.1` etiketi (henüz hiç push edilmemişti) yeni commit'e taşınır → iki repoya (`upstream cloudora-bahadir` + `origin main`, fast-forward, force yok) dal + `v3`, `v3.1` etiketleri.
+
+## 2026-10-15 00:33 — Push içeriği incelendi (kullanıcı soruları; kod değişikliği yok)
+- **Sorular:** Ekip arkadaşları v3/v3.1'i indirip kendileri derlerse aynı aşamaya ulaşır mı; tam olarak ne gönderiliyor; bölüm aracı gidiyor mu, gitmeli mi.
+- **Bulgular:** `ebd0576..v3.1` = 44 dosya (yeni kod + `.meta`, 3 test dosyası, üretilmiş veri, tasarım dokümanı, crVersion, işlem kaydı). Oyunun ihtiyaç duyduğu her şey (üretilmiş `V3LevelData.Generated.cs` dahil) commit'te; Library/Builds/scratchpad gerekmiyor. `v3` etiketinde 3 test dosyası ve 15 bölüm verisi var. Kişisel bilgi taraması: yerel yol/kullanıcı klasörü yok; işlem kaydında iki özel claude.ai bağlantısı (biri 14.10'da zaten push edilmişti) ve tasarım dokümanında kullanıcının adı — kullanıcıya bildirildi. Not: `v3` etiketindeki commit'te crVersion v3 girişi henüz yok (sonraki commit'te).
+
 ## 2026-10-15 00:27 — Etiket kararı; crVersion.md v3 ve v3.1 girişleri
 - **Kullanıcı:** v3 zaten commit'lendi; hem v3 hem v3.1 push edilsin. Eklemeler geldikçe v3.2, v3.3…; bir sonraki major değişiklikte v4.
 - **Bildirilen eksik:** Versiyon kuralı gereği `crVersion.md`'ye v3 ve v3.1 girişleri yazılmamıştı; başlıkta "yalnızca yerelde, push edilmez" yazıyordu (14.10'dan beri yanlış). Düzeltildi: başlık numaralandırma ve onaylı push kuralıyla yeniden yazıldı; v3.1 ve v3 girişleri eklendi (değişiklikler, doğrulama, bilinen sınırlar).

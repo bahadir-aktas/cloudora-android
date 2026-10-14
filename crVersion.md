@@ -32,7 +32,8 @@
    - Bitmiş bölümde Undo engellendi (coin'in iki kez kazanılmaması için).
    - Analytics'e `level_retried`, `level_continued`, `coins_earned` ve `coins_spent` eklendi.
    - Reklam yerlerine `RewardedPlacement.Continue` eklendi.
-9. **Geri alınanlar:** v2'deki "Shuffle ekstra bulutlara da dağıtır" (`LevelGenerator.Generate` `extraEmptyClouds`) ve v3'ün Shuffle yedek tahtaları.
+9. **Klasör düzeni:** Bölüm aracının yalnızca bölüm üretirken kullanılan parçaları (`LevelCandidateFactory`, `LevelCandidateSelector`, `V3LevelBuilder`) `Scripts/Level/` altından `Editor/` altına taşındı; APK'ya girmiyorlar. `BoardFrame` ayrı dosyada oyun tarafında kaldı (`V3LevelPlan` kullanıyor). Çözücü (`PuzzleSolver`) oyun tarafında kaldı; Shuffle ve "devam" onu oyun içinde kullanıyor.
+10. **Geri alınanlar:** v2'deki "Shuffle ekstra bulutlara da dağıtır" (`LevelGenerator.Generate` `extraEmptyClouds`) ve v3'ün Shuffle yedek tahtaları.
 
 ### Doğrulama
 - **EditMode:** 96/96. Bilerek eklenen hatalarla da denendi: güvenlik kontrolü kapalı Shuffle, "devam"ın her zaman son duruma dönmesi, Undo geçmişini yazmayan başarısızlık kaydı. Üçü de testler tarafından yakalandı.
