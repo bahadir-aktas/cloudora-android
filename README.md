@@ -1,3 +1,10 @@
+## Contributors
+
+- [@yigityvz](https://github.com/yigityvz) – original author of the project
+- [@bahadir-aktas](https://github.com/bahadir-aktas) – contributor (Unity development and Android builds)
+
+Team repository: [yigityvz/cloudora-android](https://github.com/yigityvz/cloudora-android) · Bahadır's line: [`cloudora-bahadir`](https://github.com/yigityvz/cloudora-android/tree/cloudora-bahadir), mirrored at [bahadir-aktas/cloudora-android](https://github.com/bahadir-aktas/cloudora-android)
+
 # Cloudora
 
 **Fix the sky. Restore the world.** Cloudora is an Android-first, portrait, cozy weather-sorting puzzle built in Unity 6000.5.9f1 (Universal 2D). Tap a source cloud and then a compatible destination; matching top weather moves as a group. No level countdown or drag gesture is required.
@@ -24,10 +31,3 @@ The latest fresh EditMode result passed 26/26 tests after package cleanup; a sep
 ## Store/portfolio package
 
 The [store-art pack](StoreAssets/README.md) contains an original icon and feature illustration, plus exact-size PNG candidates; [English and Turkish store copy](StoreAssets/STORE_COPY.md) is a draft. These are not gameplay screenshots. Authentic Android screenshots, release signing, privacy-policy approval, and publication remain separate owner-controlled gates. See the [privacy release review](Docs/PRIVACY_RELEASE_REVIEW.md).
-
-## Contributors
-
-- [@yigityvz](https://github.com/yigityvz) – original author of the project
-- [@bahadir-aktas](https://github.com/bahadir-aktas) – contributor (Unity development and Android builds)
-
-Team repository: [yigityvz/cloudora-android](https://github.com/yigityvz/cloudora-android) · Bahadır's line: [`cloudora-bahadir`](https://github.com/yigityvz/cloudora-android/tree/cloudora-bahadir), mirrored at [bahadir-aktas/cloudora-android](https://github.com/bahadir-aktas/cloudora-android)
