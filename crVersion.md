@@ -1,6 +1,79 @@
 # crVersion — Cloudora Versiyon Kaydı
 
-`bahadir-claude-versions` dalındaki major versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur, git etiketiyle (`v1`, `v2`, …) işaretlenir ve **yalnızca yerelde** tutulur (GitHub'a push edilmez).
+`bahadir-claude-versions` dalındaki versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur ve git etiketiyle işaretlenir. Major değişiklikler yeni ana numara alır (`v1`, `v2`, `v3`, … → sıradaki `v4`); bir versiyona sonradan gelen eklemeler ara numara alır (`v3.1`, `v3.2`, …). GitHub'a push yalnızca kullanıcının her seferinde ayrıca verdiği onayla yapılır (iki hedef birlikte: takım reposu `cloudora-bahadir` + `bahadir-aktas/cloudora-android` `main`).
+
+---
+
+## v3.1 — Bulut içi Shuffle, Restart'ın kaldırılması, başarısızlık ekranı, coin
+
+- **Tarih:** 2026-10-14 / 2026-10-15
+- **Commit'ler:** `0026a1d` (ana değişiklikler) → `4145b49` (başarısızlık kaydı) → bu dosyanın güncellendiği commit (etiket `v3.1`).
+- **Neden:** Ana yazarın Shuffle'dan amacının bir bulutu kendi içinde karıştırmak olduğu anlaşıldı. Orijinal kod (`a18a3e4`) ve v2 bütün tahtayı yeniden üretiyordu. Bunun yanında Restart kaldırıldı, "No Moves" bir başarısızlık ekranına dönüştü ve coin eklendi.
+
+### Değişiklikler
+1. **Safe Shuffle (bulut içi)** — `Scripts/Level/CloudShuffler.cs`, `PuzzleController.cs`
+   - Shuffle'a basınca seçili bulut bırakılır ve "Select a cloud to shuffle" yazısı çıkar. Seçilen bulut kendi içinde karıştırılır.
+   - Sonuç her zaman farklı bir dizilimdir ve tahta çözülebilir kalır; çözücüyle doğrulanır.
+   - Değişemeyecek bulutlar (boş, tek renkli, tek elemanlı) seçilemez ve hak düşmez. Özel (modifier'lı) bulutlara dokunulmaz.
+   - Hak, karıştırma yapıldığında düşer. Shuffle'a tekrar basmak, boş yere dokunmak ya da başka bir buton iptal eder.
+   - Shuffle Undo ile geri alınamaz: Undo geçmişi temizlenir, Undo butonu söner.
+   - Açılma koşulu bölüm ≥ 16 (eskiden "üretilmiş bölüm" koşuluydu).
+2. **Restart kaldırıldı:** buton, can rozeti, `RestartCost`, ilgili mesajlar ve `level_restarted`. Can sistemi kaldı.
+3. **"No Moves" = başarısızlık ekranı** (tam ekran; Undo/Extra/Shuffle bu ekranda kullanılamaz):
+   - **Retry:** −1 can, bölüm sıfırdan başlar, ekstra bulutlar silinir. 1–5'te ücretsiz.
+   - **Watch Ad / Continue (40 coin):** çözüme ulaşılabilen son duruma döner, gerekirse birkaç hamle geri (`FailRecovery`).
+4. **Başarısızlık kaydı** (`Scripts/Services/FailRecord.cs`): Ekran açıkken uygulama kapanırsa tahta, Undo geçmişi ve hamle sayısı kaydedilir. Açılışta aynı ekran geri gelir; kapatıp açmak Retry'ın can bedelini atlatmaz.
+5. **Coin** (`Scripts/Progression/CoinEconomy.cs`):
+   - Bölüm sonunda Orta 10, Zor 15, Çok zor 20 coin (101+: 10). Devam 40 coin. Başlangıç 0; ileride tutorial görevinde verilecek.
+   - Coin sol üstte gösterilir, tamamlama ekranında "+N coins" yazar ve kayıtta (`SaveData.coins`) tutulur.
+6. **Buton düzeni:** üst sırada Extra · Undo · Shuffle; alt sırada World ve Menu, üstteki butonların tam aralarında.
+7. **Geçici geliştirme butonu:** sağ üstte "AD +1" (reklamla +1 can). Reklamla can almanın asıl yeri ileride belirlenecek.
+8. **Diğer:**
+   - Bitmiş bölümde Undo engellendi (coin'in iki kez kazanılmaması için).
+   - Analytics'e `level_retried`, `level_continued`, `coins_earned` ve `coins_spent` eklendi.
+   - Reklam yerlerine `RewardedPlacement.Continue` eklendi.
+9. **Geri alınanlar:** v2'deki "Shuffle ekstra bulutlara da dağıtır" (`LevelGenerator.Generate` `extraEmptyClouds`) ve v3'ün Shuffle yedek tahtaları.
+
+### Doğrulama
+- **EditMode:** 96/96. Bilerek eklenen hatalarla da denendi: güvenlik kontrolü kapalı Shuffle, "devam"ın her zaman son duruma dönmesi, Undo geçmişini yazmayan başarısızlık kaydı. Üçü de testler tarafından yakalandı.
+- **Unity Editor ve telefon (Galaxy S24 FE, "Cloudora v3"):**
+  - 16–18'de Shuffle (2 ekstra bulutlu tahtada da) ve coin (+10, +10, +15) çalıştı.
+  - L19'da 3 hamlede başarısızlık oluştu. Retry'da can düştü. Reklamla devam, hesaplandığı gibi 2 hamle geri gitti.
+  - Kapat-aç sonrası başarısızlık ekranı can harcamadan geri geldi.
+  - Çökme ya da exception görülmedi.
+
+### Bilinen sınırlar
+- Çözücü modifier'ları bilmiyor. Bu yüzden 101+ (eski sistem) bölümlerde Shuffle ve "devam"ın güvenliği yaklaşık; çok büyük tahtalarda "No safe shuffle" çıkabilir.
+- Hamle yapılabildiği halde kazanılamayan durumda otomatik başarısızlık yok (kullanıcı kararı). İleride menüden "baştan başlat" eklenecek.
+- Bölüm ortasında, başarısız olmadan kapatılırsa bölüm sıfırdan başlar (orijinal davranış).
+
+---
+
+## v3 — Ölçülmüş zorluk: bölüm aracı ve 1–15
+
+- **Tarih:** 2026-10-14
+- **Commit:** `b0b2f13` (etiket `v3`).
+- **Kapsam (kullanıcı):** İlk 100 bölüm, oyunun yapısı değişmeden, zorluğu belirli bölümlere dağıtılarak yeniden kurulacak. Desen her 5 bölümde bir tekrarlanıyor: Orta, Orta, Zor, Orta, Çok zor ("Kolay" yok). Zorluk göreli ve birikimli. Bölüm aralıkları: 1–5 Tanıtım, 6–15 Alışma, 16–30 Geçiş teması, 31–60 Tema 2, 61–100 Tema 3. Bu versiyonda 1–15 tamamlandı; kalan parçalar v3.x olarak gelecek. Ayrıntılar: `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md`.
+
+### Değişiklikler
+1. **Bölüm aracı** (`Scripts/Level/`):
+   - **Çözücü** (`PuzzleSolver`): tam durum uzayını tarar. Ölçtükleri: en kısa çözüm, çıkmaz oranı, ilerleten ve tuzak hamle oranları, ve "sanal oyuncu" (ileriyi hesaplamayan, mantıklı görünen hamleyi seçen oyuncunun fazla hamlesi ve takılma oranı). Bunlardan birleşik bir puan çıkar.
+   - **Aday üretici** (`LevelCandidateFactory`, platformdan bağımsız SplitMix64) ve **seçici** (`LevelCandidateSelector`).
+   - **Parça kurucu** (`V3LevelBuilder`): bant aralıklarını aday dağılımından çakışmasız çıkarır. Öğretici yazının gösterdiğini tahtada şart koşar ve aynı bandı parça içinde hafifçe zorlaştırır.
+   - **Plan** (`V3LevelPlan`).
+   - **Üretilen veri** `V3LevelData.Generated.cs`; Editor menüleri `Cloudora/V3/…` (aday raporu, veri üretimi, kalibrasyon raporu).
+2. **1–15** artık ölçülüp seçilmiş tahtalardan geliyor (`AuthoredLevelCatalog` → `V3LevelData`). Öğretici yazılar, kapasite 4, 2 boş bulut, Shuffle kilidi ve 1–5'te can kuralı aynı kaldı. Renk sayısı: 1–5'te 2, 6–15'te 3.
+3. **Kalibrasyon:** Telefon ve Editor testlerinin insan verisiyle sanal oyuncu ölçümü eklendi; 1–5 yeniden seçildi.
+
+### Doğrulama
+- **EditMode:** 80/80 (v3 commit'inde). Hatalar bilerek eklenerek denendi: renk kuralı, kanonik anahtar, sanal oyuncunun tercihleri, veri dosyasının elle bozulması. Hepsi yakalandı.
+- **Unity ve telefon:** 1–5 ve 6–15 test edildi.
+  - Ortalama fazla hamle: 1–5'te Orta 0–1, Zor ve Çok zor 1–2. 6–15'te Orta 0,9 < Zor 1,5 < Çok zor 1,75.
+  - Süreler 1. parçadan 2. parçaya belirgin şekilde arttı.
+
+### Bilinen açık konular
+- 6–15'in ikinci döngüsünde Zor ve Çok zor, Orta'lardan zayıf ayrışıyor. Kullanıcı kararıyla kabul edildi: oyunun başında radikal artış istenmiyor.
+- Öğretici yazılar fark edilmiyor; tutorial ileride ele alınacak.
 
 ---
 

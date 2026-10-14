@@ -4,6 +4,16 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 00:27 — Etiket kararı; crVersion.md v3 ve v3.1 girişleri
+- **Kullanıcı:** v3 zaten commit'lendi; hem v3 hem v3.1 push edilsin. Eklemeler geldikçe v3.2, v3.3…; bir sonraki major değişiklikte v4.
+- **Bildirilen eksik:** Versiyon kuralı gereği `crVersion.md`'ye v3 ve v3.1 girişleri yazılmamıştı; başlıkta "yalnızca yerelde, push edilmez" yazıyordu (14.10'dan beri yanlış). Düzeltildi: başlık numaralandırma ve onaylı push kuralıyla yeniden yazıldı; v3.1 ve v3 girişleri eklendi (değişiklikler, doğrulama, bilinen sınırlar).
+- **Plan:** `crVersion.md` + bu kayıt commit'lenir → annotated etiketler: `v3` → `b0b2f13`, `v3.1` → yeni commit. Push planı kullanıcıya son onay için sunuldu.
+
+## 2026-10-15 00:19 — Commit `4145b49`; push öncesi durum kontrolü
+- `bahadir-claude-versions` @ `4145b49` "v3.1: basarisizlik kaydi (kapat-ac acigi kapandi)" (8 dosya). Etiket yok.
+- `git fetch upstream/origin`: `upstream/cloudora-bahadir` ve `origin/main` hâlâ `ebd0576` → push fast-forward olur (force gerekmez). Gönderilecek commit'ler: `b0b2f13`, `0026a1d`, `4145b49`. Yerel etiketler: v1, v2.
+- Push planı ve etiket seçimi kullanıcıya soruldu (onay her push için ayrı).
+
 ## 2026-10-15 00:18 — Başarısızlık kaydı Editor testi geçti; v3.1'e ek commit
 - **Kullanıcı:** Yeniden açınca (menüde Continue) başarısızlık ekranı geliyor, can harcanmıyor ✔; Watch Ad 2 hamle geri aldı ✔; Retry sıfırladı ✔.
 - **Editor.log:** Exception yok. L19 başarısızlık → kapat/aç ×2 (ekran geri geldi, ek analytics yok) → reklamla devam `rewound_moves=2` ✔ (geçmiş de doğru kaydedilmiş) → başarısızlık → kapat/aç → `level_retried` ✔. Kayıt: can 3→2, coin 35, `failRecord.level=0` (Retry sonrası temizlendi) ✔.
