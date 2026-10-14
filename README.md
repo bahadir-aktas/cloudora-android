@@ -29,3 +29,5 @@ The [store-art pack](StoreAssets/README.md) contains an original icon and featur
 
 - [@yigityvz](https://github.com/yigityvz) – original author of the project
 - [@bahadir-aktas](https://github.com/bahadir-aktas) – contributor (Unity development and Android builds)
+
+Team repository: [yigityvz/cloudora-android](https://github.com/yigityvz/cloudora-android) · Bahadır's line: [`cloudora-bahadir`](https://github.com/yigityvz/cloudora-android/tree/cloudora-bahadir), mirrored at [bahadir-aktas/cloudora-android](https://github.com/bahadir-aktas/cloudora-android)

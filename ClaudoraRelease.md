@@ -4,10 +4,21 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-14 13:12 — README'ye repo bağlantıları satırı eklendi (kullanıcı seçimi: "Tek cümle")
+- **Dosya:** `README.md`, Contributors listesinin altı.
+- **Eklenen:** Takım reposu (`yigityvz/cloudora-android`), `cloudora-bahadir` branch'i ve aynası (`bahadir-aktas/cloudora-android`) için linkler. Metin her iki repoda da doğru okunacak şekilde tarafsız yazıldı.
+- **Durum:** Kullanıcı onayıyla commit edildi ve iki repoya push edildi (`upstream cloudora-bahadir` + `origin main`, force yok). ClaudoraRelease.md de bu commit'e **bir seferlik istisna** olarak eklendi (kural yine: her yeni versiyonla birlikte).
+
+## 2026-10-14 12:56 — Commit'ler kullanıcının kendi reposuna da push edildi (profilde görünmesi için, kullanıcı onayıyla)
+- **Neden:** GitHub katkı grafiği sadece default branch'teki commit'leri sayar. Takım reposunun default branch'i `cloudora-yigit` olduğu için `cloudora-bahadir` commit'leri profilde görünmüyordu. Kullanıcı merge istemiyor; `cloudora-bahadir` takım reposunda ayrı kalacak.
+- **Push:** `origin` (bahadir-aktas/cloudora-android) → `main`: 0c967b1..135ecb3 (fast-forward, force yok). Tag'ler `v1` ve `v2` de gönderildi. `git ls-remote origin` ile doğrulandı.
+- **Kural (kullanıcı):** Bundan sonraki her push iki yere birlikte yapılacak: `upstream cloudora-bahadir` + `origin main`. Onay her seferinde yeniden alınacak.
+- **Bilgi:** Kullanıcının reposu fork değil. 2026-10-12'de VS Code, takım reposunun clone'unu yayınlarken repoyu otomatik oluşturdu. Repo public.
+
 ## 2026-10-14 12:40 — ClaudoraRelease.md takım reposuna eklenmek üzere hazırlandı (kullanıcı kararı)
 - **Karar (kullanıcı):** Bu log dosyası artık yerelde kalmayacak, `cloudora-bahadir` branch'ine eklenecek. 12 Ekim'deki "yalnızca yerel" kararının yerine bu geçerli. Bundan sonra dosya **her yeni versiyonla birlikte** (v3, v4…) commitlenecek; push için her seferinde onay alınacak.
 - **Gizlilik düzenlemesi:** 2026-10-12 22:00 kaydındaki kullanıcı klasörü yolu `%USERPROFILE%\.gradle` olarak değiştirildi ve kullanıcı adında Türkçe karakter olduğunu belirten bir not eklendi.
-- **Planlanan:** `.git/info/exclude` içinden `ClaudoraRelease.md` satırı kaldırılacak → commit → `upstream cloudora-bahadir`'e push (onay bekleniyor).
+- **Yapıldı (kullanıcı onayıyla):** `.git/info/exclude` içinden `ClaudoraRelease.md` satırı kaldırıldı → commit `135ecb3` → `upstream cloudora-bahadir`'e push (413c39a..135ecb3, force yok). `git ls-remote` ile doğrulandı. Bu satırdaki güncelleme yerelde duruyor, bir sonraki versiyon commit'iyle gidecek.
 
 ## 2026-10-14 12:35 — v2, takım reposundaki `cloudora-bahadir` branch'ine push edildi (kullanıcı onayıyla)
 - **Kural değişikliği (kullanıcı):** "Asla push yapma" kuralı "push yalnızca kullanıcının açık onayıyla, her seferinde yeniden onay alınarak yapılır" şeklinde güncellendi.
