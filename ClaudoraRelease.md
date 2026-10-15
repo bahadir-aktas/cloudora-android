@@ -4,6 +4,16 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 21:04 — Push öncesi proje hafızası güncellendi ve commit'lendi
+- **Kullanıcı:** "Commit'lenecekleri commit'le, daha sonra push'a geçelim."
+- **Kural gereği (her push'tan önce hafıza):** `Docs/PROJE_HAFIZASI.md` §0 push durumuyla güncellendi (v3.2 + belge commit'leri, push planı, sonucun nerede yazacağı).
+- **Uzak durum (fetch):** `upstream/cloudora-bahadir` ve `origin/main` = `ae54acc` (v3.1); yerel dal onların üstünde (hızlı ileri sarma, force gerekmiyor). Uzakta v3 ve v3.1 etiketleri var, v3.2 yok.
+- **Commit:** bu kayıt + `PROJE_HAFIZASI.md` (bir önceki "temiz kopya denemesi yapılmadı" kaydı dahil). Dışarıda: `ProjectSettings.asset`, `.vscode/`, eski şablon HTML'i.
+
+## 2026-10-15 21:03 — Temiz kopya denemesi yapılmadı (kullanıcı kararı)
+- **Soru:** v3.2'yi indiren biri Editor'da açıp APK kurabilir mi? Cevap (koddan/belgelerden): evet; Unity 6000.5.9f1 + Android Build Support, Git LFS (9 dosya), İngilizce karakterli ve boşluksuz yol, gerekirse `GRADLE_USER_HOME`; geliştirme APK'sı hata ayıklama imzasıyla, `-ProjectPath` verilmeli; `CLOUDORA_DEV_APP_ID` verilmezse ana Cloudora paketinin üzerine kurulur.
+- **Kullanıcı:** temiz kopya denemesine (tahmini 20–30 dk) gerek yok; "gerekli dosyaları atıyoruz, kurulumu o ayarlar." Deneme yapılmadı; temiz kopyadan açılış ve build doğrulanmamış durumda.
+
 ## 2026-10-15 20:58 — Kural: her push'tan önce proje hafızası güncellenir; oturum belgeleri commit'lendi
 - **Kullanıcı:** "Proje hafızasına push'tan önce hafızayı güncelleyeceğine dair bir satır da ekle. Daha sonra commit'le değişenleri."
 - **`Docs/PROJE_HAFIZASI.md` §2:** yeni kural — her push'tan önce `PROJE_HAFIZASI.md` (özellikle §0) ve gerekiyorsa `ClaudoraRelease.md` güncellenip commit'lenir; push bu commit'le yapılır. Aynı kural hafıza dosyasına (sürüm/push kuralları) da eklendi.

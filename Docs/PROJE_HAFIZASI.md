@@ -1,12 +1,12 @@
 # Cloudora — Proje Hafızası (Claude için oturum başlangıcı)
 
 > Her oturumun başında **ilk iş bu dosyayı oku.** Projeyi anlamak için nelere bakılacağını, hangi kuralların geçerli olduğunu ve işin nerede kaldığını özetler. Ayrıntı her zaman kaynak dosyadadır; burada yazanla kaynak çelişirse **kaynak doğrudur**, bu dosya düzeltilir.
-> Son güncelleme: 2026-10-15 21:00 (v3.2 yerel commit + etiket sonrası, push öncesi).
+> Son güncelleme: 2026-10-15 21:04 (v3.2 push öncesi).
 
 ---
 
 ## 0. Nerede kaldık (2026-10-15 kapanış) — yeni oturumda önce bunu oku
-- **v3.2 yerelde hazır:** commit `73611d2`, etiket `v3.2`, dal `bahadir-claude-versions`. **Push edilmedi** — kullanıcıya ayrıca sorulacak (iki hedef, §2). Uzak repolar hâlâ `ae54acc` (v3.1).
+- **v3.2:** commit `73611d2`, etiket `v3.2`, dal `bahadir-claude-versions`; üstünde belge commit'leri (`03c27dd` ve 21:04 oturum kapanışı). **Push:** 21:04'de kullanıcı "pusha geçelim" dedi; bu commit'ten sonra iki hedefe (`upstream` `cloudora-bahadir`, `origin` `main`, etiket `v3.2`) push planı sunulup onayla yapılacak. Push'un gerçekleşip gerçekleşmediği ve sonucu: `ClaudoraRelease.md`'nin en üst kayıtları (yeni oturumda `git ls-remote` ile de doğrula). Push öncesi uzak repolar `ae54acc` (v3.1).
 - **v3.2'de olan:** 16–100 v3 aracıyla kuruldu ve oyuna bağlandı (16–100 veri dosyasından, 101+ eski üretici); renkler; bilgi penceresinde buton kilidi; telefonda bulunan Shuffle donmasının düzeltmesi (`PuzzleSolver.CheckSolvable`). Ayrıntı: `crVersion.md` v3.2, `ClaudoraRelease.md` 2026-10-15 girdileri.
 - **Testler:** EditMode 196 → 192 geçti, 4 atlandı (3 bant aralığı testi araçla kurulan parçalara uygulanmıyor; `V32ShuffleLoadProbe` elle çalıştırılan ölçüm), başarısız yok.
 - **Oyun testleri tamam:** Editor'da 16–30 (17:56), 31–60 (18:42), 61–100 (20:00) — kullanıcı memnun. Telefonda seçili bölümler (16–19, 31–41, 59–61, 75–78, 81–83, 87) — renkler ayrılıyor, donma düzeldi.
