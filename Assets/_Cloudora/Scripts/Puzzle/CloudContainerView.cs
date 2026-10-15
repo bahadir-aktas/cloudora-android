@@ -158,7 +158,7 @@ namespace Cloudora.Puzzle
                 label.fontSize = 22;
                 label.fontStyle = FontStyle.Bold;
                 label.alignment = TextAnchor.MiddleCenter;
-                label.color = new Color(0.15f, 0.22f, 0.29f, 0.85f);
+                label.color = DarkPatternColor;
                 label.raycastTarget = false;
                 label.rectTransform.anchorMin = Vector2.zero;
                 label.rectTransform.anchorMax = Vector2.one;
@@ -204,6 +204,7 @@ namespace Cloudora.Puzzle
 
                 slotImage.color = GetColor(element);
                 _slotLabels[visualIndex].text = GetPattern(element);
+                _slotLabels[visualIndex].color = GetPatternColor(element);
                 if (_hideContents && visualIndex > emptySlotCount)
                     slotImage.color = new Color(0.72f, 0.78f, 0.86f, 0.22f);
             }
@@ -220,16 +221,25 @@ namespace Cloudora.Puzzle
                 WeatherType.Rain =>
                     new Color(0.20f, 0.55f, 1f),
 
-                WeatherType.Snow =>
-                    new Color(0.72f, 0.87f, 1f),
-
-                WeatherType.Wind => new Color(0.56f, 0.84f, 0.78f),
+                // v3.2 renkleri (tasarım §11c): Kar cyan, Rüzgar gümüş, Şimşek gece mavisi.
+                WeatherType.Snow => new Color32(0x7F, 0xE3, 0xF5, 0xFF),
+                WeatherType.Wind => new Color32(0xAE, 0xB7, 0xC2, 0xFF),
                 WeatherType.Moon => new Color(0.56f, 0.49f, 0.95f),
-                WeatherType.Lightning => new Color(1f, 0.82f, 0.40f),
+                WeatherType.Lightning => new Color32(0x25, 0x35, 0x8A, 0xFF),
                 WeatherType.Rainbow => new Color(0.95f, 0.55f, 0.78f),
 
                 _ => Color.magenta
             };
+        }
+
+        private static readonly Color DarkPatternColor = new Color(0.15f, 0.22f, 0.29f, 0.85f);
+
+        // Koyu renkli parçada (Şimşek) desen beyaz, diğerlerinde koyu.
+        public static Color GetPatternColor(WeatherType element)
+        {
+            Color color = GetColor(element);
+            float brightness = color.r * 0.299f + color.g * 0.587f + color.b * 0.114f;
+            return brightness < 0.43f ? Color.white : DarkPatternColor;
         }
 
         // Oyuncu bu cloud'u seçtiğinde görünüşünü değiştirir.

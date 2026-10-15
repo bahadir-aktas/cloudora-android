@@ -18,7 +18,7 @@ namespace Cloudora.Tests.Editor
             null, null, null, null, "Undo is always safe", null, null, null, null, "The world is waking up"
         };
 
-        private static readonly V3Part[] DesignedParts = { V3Part.Intro, V3Part.Adaptation };
+        private static readonly V3Part[] DesignedParts = { V3Part.Intro, V3Part.Adaptation, V3Part.TransitionTheme, V3Part.Theme2, V3Part.Theme3 };
         private static readonly Dictionary<V3Part, IReadOnlyList<V3LevelResult>> Cache = new();
 
         private static IReadOnlyList<V3LevelResult> Part(V3Part part)
@@ -29,6 +29,7 @@ namespace Cloudora.Tests.Editor
         }
 
         private static IEnumerable<V3Part> Parts() => DesignedParts;
+        private const float MediumSeamTolerance = 0.25f;
 
         // ---------- Parça kurulumu ----------
 
@@ -87,6 +88,7 @@ namespace Cloudora.Tests.Editor
         public void BandWindowsDoNotOverlap(V3Part part)
         {
             IReadOnlyList<V3LevelResult> results = Part(part);
+            if (!float.IsNaN(results[0].Target)) Assert.Ignore("Ladder parts use absolute targets (V32LadderTests), not band windows.");
             ScoreWindow medium = results.First(r => r.Band == DifficultyBand.Medium).Window;
             ScoreWindow hard = results.First(r => r.Band == DifficultyBand.Hard).Window;
             ScoreWindow veryHard = results.First(r => r.Band == DifficultyBand.VeryHard).Window;
@@ -107,7 +109,8 @@ namespace Cloudora.Tests.Editor
                 float currentMediumMin = current.Where(r => r.Band == DifficultyBand.Medium).Min(r => r.Primary.Score);
                 float previousFinale = previous.Last().Primary.Score;
                 float firstMedium = current.First().Primary.Score;
-                Assert.That(currentMediumMin, Is.GreaterThan(previousMediumMax), $"{DesignedParts[i]} mediums must be harder");
+                // Tema eğrileri sınırda aynı değerde birleşir (ör. 31–60 Orta 20→24, 61–80 Orta 24→26): küçük pay (kullanıcı 19:22).
+                Assert.That(currentMediumMin, Is.GreaterThan(previousMediumMax - MediumSeamTolerance), $"{DesignedParts[i]} mediums must be harder");
                 Assert.That(firstMedium, Is.LessThanOrEqualTo(previousFinale * 1.10f), $"{DesignedParts[i]} starts with a jump");
             }
         }
@@ -145,9 +148,9 @@ namespace Cloudora.Tests.Editor
         [Test]
         public void UndesignedPartsAreRejected()
         {
+            // 16+ sabit çerçeve kullanmaz (çerçeveyi merdiven/tema kurucusu seçer: V32LadderTests, V32ThemeTests, V32Theme3Tests).
             Assert.Throws<NotSupportedException>(() => V3LevelPlan.FrameFor(16));
-            Assert.Throws<NotSupportedException>(() => V3LevelBuilder.BuildPart(V3Part.TransitionTheme));
-            Assert.Throws<NotSupportedException>(() => V3LevelBuilder.BuildPart(V3Part.Theme3));
+            Assert.Throws<NotSupportedException>(() => V3LevelPlan.FrameFor(61));
         }
 
         // ---------- Üretilen veri dosyası ve oyuna bağlanma ----------
@@ -196,9 +199,35 @@ namespace Cloudora.Tests.Editor
         [Test]
         public void LevelsNotYetRebuiltStayOnOldSystem()
         {
-            // 16+ geçiş teması kurulana kadar eski üreticiyle kalır.
-            Assert.That(V3LevelData.Find(16), Is.Null);
-            Assert.That(LevelGenerator.Generate(16).generated, Is.True);
+            // 101+ eski üreticiyle kalır (16–100 deneme olarak veride; 61–100 2026-10-15 19:00'dan beri).
+            Assert.That(V3LevelData.Find(101), Is.Null);
+            Assert.That(AuthoredLevelCatalog.TryGetBuilt(101, out _), Is.False);
+            Assert.That(LevelGenerator.Generate(101).generated, Is.True);
+            foreach (int level in new[] { 45, 75, 100 })
+            {
+                Assert.That(AuthoredLevelCatalog.TryGetBuilt(level, out LevelDefinition built), Is.True, $"level {level}");
+                Assert.That(built.modifiers, Is.Empty, $"level {level}: 1–100 themes are visual only: no modifiers (§11k)");
+            }
+        }
+
+        [Test]
+        public void TransitionLevelsLoadFromV3Data()
+        {
+            // v3.2: 16–30 oyunda veri dosyasından gelir (eski üretici değil); Shuffle 16'da açık kalır.
+            for (int level = 16; level <= 30; level++)
+            {
+                V3LevelEntry entry = V3LevelData.Find(level);
+                Assert.That(entry, Is.Not.Null, $"level {level} missing — regenerate V3LevelData");
+                Assert.That(AuthoredLevelCatalog.TryGetBuilt(level, out LevelDefinition definition), Is.True, $"level {level}");
+                Assert.That(V3BoardText.Format(definition.CreateBoard()), Is.EqualTo(entry.Board), $"level {level}");
+                Assert.That(definition.capacity, Is.EqualTo(entry.Capacity));
+                Assert.That(definition.seed, Is.EqualTo(entry.Seed));
+                Assert.That(definition.generated, Is.False);
+                Assert.That(definition.tutorialCue, Is.Null);
+                Assert.That(PuzzleValidator.Validate(definition, out string error), Is.True, error);
+            }
+            Assert.That(AuthoredLevelCatalog.TryGetBuilt(15, out _), Is.False, "1–15 stay in the authored catalog");
+            Assert.That(Cloudora.Puzzle.PuzzleController.IsShuffleUnlocked(16), Is.True);
         }
 
         // ---------- Tahta metni ----------

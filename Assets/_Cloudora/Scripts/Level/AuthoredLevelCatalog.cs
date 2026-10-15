@@ -39,6 +39,22 @@ namespace Cloudora.Level
             };
         }
 
+        // 16+: v3 bölüm aracıyla kurulmuş parçalar (V3LevelData). Kurulmamış bölümler eski üreticiden gelir.
+        // Dünya kimliği şimdilik mevcut dünya listesinden (yeni aralıklara geçiş ayrı adım).
+        public static bool TryGetBuilt(int levelNumber, out LevelDefinition definition)
+        {
+            definition = null;
+            if (levelNumber <= Count) return false;
+            V3LevelEntry entry = V3LevelData.Find(levelNumber);
+            if (entry == null) return false;
+            definition = new LevelDefinition(levelNumber, Progression.WorldCatalog.ForLevel(levelNumber).Id, entry.Capacity, null, entry.CreateBoard())
+            {
+                seed = entry.Seed,
+                difficultyScore = entry.Score
+            };
+            return true;
+        }
+
         private static LevelDefinition V(int id, string cue)
         {
             V3LevelEntry entry = V3LevelData.Find(id)

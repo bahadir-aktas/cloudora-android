@@ -53,7 +53,7 @@ namespace Cloudora.Level
                 var candidate = new WeatherType[board.Length][];
                 for (int c = 0; c < board.Length; c++)
                     candidate[c] = c == cloudIndex ? arrangement : (WeatherType[])board[c].Clone();
-                if (PuzzleSolver.Solve(candidate, capacity, maxStates).Status == SolveStatus.Solved)
+                if (PuzzleSolver.CheckSolvable(candidate, capacity, maxStates) == SolveStatus.Solved)
                     return new CloudShuffleResult(CloudShuffleRejection.None, candidate);
             }
             return Reject(CloudShuffleRejection.NoSafeArrangement);
@@ -106,7 +106,7 @@ namespace Cloudora.Level
         public static int NewestSolvableIndex(IReadOnlyList<WeatherType[][]> newestFirst, int capacity, int maxStates)
         {
             for (int i = 0; i < newestFirst.Count; i++)
-                if (PuzzleSolver.Solve(newestFirst[i], capacity, maxStates).Status == SolveStatus.Solved) return i;
+                if (PuzzleSolver.CheckSolvable(newestFirst[i], capacity, maxStates) == SolveStatus.Solved) return i;
             return -1;
         }
     }

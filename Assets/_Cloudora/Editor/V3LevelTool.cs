@@ -35,7 +35,7 @@ namespace Cloudora.Editor
         }
 
         // Kurulmuş parçalar; yeni bir parça tasarlandıkça buraya eklenir.
-        private static readonly V3Part[] PartsToBuild = { V3Part.Intro, V3Part.Adaptation };
+        private static readonly V3Part[] PartsToBuild = { V3Part.Intro, V3Part.Adaptation, V3Part.TransitionTheme, V3Part.Theme2, V3Part.Theme3 };
         private const string DataPath = "Assets/_Cloudora/Scripts/Level/V3LevelData.Generated.cs";
 
         [MenuItem("Cloudora/V3/Bölüm Verisini Üret")]
@@ -84,6 +84,142 @@ namespace Cloudora.Editor
             code.Append("        };\r\n    }\r\n}\r\n");
             File.WriteAllText(DataPath, code.ToString(), new UTF8Encoding(false));
             Debug.Log($"CLOUDORA_V3 data written: {DataPath} parts={string.Join(",", PartsToBuild)}");
+            return true;
+        }
+
+        // v3.2: çerçeve merdiveniyle kurulacak parçanın önizlemesi — veri dosyasına yazmaz, yalnızca tablo üretir
+        // (Logs/v3-preview-<parça>.csv). Kullanıcı onaylayınca parça PartsToBuild'e eklenip veri üretilir.
+        [MenuItem("Cloudora/V3/Önizleme: Geçiş Teması (16–30)")]
+        public static void RunTransitionPreview() => WritePreview(V3Part.TransitionTheme);
+
+        public static void RunTransitionPreviewBatch()
+        {
+            bool ok;
+            try { ok = WritePreview(V3Part.TransitionTheme); }
+            catch (System.Exception exception)
+            {
+                Debug.LogError($"CLOUDORA_V3 preview failed: {exception}");
+                ok = false;
+            }
+            EditorApplication.Exit(ok ? 0 : 1);
+        }
+
+        // Faz 2.2: 31–60 (Tema 2) önizlemesi — veri dosyasına yazmaz.
+        [MenuItem("Cloudora/V3/Önizleme: Tema 2 (31–60)")]
+        public static void RunTheme2Preview() => WritePreview(V3Part.Theme2);
+
+        public static void RunTheme2PreviewBatch() => RunReportBatch(() => WritePreview(V3Part.Theme2));
+
+        [MenuItem("Cloudora/V3/Önizleme: Tema 3 (61–100)")]
+        public static void RunTheme3Preview() => WritePreview(V3Part.Theme3);
+
+        public static void RunTheme3PreviewBatch() => RunReportBatch(() => WritePreview(V3Part.Theme3));
+
+        private static bool WritePreview(V3Part part)
+        {
+            var timer = Stopwatch.StartNew();
+            IReadOnlyList<V3LevelResult> results = V3LevelBuilder.BuildPart(part);
+            timer.Stop();
+            var csv = new StringBuilder("level,band,target,score,deviation,frame,novelty,seed,optimal_moves,progress_ratio,dead_ratio,trap_ratio,naive_excess,naive_fail,no_moves_depth,no_moves_states,board\n");
+            foreach (V3LevelResult r in results)
+            {
+                DifficultyMetrics m = r.Primary.Result.Metrics;
+                csv.AppendLine(string.Join(",", r.Level, r.Band, F(r.Target), F(r.Primary.Score), F(r.Primary.Score - r.Target), r.Frame,
+                    r.Novelty, r.Primary.Seed, m.OptimalMoves, F(m.ProgressMoveRatio), F(m.DeadStateRatio), F(m.TrapMoveRatio), F(m.NaiveExcessMoves),
+                    F(m.NaiveFailureRate), m.NoMovesDepth, F(m.NoMovesStateRatio), V3BoardText.Format(r.Primary.Board)));
+                Debug.Log($"CLOUDORA_V3_PREVIEW level={r.Level} band={r.Band} target={F(r.Target)} score={F(r.Primary.Score)} frame={r.Frame} novelty={r.Novelty} seed={r.Primary.Seed} {m}");
+            }
+            foreach (BoardFrame frame in results.Select(r => r.Frame).Distinct())
+            {
+                IReadOnlyList<LevelCandidate> pool = V3LadderBuilder.Pool(frame);
+                Debug.Log($"CLOUDORA_V3_PREVIEW_POOL frame={frame} usable={pool.Count} score[min/p50/max]={F(pool.First().Score)}/{F(pool[pool.Count / 2].Score)}/{F(pool.Last().Score)}");
+            }
+            string directory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, $"v3-preview-{part}.csv"), csv.ToString());
+            Debug.Log($"CLOUDORA_V3 preview written part={part} ms={timer.ElapsedMilliseconds}");
+            return true;
+        }
+
+        // v3.2 (tasarım §11j): başlangıç dizilimi raporu — klasik "dolu + boş" ile serpiştirilmiş dizilimleri karşılaştırır.
+        // Veri dosyasına yazmaz. Çıktı: Logs/v3-layout-candidates.csv, Logs/v3-layout-summary.txt.
+        private static readonly BoardFrame[] LayoutFrames =
+        {
+            new(4, 3, 2, 2), new(4, 3, 2, 1), new(4, 3, 2, 0), new(4, 3, 1, 1), new(4, 3, 1, 0),
+            new(5, 3, 2, 2), new(5, 3, 2, 1), new(5, 3, 2, 0), new(5, 3, 1, 1), new(5, 3, 1, 0)
+        };
+
+        [MenuItem("Cloudora/V3/Dizilim Raporu")]
+        public static void RunLayoutReport() => WriteLayoutReport(LayoutFrames, "layout");
+
+        public static void RunLayoutReportBatch() => RunReportBatch(() => WriteLayoutReport(LayoutFrames, "layout"));
+
+        // Faz 1.1 (tasarım §11l): 1–100'de kullanılabilecek bütün çerçevelerin envanteri —
+        // kapasite 4–6 × 3–6 renk × 1–2 boş × dizilim (klasik, 1 açık [yalnız 2 boşta], 0 açık).
+        private static IEnumerable<BoardFrame> InventoryFrames()
+        {
+            for (int capacity = 4; capacity <= 6; capacity++)
+            for (int colors = 3; colors <= 6; colors++)
+            for (int empties = 2; empties >= 1; empties--)
+            for (int open = empties; open >= 0; open--)
+                yield return new BoardFrame(capacity, colors, empties, open);
+        }
+
+        [MenuItem("Cloudora/V3/Çerçeve Envanteri (Faz 1.1)")]
+        public static void RunInventoryReport() => WriteLayoutReport(InventoryFrames().ToArray(), "inventory");
+
+        public static void RunInventoryReportBatch() => RunReportBatch(() => WriteLayoutReport(InventoryFrames().ToArray(), "inventory"));
+
+        private static void RunReportBatch(System.Func<bool> report)
+        {
+            bool ok;
+            try { ok = report(); }
+            catch (System.Exception exception)
+            {
+                Debug.LogError($"CLOUDORA_V3 report failed: {exception}");
+                ok = false;
+            }
+            EditorApplication.Exit(ok ? 0 : 1);
+        }
+
+        private static bool WriteLayoutReport(BoardFrame[] frames, string name)
+        {
+            var csv = new StringBuilder("frame,seed,status,optimal_moves,states,dead_ratio,progress_ratio,trap_ratio,naive_excess,naive_fail,no_moves_depth,score,board\n");
+            var summary = new StringBuilder();
+            foreach (BoardFrame frame in frames)
+            {
+                var timer = Stopwatch.StartNew();
+                CandidateSelection selection = LevelCandidateSelector.Select(frame, new ScoreWindow(float.MinValue, float.MaxValue),
+                    V3LevelBuilder.FirstSeed, V3LevelBuilder.CandidatesPerFrame, 0, V3LevelBuilder.MaxStates);
+                timer.Stop();
+                foreach (LevelCandidate c in selection.Measured)
+                {
+                    DifficultyMetrics m = c.Result.Metrics;
+                    csv.AppendLine(string.Join(",", frame, c.Seed, c.Result.Status, m.OptimalMoves, m.ReachableStates, F(m.DeadStateRatio),
+                        F(m.ProgressMoveRatio), F(m.TrapMoveRatio), F(m.NaiveExcessMoves), F(m.NaiveFailureRate), m.NoMovesDepth, F(m.Score),
+                        V3BoardText.Format(c.Board)));
+                }
+                List<LevelCandidate> solved = selection.Measured.Where(c => c.Result.Status == Cloudora.Level.SolveStatus.Solved).ToList();
+                List<LevelCandidate> usable = solved.Where(c => c.Result.Metrics.NaiveFailureRate < V3LadderBuilder.MaxNaiveFailureRate).ToList();
+                string line = $"CLOUDORA_V3_LAYOUT frame={frame} distinct={selection.Measured.Count} solved={solved.Count} usable={usable.Count} " +
+                              $"over_limit={selection.LimitExceeded} ms={timer.ElapsedMilliseconds} max_states={MaxOf(selection.Measured.Select(c => c.Result.Metrics.ReachableStates))}";
+                if (usable.Count > 0)
+                {
+                    line += $" score[p10/p50/p90]={Pct(usable, c => c.Score, 10)}/{Pct(usable, c => c.Score, 50)}/{Pct(usable, c => c.Score, 90)}" +
+                            $" moves[p10/p50/p90]={Pct(usable, c => c.Result.Metrics.OptimalMoves, 10)}/{Pct(usable, c => c.Result.Metrics.OptimalMoves, 50)}/{Pct(usable, c => c.Result.Metrics.OptimalMoves, 90)}" +
+                            $" dead[p50/p90]={Pct(usable, c => c.Result.Metrics.DeadStateRatio, 50)}/{Pct(usable, c => c.Result.Metrics.DeadStateRatio, 90)}" +
+                            $" progress_p50={Pct(usable, c => c.Result.Metrics.ProgressMoveRatio, 50)}" +
+                            $" naive_fail[p50/p90]={Pct(usable, c => c.Result.Metrics.NaiveFailureRate, 50)}/{Pct(usable, c => c.Result.Metrics.NaiveFailureRate, 90)}" +
+                            $" no_moves={F(usable.Count(c => c.Result.Metrics.NoMovesDepth >= 0) / (float)usable.Count)}";
+                }
+                summary.AppendLine(line);
+                Debug.Log(line);
+                File.AppendAllText(Path.Combine(Directory.GetCurrentDirectory(), "Logs", $"v3-{name}-progress.txt"), line + "\n");
+            }
+            string directory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, $"v3-{name}-candidates.csv"), csv.ToString());
+            File.WriteAllText(Path.Combine(directory, $"v3-{name}-summary.txt"), summary.ToString());
             return true;
         }
 

@@ -17,7 +17,10 @@ namespace Cloudora.Level
         public const float MoveWeight = 1f;
         public const float TrapWeight = 15f;
         public const float MisdirectionWeight = 10f;
-        public const float DeadStateWeight = 5f;
+        // v3.2 kalibrasyonu (2026-10-15 Editor testi): 1 boşlu bölümlerde insan süresi çıkmaz oranıyla birlikte arttı
+        // (0,08 → 20 sn … 0,33 → tıkanma); 5 ile 26 (Orta) puanda 20'nin (Çok zor) altında kalıyordu. 2 boşlu tahtalarda
+        // çıkmaz olmadığı için 1–15 puanları değişmez.
+        public const float DeadStateWeight = 20f;
         public const float NaiveExcessWeight = 1.5f;
         public const float NaiveFailureWeight = 10f;
 
@@ -29,11 +32,15 @@ namespace Cloudora.Level
         public readonly float AverageChoices;    // en kısa yollar üzerinde, durum başına ortalama legal hamle
         public readonly float NaiveExcessMoves;  // sanal oyuncunun, çözdüğü oyunlarda en kısa çözüme göre ortalama fazla hamlesi
         public readonly float NaiveFailureRate;  // sanal oyuncunun takıldığı (çıkmaz / hamle sınırı) oyun oranı
+        public readonly int NoMovesDepth;        // v3.2: hiç legal hamle kalmayan (No Moves) duruma en kısa uzaklık (-1: yok); puana katılmaz
+        public readonly float NoMovesStateRatio; // v3.2: ulaşılabilir durumlar içinde No Moves durumlarının oranı; puana katılmaz
 
         public DifficultyMetrics(int optimalMoves, int reachableStates, float deadStateRatio,
             float progressMoveRatio, float trapMoveRatio, float averageChoices,
-            float naiveExcessMoves = 0f, float naiveFailureRate = 0f)
+            float naiveExcessMoves = 0f, float naiveFailureRate = 0f, int noMovesDepth = -1, float noMovesStateRatio = 0f)
         {
+            NoMovesDepth = noMovesDepth;
+            NoMovesStateRatio = noMovesStateRatio;
             NaiveExcessMoves = naiveExcessMoves;
             NaiveFailureRate = naiveFailureRate;
             OptimalMoves = optimalMoves;
@@ -54,13 +61,14 @@ namespace Cloudora.Level
             OptimalMoves == other.OptimalMoves && ReachableStates == other.ReachableStates &&
             DeadStateRatio.Equals(other.DeadStateRatio) && ProgressMoveRatio.Equals(other.ProgressMoveRatio) &&
             TrapMoveRatio.Equals(other.TrapMoveRatio) && AverageChoices.Equals(other.AverageChoices) &&
-            NaiveExcessMoves.Equals(other.NaiveExcessMoves) && NaiveFailureRate.Equals(other.NaiveFailureRate);
+            NaiveExcessMoves.Equals(other.NaiveExcessMoves) && NaiveFailureRate.Equals(other.NaiveFailureRate) &&
+            NoMovesDepth == other.NoMovesDepth && NoMovesStateRatio.Equals(other.NoMovesStateRatio);
 
         public override bool Equals(object obj) => obj is DifficultyMetrics other && Equals(other);
-        public override int GetHashCode() => HashCode.Combine(OptimalMoves, ReachableStates, DeadStateRatio, ProgressMoveRatio, TrapMoveRatio, AverageChoices, NaiveExcessMoves, NaiveFailureRate);
+        public override int GetHashCode() => HashCode.Combine(HashCode.Combine(OptimalMoves, ReachableStates, DeadStateRatio, ProgressMoveRatio, TrapMoveRatio, AverageChoices, NaiveExcessMoves, NaiveFailureRate), NoMovesDepth, NoMovesStateRatio);
 
         public override string ToString() =>
-            $"moves={OptimalMoves} states={ReachableStates} dead={DeadStateRatio:F3} progress={ProgressMoveRatio:F3} trap={TrapMoveRatio:F3} choices={AverageChoices:F2} naive_excess={NaiveExcessMoves:F2} naive_fail={NaiveFailureRate:F3} score={Score:F2}";
+            $"moves={OptimalMoves} states={ReachableStates} dead={DeadStateRatio:F3} progress={ProgressMoveRatio:F3} trap={TrapMoveRatio:F3} choices={AverageChoices:F2} naive_excess={NaiveExcessMoves:F2} naive_fail={NaiveFailureRate:F3} no_moves_depth={NoMovesDepth} no_moves_states={NoMovesStateRatio:F3} score={Score:F2}";
     }
 
     public sealed class PuzzleSolveResult
@@ -126,12 +134,23 @@ namespace Cloudora.Level
             float deadRatio = dead / (float)count;
             int optimal = toGoal[0];
 
+            // No Moves: çözülmemiş ve hiç legal hamlesi olmayan durum (oyun burada başarısızlık ekranını açar).
+            // depth BFS sırasıyla verildiği için en kısa uzaklıktır.
+            int noMovesDepth = -1, noMovesStates = 0;
+            for (int i = 0; i < count; i++)
+            {
+                if (edges[i].Length != 0 || toGoal[i] == 0) continue;
+                noMovesStates++;
+                if (noMovesDepth < 0 || depth[i] < noMovesDepth) noMovesDepth = depth[i];
+            }
+            float noMovesRatio = noMovesStates / (float)count;
+
             if (optimal == Unreached)
                 return new PuzzleSolveResult(SolveStatus.Unsolvable,
-                    new DifficultyMetrics(-1, count, deadRatio, 0f, 0f, 0f), Array.Empty<Move>());
+                    new DifficultyMetrics(-1, count, deadRatio, 0f, 0f, 0f, 0f, 0f, noMovesDepth, noMovesRatio), Array.Empty<Move>());
             if (optimal == 0)
                 return new PuzzleSolveResult(SolveStatus.Solved,
-                    new DifficultyMetrics(0, count, deadRatio, 1f, 0f, 0f), Array.Empty<Move>());
+                    new DifficultyMetrics(0, count, deadRatio, 1f, 0f, 0f, 0f, 0f, noMovesDepth, noMovesRatio), Array.Empty<Move>());
 
             // En kısa yollar üzerindeki durumlar: başlangıçtan uzaklık + çözüme uzaklık = en kısa çözüm.
             // Toplama, sonuç bulut sırasından bağımsız olsun diye kanonik anahtar sırasıyla yapılır.
@@ -158,7 +177,7 @@ namespace Cloudora.Level
             (float naiveExcess, float naiveFailure) = SimulateNaivePlayer(states, keys, index, toGoal, capacity, optimal, naiveStyle);
             var metrics = new DifficultyMetrics(optimal, count, deadRatio,
                 (float)(progressSum / onPath.Count), trapMoves / (float)legalMoves, legalMoves / (float)onPath.Count,
-                naiveExcess, naiveFailure);
+                naiveExcess, naiveFailure, noMovesDepth, noMovesRatio);
             return new PuzzleSolveResult(SolveStatus.Solved, metrics, BuildSolution(start, capacity, index, toGoal));
 
             int Register(int[] state, int stateDepth)
@@ -264,6 +283,45 @@ namespace Cloudora.Level
         }
 
         // Bulut sırasından bağımsız tahta anahtarı (aynı tahtanın farklı dizilişleri aynı anahtarı verir).
+        // Oyun içi hızlı kontrol (Shuffle, No Moves dönüşü): yalnızca "çözülebilir mi". Derinlik öncelikli arar ve ilk
+        // çözümde durur; zorluk ölçüsü hesaplamaz. Solve bütün durum uzayını gezdiği için büyük tahtada (9 bulut) sınırı
+        // aşıp çözülebilir tahtayı "LimitExceeded" sayıyordu ve telefonda dakikalarca sürüyordu (2026-10-15, Faz 2.6).
+        // Önce dolu bir buluta yapılan hamleler denenir (boş buluta taşımak en son).
+        public static SolveStatus CheckSolvable(IReadOnlyList<WeatherType[]> board, int capacity, int maxStates)
+        {
+            int[] start = EncodeBoard(board, capacity);
+            if (maxStates < 1) throw new ArgumentOutOfRangeException(nameof(maxStates));
+            if (IsSolved(start, capacity)) return SolveStatus.Solved;
+
+            var seen = new HashSet<StateKey> { Key(start) };
+            var stack = new Stack<int[]>();
+            stack.Push(start);
+            var toEmpty = new List<int[]>();
+            var toFilled = new List<int[]>();
+            while (stack.Count > 0)
+            {
+                int[] current = stack.Pop();
+                toEmpty.Clear();
+                toFilled.Clear();
+                for (int s = 0; s < current.Length; s++)
+                for (int t = 0; t < current.Length; t++)
+                {
+                    if (!TryMove(current, s, t, capacity, out int newSource, out int newTarget, out _)) continue;
+                    StateKey key = Key(current, s, newSource, t, newTarget);
+                    if (seen.Contains(key)) continue;
+                    if (seen.Count >= maxStates) return SolveStatus.LimitExceeded;
+                    seen.Add(key);
+                    int[] next = With(current, s, newSource, t, newTarget);
+                    if (IsSolved(next, capacity)) return SolveStatus.Solved;
+                    (CountOf(current[t]) == 0 ? toEmpty : toFilled).Add(next);
+                }
+                // Yığın: son eklenen önce açılır → dolu buluta hamleler önce.
+                foreach (int[] next in toEmpty) stack.Push(next);
+                foreach (int[] next in toFilled) stack.Push(next);
+            }
+            return SolveStatus.Unsolvable;
+        }
+
         public static string CanonicalKey(IReadOnlyList<WeatherType[]> board, int capacity) => Key(EncodeBoard(board, capacity)).ToString();
 
         // Gerçek bulut sırasıyla, her adımda çözüme bir adım yaklaştıran ilk hamle seçilir (deterministik).

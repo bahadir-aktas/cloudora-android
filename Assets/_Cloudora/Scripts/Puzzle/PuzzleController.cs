@@ -263,9 +263,8 @@ namespace Cloudora.Puzzle
         {
             _progression.DebugJump(levelNumber);
             _shuffleUseCount = 0;
-            _currentLevel = levelNumber <= AuthoredLevelCatalog.Count
-                ? AuthoredLevelCatalog.Get(levelNumber)
-                : LevelGenerator.Generate(levelNumber);
+            if (levelNumber <= AuthoredLevelCatalog.Count) _currentLevel = AuthoredLevelCatalog.Get(levelNumber);
+            else if (!AuthoredLevelCatalog.TryGetBuilt(levelNumber, out _currentLevel)) _currentLevel = LevelGenerator.Generate(levelNumber);
             _baseCloudCount = _currentLevel.clouds.Length;
             LoadState(_currentLevel.CreateBoard());
             _overlay.SetLevelInfo(_currentLevel.levelId, _currentLevel.worldId);

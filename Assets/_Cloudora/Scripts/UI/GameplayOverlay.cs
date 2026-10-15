@@ -324,7 +324,13 @@ namespace Cloudora.UI
             shadow.effectColor = new Color(0.08f, 0.15f, 0.35f, 0.30f);
             shadow.effectDistance = new Vector2(0f, -5f);
             Button button = go.GetComponent<Button>();
-            button.onClick.AddListener(() => action?.Invoke());
+            button.onClick.AddListener(() =>
+            {
+                // Geliştirme derlemelerinde her basış kare/zamanla yazılır (tek basışta çift işlem kontrolü için).
+                if (Debug.isDebugBuild)
+                    Debug.Log($"[Input] button={label} frame={Time.frameCount} t={Time.realtimeSinceStartup.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture)}");
+                action?.Invoke();
+            });
             CreateText(go.transform, label, 34, TextAnchor.MiddleCenter);
             return button;
         }
@@ -349,10 +355,25 @@ namespace Cloudora.UI
         }
 
         // Bilgi mesajları (Sky Is Full, Reward…, Out of Lives). Alttaki butonları örtmez; dokununca kapanır.
+        // v3.2 (tasarım §11g): pencere açıkken alt butonlar görünür ama çalışmaz — üstlerindeki görünmez kalkana
+        // dokunmak yalnızca pencereyi kapatır; butonu kullanmak için yeniden basılır.
         private static GameObject CreateBlockingPanel(Transform parent)
         {
-            GameObject root = CreateDimmedCard(parent, "BlockingPanel", new Vector2(760f, 380f), ButtonBottom + 2f * ButtonSize.y + 40f, out GameObject panel);
+            float bottomInset = ButtonBottom + 2f * ButtonSize.y + 40f;
+            GameObject root = CreateDimmedCard(parent, "BlockingPanel", new Vector2(760f, 380f), bottomInset, out GameObject panel);
             root.AddComponent<Button>().onClick.AddListener(() => root.SetActive(false));
+
+            var shield = new GameObject("ButtonShield", typeof(RectTransform), typeof(Image), typeof(Button));
+            shield.transform.SetParent(root.transform, false);
+            RectTransform shieldRect = shield.GetComponent<RectTransform>();
+            shieldRect.anchorMin = Vector2.zero;
+            shieldRect.anchorMax = new Vector2(1f, 0f);
+            shieldRect.offsetMin = new Vector2(0f, -bottomInset);
+            shieldRect.offsetMax = Vector2.zero;
+            shield.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            Button shieldButton = shield.GetComponent<Button>();
+            shieldButton.transition = Selectable.Transition.None;
+            shieldButton.onClick.AddListener(() => root.SetActive(false));
             Text title = CreateText(panel.transform, "Notice", 50, TextAnchor.MiddleCenter);
             title.color = new Color(0.15f, 0.22f, 0.29f);
             title.rectTransform.anchorMin = new Vector2(0.08f, 0.55f);

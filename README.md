@@ -13,10 +13,11 @@ Team repository: [yigityvz/cloudora-android](https://github.com/yigityvz/cloudor
 
 ## Product and architecture
 
-- Fifteen authored onboarding levels lead into seed-reproducible generated puzzles. The generator reverse-shuffles solved boards and records a legal solution, then validates invariants before accepting a level.
+- Fifteen authored onboarding levels lead into seed-reproducible generated puzzles. Since v3, levels 1–100 use boards picked by an editor-only solver tool to follow a fixed difficulty pattern (Medium, Medium, Hard, Medium, Very hard per five levels), with one new element at a time (weather type, capacity, single empty cloud, cloud layout) and trap levels that grow more frequent; see [the level map](Docs/V3_BOLUM_HARITASI.html). Levels 101+ still come from the generator, which reverse-shuffles solved boards and records a legal solution, then validates invariants before accepting a level.
+- Since v3.1, Shuffle reorders a single chosen cloud (unlocks at level 16), Restart is removed, and running out of moves fails the level: retry for a life, or continue via ad or coins from the last solvable state.
 - Cloud capacity progresses from four to seven slots. Thirteen world definitions span levels 1–400, with restoration milestones, new weather, modifiers, and difficulty waves.
 - Rule logic lives in pure C# state and move classes; Unity cloud views, animations, responsive board layout, HUD, world screen, and settings sit around that core. Modifier rules are registered independently of the views.
-- Local JSON save data includes progress, life regeneration, tutorial flags, settings and boosters, with schema migration and backup recovery. No account, backend, or cloud-save service is required for the puzzle loop.
+- Local JSON save data includes progress, life regeneration, tutorial flags, settings, boosters, coins and a failed-level snapshot, with schema migration and backup recovery. No account, backend, or cloud-save service is required for the puzzle loop.
 - Analytics and advertising are behind interfaces. This repository binds fake ads and a credential-free analytics fallback. Real AdMob is not enabled; no public release is authorized.
 
 ## Run and test
@@ -26,7 +27,7 @@ Team repository: [yigityvz/cloudora-android](https://github.com/yigityvz/cloudor
 3. Run EditMode tests in Unity Test Runner. `Cloudora/Validate 10,000 Levels` runs the deterministic content stress check.
 4. Use `Cloudora/Build/Android Development APK` for an internal build. See [Android build and device QA](Docs/ANDROID_BUILD.md) for the ASCII-only path requirement and open physical-device checks.
 
-The latest fresh EditMode result passed 26/26 tests after package cleanup; a separate content stress check passed 10,000/10,000 generated-level validations. These checks do not substitute for Android PlayMode/device smoke tests or prove real-world difficulty quality. See [phase progress](Docs/PROJECT_PROGRESS.md) and the [release checklist](Docs/RELEASE_CHECKLIST.md) for exact status and blockers.
+The latest EditMode result (v3.2) passed 192 tests (4 skipped: three range checks that do not apply to solver-built parts and one manual measurement); an earlier separate content stress check passed 10,000/10,000 generated-level validations. These checks do not substitute for Android PlayMode/device smoke tests or prove real-world difficulty quality. See [phase progress](Docs/PROJECT_PROGRESS.md) and the [release checklist](Docs/RELEASE_CHECKLIST.md) for exact status and blockers.
 
 ## Store/portfolio package
 

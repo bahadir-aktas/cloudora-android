@@ -4,6 +4,35 @@
 
 ---
 
+## v3.2 — 16–100 yeniden kuruldu; renkler, buton koruması, Shuffle donması düzeltmesi
+
+- **Tarih:** 2026-10-15
+- **Commit:** bu dosyanın güncellendiği commit (etiket `v3.2`).
+- **Kapsam (kullanıcı):** v3 deseniyle 16–100'ün kurulması; her bölümde tek yenilik, temalar yalnızca görsel (modifier yok). Faz planı: `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` §11l; şablon ve uygulanan plan `Docs/V3_SABLON.md`; görsel özet `Docs/V3_BOLUM_HARITASI.html`.
+
+### Değişiklikler
+1. **16–30 (Geçiş teması)** — `Editor/V3LadderBuilder.cs`: serpiştirilmiş dizilim (17), kapasite 5 (19), tek boş bulut ve ilk tuzaklar (21, 26, 30); No Moves bantlara dağılmış; final 30.
+2. **31–100 (Tema 2 ve 3)** — `Editor/V3ThemeBuilder.cs`: Rüzgar 31, Ay 81; yeni renkle boş bulut ve dizilim "nefes alır" (2 boş, 0 açık), dizilim adımları 0 açık → 1 açık → klasik (39/49, 74, 89/94); tek boş bulut 36 ve 87'de geri döner; tuzak bölümleri döngüde 1 → 2, 75/78/95/98 Zor/Çok zor tuzak; finaller 60 ve 100 parçanın en tuzaklısı ve en az ortanca uzunlukta. Kilitleyen tahta (takılma ≥ 0,5) yalnızca finalde.
+3. **Oyuna bağlama:** `AuthoredLevelCatalog.TryGetBuilt` + `PuzzleController.LoadLevel`: 16–100 veri dosyasından (`V3LevelData.Generated.cs`); 101+ eski üretici.
+4. **Ölçüm:** çıkmaz ağırlığı 20 (`DeadStateWeight`); `NoMovesDepth` / `NoMovesStateRatio`; uzunluk tercihi yerine "absürt uzunluk" sınırı (çerçevenin %90'lık değeri). `BoardFrame.OpenClouds` (serpiştirilmiş dizilim), `LevelCandidateFactory.DealScattered`.
+5. **Renkler:** Kar #7FE3F5, Rüzgar #AEB7C2, Şimşek #25358A (koyu parçada beyaz desen).
+6. **Bilgi penceresi açıkken alt butonlar kilitli** (görünmez `ButtonShield`).
+7. **Shuffle donması düzeltmesi (Faz 2.6, telefonda bulundu):** 7 bulut + 2 Extra'da Shuffle ~144 sn donuyor ve çözülebilir tahtayı reddediyordu. Oyun içi Shuffle ve No Moves dönüşü artık `PuzzleSolver.CheckSolvable` kullanıyor (ilk çözümde durur, ölçü hesaplamaz).
+8. **Geliştirme logları:** `[Input]` buton satırları ve analytics satırlarında kare/zaman (yalnızca debug).
+
+### Doğrulama
+- **EditMode:** 196 test; 192 geçti, 4 atlandı (3 bant aralığı testi araçla kurulan parçalara uygulanmıyor, 1 elle çalıştırılan ölçüm), başarısız yok.
+- **Unity Editor:** kullanıcı 16–30 (17:56), 31–60 (18:42) ve 61–100'ü (20:00) oynadı; memnun. Geri bildirimle 59 (yalnızca o) ve Tema 2 finali düzeltildi.
+- **Telefon (Galaxy S24 FE, "Cloudora v3"):** 16–19, 31–41, 59–61, 75–78, 81–83, 87; renkler ayrılıyor, No Moves dönüşü anında; Shuffle düzeltmesi 83 + 2 Extra'da 10 Shuffle ile doğrulandı (ort. 0,28 sn). Çökme ya da oyunla ilgili exception yok.
+
+### Bilinen sınırlar / açık konular (tasarım §15)
+- Finaller (60, 100) ve 5 renkli planlama: ölçü dikkatli insanı tam tahmin etmiyor (Faz 3).
+- Tahta ölçeği: 7 bulutta ve Extra alınınca tahta küçülüyor; uzun vadede düzenlenecek.
+- Dünya adları ekranda eski listeden (Faz 5.1). 101+ eski sistem: Rainbow modifier ve ani zorluk sıçraması.
+- Büyük tahtada gerçekten çözülemeyen bir Shuffle dizilişi hâlâ 200.000 duruma kadar arar (ölçümde görülmedi).
+
+---
+
 ## v3.1 — Bulut içi Shuffle, Restart'ın kaldırılması, başarısızlık ekranı, coin
 
 - **Tarih:** 2026-10-14 / 2026-10-15

@@ -12,14 +12,19 @@ namespace Cloudora.Level
         public BoardFrame Frame { get; }
         public ScoreWindow Window { get; }
         public LevelCandidate Primary { get; }
+        public float Target { get; }        // çerçeve merdiveninde (16+) bölümün mutlak hedef puanı; 1–15'te NaN
+        public V3Novelty Novelty { get; }   // bölümün getirdiği yenilik (16+)
 
-        public V3LevelResult(int level, DifficultyBand band, BoardFrame frame, ScoreWindow window, LevelCandidate primary)
+        public V3LevelResult(int level, DifficultyBand band, BoardFrame frame, ScoreWindow window, LevelCandidate primary,
+            float target = float.NaN, V3Novelty novelty = V3Novelty.None)
         {
             Level = level;
             Band = band;
             Frame = frame;
             Window = window;
             Primary = primary;
+            Target = target;
+            Novelty = novelty;
         }
     }
 
@@ -34,6 +39,11 @@ namespace Cloudora.Level
 
         public static IReadOnlyList<V3LevelResult> BuildPart(V3Part part)
         {
+            // 16+: çerçeveyi merdiven seçer (v3.2). 1–15 aşağıdaki sabit yoldan, değişmeden kurulur.
+            if (V3LadderBuilder.Supports(part)) return V3LadderBuilder.BuildPart(part);
+            // 31+: tema kurucusu (Faz 2.2).
+            if (V3ThemeBuilder.Supports(part)) return V3ThemeBuilder.BuildPart(part);
+
             (int first, int last) = V3LevelPlan.RangeOf(part);
             int[] levels = Enumerable.Range(first, last - first + 1).ToArray();
             BoardFrame[] frames = levels.Select(V3LevelPlan.FrameFor).ToArray(); // tasarlanmamış parça burada durur
