@@ -1,149 +1,150 @@
 # Cloudora — Proje Hafızası (Claude için oturum başlangıcı)
 
 > Her oturumun başında **ilk iş bu dosyayı oku.** Projeyi anlamak için nelere bakılacağını, hangi kuralların geçerli olduğunu ve işin nerede kaldığını özetler. Ayrıntı her zaman kaynak dosyadadır; burada yazanla kaynak çelişirse **kaynak doğrudur**, bu dosya düzeltilir.
-> Son güncelleme: 2026-10-15 (v3.1 push edildikten sonra, v3.2 öncesi).
+> Son güncelleme: 2026-10-15 21:00 (v3.2 yerel commit + etiket sonrası, push öncesi).
 
 ---
 
+## 0. Nerede kaldık (2026-10-15 kapanış) — yeni oturumda önce bunu oku
+- **v3.2 yerelde hazır:** commit `73611d2`, etiket `v3.2`, dal `bahadir-claude-versions`. **Push edilmedi** — kullanıcıya ayrıca sorulacak (iki hedef, §2). Uzak repolar hâlâ `ae54acc` (v3.1).
+- **v3.2'de olan:** 16–100 v3 aracıyla kuruldu ve oyuna bağlandı (16–100 veri dosyasından, 101+ eski üretici); renkler; bilgi penceresinde buton kilidi; telefonda bulunan Shuffle donmasının düzeltmesi (`PuzzleSolver.CheckSolvable`). Ayrıntı: `crVersion.md` v3.2, `ClaudoraRelease.md` 2026-10-15 girdileri.
+- **Testler:** EditMode 196 → 192 geçti, 4 atlandı (3 bant aralığı testi araçla kurulan parçalara uygulanmıyor; `V32ShuffleLoadProbe` elle çalıştırılan ölçüm), başarısız yok.
+- **Oyun testleri tamam:** Editor'da 16–30 (17:56), 31–60 (18:42), 61–100 (20:00) — kullanıcı memnun. Telefonda seçili bölümler (16–19, 31–41, 59–61, 75–78, 81–83, 87) — renkler ayrılıyor, donma düzeldi.
+- **Faz planı durumu (tasarım §11l):** Faz 1 bitti; Faz 2.1, 2.2, 2.3 bitti; **2.5 atlandı** (kullanıcı: "gözüme batan bir şey olmadı"); **2.6'nın acil kısmı yapıldı** (Shuffle/No Moves dönüşü hızlı kontrol), kalan kısmı not (tasarım §15); **2.4 bekliyor**; Faz 3 (simülasyon), Faz 5.1 (dünya listesi) bekliyor. Faz 4 (Editor + telefon testi) fiilen yapıldı.
+- **Sıradaki seçenekler (kullanıcıya sorulacak):** (1) v3.2 push (ayrı onay), (2) Faz 2.4 — aracın yenilikleri şablondaki aralıklara yerleştirmesi, (3) Faz 3 — 1–100 simülasyonu; finallerin insan için zorluğu da burada (tasarım §15 "Ölçü insanla uyuşmuyor").
+- **Cihaz/kayıt durumu:**
+  - Telefonda "Cloudora v3" paketinde **v3.2 derlemesi** (20:45) kurulu; kayıt **87**'de (test için elle ayarlandı). Testten önceki telefon kaydının yedeği: `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-telefon-v32-test-oncesi-20261015-2016\` (L31, coin 190).
+  - Editor kaydı **101**'de (61–100 testinden sonra). Testten önceki yedek: `yedek-v32-tema3-test-oncesi-20261015-1911\`.
+  - Unity Editor kapalı.
+
 ## 1. Oturum başında okuma sırası
-1. **Bu dosya.**
-2. `ClaudoraRelease.md` (repo kökü) — yapılan her işlemin kaydı, en yeni en üstte. En üstteki birkaç kayıt "nerede kaldık"ı söyler (özellikle "Oturum kapanışı" girdileri).
-3. `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` — v3'ün **asıl tasarım dokümanı**: parçalar/temalar, zorluk ilkeleri, yöntem, kararlar, parça durumu (§13), açık konular (§15).
-4. `crVersion.md` (repo kökü) — onaylanmış versiyonlar (v1, v2, v3, v3.1…), en yeni en üstte.
-5. İşe göre: ilgili kod dosyaları (bkz. §6 kod haritası).
-6. **Çalıştırarak doğrula (kullanıcı kuralı, her oturum):** Unity Editor kapalıyken (kilit: `Temp\UnityLockfile`) sırayla:
-   - EditMode testleri: `Unity.exe -batchmode -nographics -projectPath <proje> -runTests -testPlatform EditMode -testResults Logs\<ad>.xml -logFile Logs\<ad>.log` → sonuç XML'deki `total/passed/failed`.
-   - Bölümlerin kendi ölçümü: `-executeMethod Cloudora.Editor.V3LevelTool.RunCalibrationReportBatch` (oyundaki 1–15'i yeniden ölçer; `CLOUDORA_V3_CAL` satırları) ve gerekirse `RunCandidateReportBatch` (çerçeve dağılımları → `Logs/v3-candidate-summary.txt`).
+1. **Bu dosya** (önce §0).
+2. `ClaudoraRelease.md` (repo kökü) — yapılan her işlemin kaydı, en yeni en üstte.
+3. `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` — v3'ün **asıl tasarım dokümanı**: parçalar/temalar, zorluk ilkeleri, kararlar (§11b–11l), faz planı (§11l), açık konular (§15).
+4. `crVersion.md` (repo kökü) — onaylanmış versiyonlar (v1 … v3.2), **baştan sona** oku.
+5. `Docs/V3_SABLON.md` ("Uygulanan plan": 1–100 bölüm bölüm tablo) ve `Docs/V3_BOLUM_HARITASI.html` (tek sayfalık görsel özet).
+6. İşe göre: ilgili kod dosyaları (bkz. §6 kod haritası).
+7. **Çalıştırarak doğrula (kullanıcı kuralı, her oturum):** Unity Editor kapalıyken (kilit: `Temp\UnityLockfile`; açıksa `CloseMainWindow` ile kapat) sırayla:
+   - EditMode testleri: `Unity.exe -batchmode -nographics -projectPath <proje> -runTests -testPlatform EditMode -testResults Logs\<ad>.xml -logFile Logs\<ad>.log` → XML'deki `total/passed/failed/skipped`. Beklenen: 196 / 192 / 0 / 4.
+   - Bölümlerin ölçümü: `-executeMethod Cloudora.Editor.V3LevelTool.RunCalibrationReportBatch` (`CLOUDORA_V3_CAL` satırları). Önizlemeler: `RunTransitionPreviewBatch`, `RunTheme2PreviewBatch`, `RunTheme3PreviewBatch` → `Logs/v3-preview-<Parça>.csv`. Veri üretimi: `GenerateLevelDataBatch` (veri değişmemeli; `GeneratedDataMatchesBuilder` testi korur).
    - Unity yolu: `C:\Program Files\Unity\Hub\Editor\6000.5.9f1\Editor\Unity.exe`.
-7. **Editor oyun testi (kullanıcı kuralı, her oturum, 2026-10-15):** Claude oynayamaz; kullanıcı oynar, Claude hazırlar ve log'dan doğrular.
-   - Batch işleri bitince Unity Editor'ı projeyle aç (`Start-Process Unity.exe -ArgumentList '-projectPath', <proje>`); kaydı gerekirse yedekleyip ayarla (`%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\`).
-   - Kısa rutin (5–10 dk): 2–3 bölüm; Undo, Extra, Shuffle birer kez; 1 boş bulutlu bölümde (19, 29…) başarısızlık + devam. Parça değiştiyse parçanın tamamı.
-   - Sonra `Logs/Editor.log`'dan doğrula: `[Analytics]` satırları (level_started/completed, move_count, duration, undo/extra/shuffle, level_failed/continued, coins), exception var mı; bölüm verisiyle (en kısa çözüm) karşılaştır, tabloyu `ClaudoraRelease.md`'ye yaz.
-   - Editor'ı kapatmadan build alma (proje kilidi); kod değiştirmeden önce Play'i durdur.
+8. **Editor oyun testi (kullanıcı kuralı, her oturum):** Claude oynayamaz; kullanıcı oynar, Claude hazırlar ve log'dan doğrular.
+   - Batch işleri bitince Unity Editor'ı projeyle aç (`Start-Process Unity.exe -ArgumentList '-projectPath "<proje>"'`); kaydı yedekleyip (SHA kontrolü) gerekirse `currentLevel` / `highestCompletedLevel`'i ayarla (`%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\`).
+   - Kısa rutin (5–10 dk): 2–3 bölüm; Undo, Extra, Shuffle birer kez; 1 boş bulutlu bir bölümde başarısızlık + devam. Parça değiştiyse parçanın tamamı.
+   - Sonra `Logs/Editor.log`'dan doğrula: `[Analytics]` ve `[Input]` satırları (frame ve t ile), exception; bölüm verisiyle (en kısa çözüm) karşılaştır, tabloyu `ClaudoraRelease.md`'ye yaz.
+   - **`Logs/Editor.log` Editor her açılışta üzerine yazılır** → önemli test loglarını `Logs/oyun-testleri/` altına tarihli adla kopyala (§8).
+   - Editor açıkken build alma ve `Assets/` altına yazma (oyun sırasında yeniden derleme tetiklenir).
 
 ## 2. Çalışma kuralları (kullanıcı: Bahadır; Türkçe konuşur)
-- Promptları uygula; **gerçek karar noktalarında onay iste.** Oyuncuya görünen metinler için 3–4 somut seçenek sun.
-- **Her işlem** (küçük düzeltme ve önemli kontroller dahil) tarih-saatle (`Get-Date`) `ClaudoraRelease.md`'ye, en yeni en üstte, Türkçe yazılır. Kişisel yol yazma (`%USERPROFILE%` kullan).
-- **Versiyon:** yalnızca kullanıcı onayıyla; `bahadir-claude-versions` dalında commit + etiket, `crVersion.md`'ye giriş. Eklemeler v3.2, v3.3…; bir sonraki major değişiklik v4. `ClaudoraRelease.md` her versiyonla birlikte commit'lenir.
-- **Push: her seferinde ayrı, açık onay.** Önceki onay sonrakine geçmez. Hedefler: `upstream` (yigityvz/cloudora-android) `cloudora-bahadir` + `origin` (bahadir-aktas/cloudora-android) `main`. Force yok; takım reposunun `main`'ine dokunulmaz.
-- Commit'ler değiştirilmez (amend/rebase yok). PowerShell 5.1'de çok satırlı mesaj için `git commit -F dosya`.
+- Promptları uygula; **gerçek karar noktalarında onay iste** (kullanıcı fazlarda "her adımda sor" dedi). Oyuncuya görünen metinler için 3–4 somut seçenek sun.
+- **Her işlem** (küçük düzeltme ve önemli kontroller dahil) tarih-saatle `ClaudoraRelease.md`'ye, en yeni en üstte, Türkçe yazılır. **Saati her zaman `Get-Date` / `date` ile al, tahmin etme** (2026-10-15'te tahmini saat yazılıp düzeltildi). Kişisel yol yazma (`%USERPROFILE%` kullan).
+- Uzun işlerde ara ara yüzde ver.
+- **Versiyon:** yalnızca kullanıcı onayıyla; `bahadir-claude-versions` dalında commit + etiket, `crVersion.md`'ye giriş. Eklemeler v3.3…; bir sonraki major değişiklik v4. `ClaudoraRelease.md` her versiyonla birlikte commit'lenir.
+- **Push: her seferinde ayrı, açık onay.** Önceki onay sonrakine geçmez. Hedefler: `upstream` (yigityvz/cloudora-android) `cloudora-bahadir` + `origin` (bahadir-aktas/cloudora-android) `main`, etiketlerle. Force yok; takım reposunun `main`'ine dokunulmaz.
+- **Her push'tan önce proje hafızasını güncelle (kullanıcı, 2026-10-15):** `Docs/PROJE_HAFIZASI.md` (özellikle §0 "Nerede kaldık": versiyon, push durumu, sıradaki iş) ve gerekiyorsa `ClaudoraRelease.md` güncellenir, commit'lenir; push bu commit'le birlikte yapılır.
+- Commit'ler değiştirilmez (amend/rebase yok). Çok satırlı mesaj için `git commit -F` (dosya ya da stdin).
 - Gördüğün her tutarsızlığı/çakışmayı (küçük de olsa) kullanıcıya söyle. İstisna: `paylasim/DEVRALMA.md` eski ve aktif kullanılmıyor — kaynak sayma, eskiliğini raporlama, dokunma.
-- Kullanıcı testlerinde art arda hızlı basmalar kasıtlı buton testidir, zorluk göstergesi değildir.
-- Geçmişte olanı anlatırken ne zaman yapıldığını açık yaz (bu oturumda yapılan işle karışmasın).
-- Oyunda görünen metinde ASCII dışı sembol (`♥`, emoji…) kullanma; Android'de görünmez → sprite ikon (`CloudoraVisuals.Heart`).
+- Kullanıcı testlerinde art arda hızlı basmalar kasıtlı buton testidir (genelde 1–15'te). Bilerek "No Moves" denenen bölümler ve özelliklerle hızlı geçilen bölümler zorluk analizine katılmaz. **Daha önce çözülmüş bölümler tekrar oynanınca** kolay gelir (telefon testi 75/78) — zorluk yorumunda bunu belirt.
+- Geçmişte olanı anlatırken ne zaman yapıldığını açık yaz.
+- Oyunda görünen metinde ASCII dışı sembol kullanma; Android'de görünmez → sprite ikon.
+- Yeni C# dosyalarını CRLF'ye çevir. Python'da Türkçe çıktı için `PYTHONIOENCODING=utf-8`.
 
 ## 3. Kaynaklar — ne nerede yazıyor
 | Kaynak | İçerik | Durum |
 |---|---|---|
-| `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` | v3 tasarımı: desen, parçalar/temalar, yöntem, Shuffle/Restart/başarısızlık/coin kararları, modifier arşivi, test planı, parça durumu, açık konular | **Güncel, asıl referans** |
-| `Docs/V3_SABLON.md` | 1–100 arka plan şablonu (Faz 1.2–1.4): ilkeler, yenilik envanteri, yerleşim, hedef eğrisi, bölüm bölüm şablon | Taslak, Faz 1 sürüyor |
-| `Docs/V3_CERCEVE_ENVANTERI.md` | Faz 1.1 ölçümleri: 60 çerçevenin (kap. 4–6, 3–6 renk, 1–2 boş, klasik/serpiştirilmiş) puan, hamle, çıkmaz, takılma, No Moves tablosu + bulgular | Güncel (2026-10-15); puan ağırlıkları değişirse yeniden ölçülmeli |
-| `ClaudoraRelease.md` | Her işlemin kaydı; test tabloları (insan hamle/süre verileri), kararların gerekçeleri | Güncel |
-| `crVersion.md` | v1, v2, v3, v3.1 ayrıntıları (değişiklikler, doğrulama, bilinen sınırlar) | Güncel |
-| `README.md` | Proje tanıtımı, katkıda bulunanlar, repo bağlantıları | 2026-10-15'te v3.1'e göre güncellendi |
-| `Docs/GELISTIRME_ONERILERI.md` | v1 sonrası öneri listesi (D/G/F/O/Q/B maddeleri) ve eski versiyon planı | Öneri listesi; versiyon planı artık geçerli değil (v3 = zorluk çalışması oldu) |
-| `Docs/PROJECT_PROGRESS.md` | Ana yazarın faz 0–15 geçmişi (İngilizce) | Tarihsel; Restart/Shuffle anlatımı v3.1 öncesine ait |
-| `Docs/ANDROID_BUILD.md`, `GOOGLE_PLAY_SUBMISSION.md`, `RELEASE_CHECKLIST.md`, `PRIVACY_RELEASE_REVIEW.md` | Build, yayın, gizlilik süreçleri (ana yazar) | Tarihsel/yayın öncesi; yayın onayı yok |
-| `StoreAssets/README.md`, `STORE_COPY.md` | Mağaza görselleri ve metin taslağı (EN/TR) | Taslak |
-| claude.ai "Cloudora — Temalar, Bölümler ve Zorluk" (`https://claude.ai/artifact/2mwyMmgphECxmDmkSojPWH`, 14.10) | **Eski** 13 dünyalı yapı (1–400), eski zorluk dalgası, 5 tutarsızlık | v3 öncesi; tarihsel. PDF'i repo dışında: `..\Cloudora-Temalar-Bolumler-Zorluk.pdf` |
-| claude.ai "Cloudora Buton Hakları" (`https://claude.ai/artifact/4wb1GpLBHCTZaGaYvV6rHj`, 13.10) | v2 rozet kararları (köşe rozeti, AD ipucu, Restart can rozeti) | Restart rozeti v3.1'de kalktı |
+| `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` | v3 tasarımı: desen, parçalar/temalar, yöntem, Shuffle/başarısızlık/coin kararları, modifier arşivi, kararlar §11b–11l, faz planı §11l, açık konular §15 | **Güncel, asıl referans** |
+| `Docs/V3_SABLON.md` | 1–100 şablonu: ilkeler, yenilik envanteri, hedef eğrisi, **"Uygulanan plan"** (100 satır: hedef/puan/renk/kapasite/boş/dizilim/en kısa/tuzak/No Moves/yenilik) + taslaktan farklar; Faz 1.4 taslağı tarihçe | Güncel (20:20) |
+| `Docs/V3_BOLUM_HARITASI.html` | Tek sayfa: gelen özellikler sırası, kurallar, tuzak ve No Moves listeleri, 100 bölümün kartları | Güncel (20:10); bölümler değişirse `Logs/araclar/make_map.py` + `make_html.py` ile yeniden üret |
+| `Docs/V3_CERCEVE_ENVANTERI.md` | Faz 1.1 ölçümleri: 60 çerçevenin dağılımları + bulgular | Güncel; puan ağırlıkları değişirse yeniden ölçülmeli |
+| `ClaudoraRelease.md` | Her işlemin kaydı; test tabloları (insan hamle/süre), kararların gerekçeleri | Güncel |
+| `crVersion.md` | v1, v2, v3, v3.1, **v3.2** ayrıntıları | Güncel |
+| `README.md` | Proje tanıtımı | v3.2'ye göre güncellendi |
+| `Docs/Cloudora 1–100 Şablonu.html` | Faz 1.4 inceleme sayfasının yerel kopyası (eski) | **Commit'e alınmadı** (kullanıcı kararı); yerini `V3_BOLUM_HARITASI.html` aldı |
+| claude.ai "1–100 şablonu" (`https://claude.ai/artifact/PDN14bYos5oRJkJLCjHeMW`) | Faz 1.4 inceleme sayfası (grafik + tablo) | Taslak plana göre; uygulanan plan `V3_SABLON.md`'de |
+| `Docs/GELISTIRME_ONERILERI.md` | v1 sonrası öneri listesi | Versiyon planı artık geçerli değil |
+| `Docs/PROJECT_PROGRESS.md`, `ANDROID_BUILD.md`, `GOOGLE_PLAY_SUBMISSION.md`, `RELEASE_CHECKLIST.md`, `PRIVACY_RELEASE_REVIEW.md` | Ana yazarın geçmişi ve yayın süreçleri | Tarihsel; yayın onayı yok |
+| claude.ai "Cloudora — Temalar, Bölümler ve Zorluk" (`https://claude.ai/artifact/2mwyMmgphECxmDmkSojPWH`) | **Eski** 13 dünyalı yapı (1–400) | v3 öncesi; tarihsel |
 | `paylasim/DEVRALMA.md` | Eski devralma notu | **Kullanılmıyor, kaynak değil** |
+| `Logs/oyun-testleri/` (git dışı) | Tarihli test logları: Editor 61–100, telefon logcat'leri, Shuffle yük ölçümü, önizleme CSV'leri | Bkz. §8 |
+| `Logs/araclar/` (git dışı) | Bölüm haritası ve şablon tablosunu üreten Python betikleri | Bkz. §8 |
 | Hafıza dizini (`%USERPROFILE%\.claude\projects\…\memory\`) | Kullanıcı tercihleri ve kurallar | Her oturumda otomatik yüklenir |
 
 ## 4. Proje özeti
-- Unity **6000.5.9f1**, Android, dikey, tek parmakla hava sıralama bulmacası. Ana yazar **yigityvz**; Bahadır katkıda bulunan (Unity geliştirme, Android build). Tek sahne `Assets/_Cloudora/Scenes/02_Gameplay.unity`; arayüzün tamamı kodla oluşturulur.
-- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`). v3/v3.1 2026-10-15 00:32'de iki repoya push edildi.
-- **Telefon (Samsung Galaxy S24 FE):** "Cloudora" (v1), "Cloudora v2", "Cloudora v3" (`com.yigityvz.cloudora.v3`, v3.1 derlemesi) yan yana.
+- Unity **6000.5.9f1**, Android, dikey, tek parmakla hava sıralama bulmacası. Ana yazar **yigityvz**; Bahadır katkıda bulunan. Tek sahne `Assets/_Cloudora/Scenes/02_Gameplay.unity`; arayüz kodla oluşturulur.
+- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`), **v3.2 (`73611d2`, yalnızca yerel)**. v3/v3.1 2026-10-15 00:32'de iki repoya push edildi.
+- **Telefon (Samsung Galaxy S24 FE, adb `R5CXA3032LP`):** "Cloudora" (v1), "Cloudora v2", "Cloudora v3" (`com.yigityvz.cloudora.v3`, şu an v3.2 derlemesi) yan yana.
 
 ## 5. Oyun kuralları (kod: `Scripts/Core/PuzzleRules.cs`, `CloudState.cs`)
-- Bulutlar alttan üste dizili hava parçası yığınları; kapasite 2–7 (1–15'te 4). Türler: Güneş, Yağmur, Kar, Rüzgar, Ay, Şimşek (+ Gökkuşağı joker).
-- Hamle: kaynak → hedef. En üstteki aynı renkli grup, **sığdığı kadar otomatik** taşınır (miktar seçilmez). Hedef boş ya da üstü aynı renk olmalı (Gökkuşağı her şeyle eşleşir).
-- Kazanma: boş olmayan her bulut dolu ve (Gökkuşağı hariç) tek renk.
-- **Hiç legal hamle kalmazsa = bölüm başarısız** (v3.1). Seçenekler: Retry (−1 can; 1–5 ücretsiz, bölüm sıfırdan, ekstra bulutlar silinir) · reklam veya 40 coin ile **çözülebilen son duruma** dönüş. Hamle var ama çözüm yoksa başarısızlık tetiklenmez → Undo/Shuffle/Extra.
-- Başarısızlık ekranındayken uygulama kapanırsa durum kayda yazılır (`FailRecord`), açılışta aynı ekran gelir.
-- **Booster'lar:** Undo (başlangıç 3, reklamla +3), Extra Cloud (başlangıç 1; boş bulut ekler, bölüm başına en fazla 2; Undo geçmişini siler), Shuffle (başlangıç 1; **16'dan itibaren**; seçilen tek bulutu kendi içinde karıştırır, sonuç her zaman çözülebilir ve farklı; Undo geçmişini siler; tek renkli/tek elemanlı/boş/modifier'lı bulut seçilemez). Hak bitince reklam (dev build'de sahte reklam anında verir; release'te reklam yok).
-- **Can:** en fazla 5, 30 dakikada 1 dolar. **Coin:** Orta +10, Zor +15, Çok zor +20 (101+ için +10), başlangıç 0.
-- **Restart yok** (v3.1'de kaldırıldı). Geçici geliştirme butonu: sağ üstte "AD +1" (reklam → +1 can).
-- **Modifier'lar** (kodda var, 1–100'de **kullanılmıyor**): Frozen, Locked, Fog, Night, Wind, Rainbow — bkz. tasarım §7.
-- Ara reklam (interstitial): 5'ten sonra, her 4 tamamlamada bir, en az 5 dakika arayla.
+- Bulutlar alttan üste dizili hava parçası yığınları; kapasite 2–7 (1–18'de 4, 19'dan itibaren 5). Türler: Güneş, Yağmur, Kar (6+), Rüzgar (31+), Ay (81+), Şimşek (henüz yok) + Gökkuşağı joker (1–100'de yok).
+- Hamle: kaynak → hedef. En üstteki aynı renkli grup **sığdığı kadar otomatik** taşınır. Hedef boş ya da üstü aynı renk olmalı.
+- Kazanma: boş olmayan her bulut dolu ve tek renk.
+- **Hiç legal hamle kalmazsa = bölüm başarısız** (v3.1): Retry (−1 can; 1–5 ücretsiz) · reklam veya 40 coin ile **çözülebilen son duruma** dönüş (`FailRecovery`). Başarısızlık ekranındayken uygulama kapanırsa durum kayda yazılır (`FailRecord`).
+- **Booster'lar:** Undo, Extra Cloud (bölüm başına en fazla 2; tahta küçülür), Shuffle (16'dan itibaren; seçilen tek bulutu karıştırır, sonuç çözülebilir ve farklı). Shuffle ve devam kontrolü **`PuzzleSolver.CheckSolvable`** ile (v3.2; ilk çözümde durur). Hak bitince reklam (dev build'de sahte reklam anında verir).
+- **Can:** en fazla 5, 30 dakikada 1. **Coin:** Orta +10, Zor +15, Çok zor +20 (101+ için +10).
+- **Restart yok.** Geçici geliştirme butonu: sağ üstte "AD +1". Bilgi penceresi açıkken alt butonlar görünür ama kilitli (`ButtonShield`).
+- **Modifier'lar** kodda var, **1–100'de kullanılmıyor** (temalar yalnızca görsel); 101+ eski sistemde var.
 
 ## 6. Kod haritası (`Assets/_Cloudora/`)
 | Yer | Ne |
 |---|---|
-| `Scripts/Core/` | Saf kurallar: `PuzzleRules`, `CloudState`, `PuzzleState`, `Move` |
-| `Scripts/Puzzle/PuzzleController.cs` | Ana akış: bölüm yükleme, hamle, Undo, Extra, Shuffle, başarısızlık/devam, coin, kayıt |
-| `Scripts/Puzzle/CloudContainerView.cs` | Bulut görünümü (kuralların görünüm tarafı kopyası burada da var) |
-| `Scripts/Level/V3LevelPlan.cs` | Parçalar, desen, çerçeveler (`FrameFor`), bant yüzdelikleri, Shuffle açılış bölümü |
-| `Scripts/Level/PuzzleSolver.cs` | Çözücü + zorluk ölçütleri + sanal oyuncu + puan ağırlıkları |
-| `Scripts/Level/V3LevelData*.cs` | Seçilmiş bölümler (`.Generated.cs` araçla üretilir, elle değiştirilmez) |
-| `Scripts/Level/AuthoredLevelCatalog.cs` | 1–15'i `V3LevelData`'dan kurar (öğretici yazılar burada) |
-| `Scripts/Level/LevelGenerator.cs`, `BalanceProfile.cs`, `DifficultyCalculator.cs` | **Eski** üretici: henüz kurulmamış 16+ bölümler buradan gelir |
-| `Scripts/Level/CloudShuffler.cs` | Bulut içi Shuffle + `FailRecovery` (çözülebilen son durum) |
-| `Scripts/Progression/` | Can, coin, booster, ilerleme, `WorldCatalog` (dünya listesi) |
-| `Scripts/Services/` | Kayıt (JSON + yedek), `FailRecord`, reklam (sahte/AdMob kapalı), analytics |
-| `Scripts/Modifiers/` | Modifier kuralları ve çalışma zamanı |
-| `Scripts/UI/` | `GameplayOverlay` (HUD, butonlar, başarısızlık ekranı), menü, dünya ekranı, yerleşim |
-| `Editor/V3LevelTool.cs`, `V3LevelBuilder.cs`, `LevelCandidate*.cs` | **Bölüm aracı** (yalnızca Editor, APK'ya girmez) |
-| `Editor/CloudoraBuildTools.cs`, `ContentValidationTool.cs` | Build menüleri, eski üretici için 10.000 bölüm kontrolü |
-| `Tests/Editor/` | `LevelToolTests`, `V3LevelBuildTests`, `V31GameplayTests`, `PuzzleFeelTests` (son durum 96/96) |
+| `Scripts/Core/` | Saf kurallar |
+| `Scripts/Puzzle/PuzzleController.cs` | Ana akış; `LoadLevel`: 1–15 `AuthoredLevelCatalog.Get`, 16–100 `TryGetBuilt` (veri), 101+ `LevelGenerator`; `SolverStateLimit = 200000` |
+| `Scripts/Puzzle/CloudContainerView.cs` | Bulut görünümü, renkler (`GetColor`, `GetPatternColor`) |
+| `Scripts/Level/V3LevelPlan.cs` | Parçalar, bant deseni, `ShuffleUnlockLevel = 16`; 16+ için `FrameFor` yok (çerçeveyi kurucu seçer) |
+| `Scripts/Level/PuzzleSolver.cs` | Ölçüm çözücüsü `Solve` (bütün durum uzayı + zorluk ölçüleri + sanal oyuncu; araç kullanır) ve oyun içi **`CheckSolvable`** (hızlı) |
+| `Scripts/Level/BoardFrame.cs` | Çerçeve: kapasite, renk, boş, `OpenClouds` (serpiştirilmiş dizilim) |
+| `Scripts/Level/V3LevelData*.cs` | Seçilmiş 1–100 bölüm (`.Generated.cs` araçla üretilir, elle değiştirilmez) |
+| `Scripts/Level/AuthoredLevelCatalog.cs` | 1–15 (öğretici yazılar) + `TryGetBuilt` (16–100) |
+| `Scripts/Level/LevelGenerator.cs`, `BalanceProfile.cs` | **Eski** üretici: yalnızca 101+ |
+| `Scripts/Level/CloudShuffler.cs` | Bulut içi Shuffle + `FailRecovery` |
+| `Scripts/Progression/` | Can, coin, booster, `WorldCatalog` (**dünya adları hâlâ eski liste**) |
+| `Scripts/Services/` | Kayıt, `FailRecord`, reklam, analytics (`DebugAnalyticsService`: frame ve t) |
+| `Scripts/UI/GameplayOverlay.cs` | HUD, butonlar, `ButtonShield`, `[Input]` debug satırları |
+| `Editor/V3LevelBuilder.cs` | Parça dağıtımı (Ladder → Theme → sabit 1–15); 1–15 kurulumu (400 aday, 300.000 durum) |
+| `Editor/V3LadderBuilder.cs` | 16–30 kurucusu; ortak havuzlar (`Pool`), `LongMovesThreshold`, `PreviousBoards`, `NoMovesBonus`, `V3Novelty` |
+| `Editor/V3ThemeBuilder.cs` | 31–100 kurucusu: segment yapılandırması (renk, dizilim adımları, eğriler, dönüş penceresi, `TrapsByCycle`, `HardTrapLevels`), final kuralları, `EarlyTrapPreference`, `TrapPoolCandidates`, Tema 2 için yalnızca 59'u etkileyen `FallbackTrapPoolCandidates` |
+| `Editor/V3LevelTool.cs` | Menüler/batch: veri üretimi (`PartsToBuild` = 5 parça), önizlemeler, envanter, dizilim, kalibrasyon raporları |
+| `Editor/LevelCandidateFactory.cs` | Aday tahtalar (`DealScattered` dahil) |
+| `Tests/Editor/` | `V3LevelBuildTests`, `V32LadderTests`, `V32ThemeTests`, `V32Theme3Tests`, `V32SolverLoadTests`, `V32VisualTests`, `V32InputTests`, `V32NoMovesTests`, `V32LayoutTests`, `V31GameplayTests`, `LevelToolTests`, `PuzzleFeelTests`; `V32ShuffleLoadProbe` (`[Explicit]`, elle) |
 
-## 7. Bölüm tasarımı (v3) — nasıl yapılır
-**Plan (tasarım §2, §4):** Her 5 bölümde **Orta, Orta, Zor, Orta, Çok zor**; "Kolay" yok. Yani 3, 8, 13… Zor; 5, 10, 15… Çok zor (her parçanın sonu Çok zor). Etiketler parçadan parçaya aynı şeyi ifade etmez: her parçanın kendi ölçeği var, genel zorluk birikimli artar (ileride bir Orta baştaki bir Zor'a ulaşabilir), parça geçişlerinde sıçrama/düşüş yok, parça içinde aynı bant hafifçe zorlaşır, oyunun başında artış yavaş, oyuncunun alışması hesaba katılır.
+## 7. Bölüm tasarımı (v3) — özet
+**Desen:** her 5 bölümde **Orta, Orta, Zor, Orta, Çok zor**; etiketler parçadan parçaya farklı ölçekte, zorluk birikimli, parça geçişlerinde sıçrama yok (geçiş testinde Orta'lar için 0,25 pay: eğriler sınırda birleşir).
 
-**Şu anki puanlar (kalibrasyon raporuyla doğrulanır):**
-| Bant | 1–5 | 6–15 |
-|---|---|---|
-| Orta | 10,38 · 11,55 · 11,91 | 15,13 → 16,80 (6 bölüm, artan) |
-| Zor | 13,69 | 18,12 · 18,79 |
-| Çok zor | 15,44 | 20,24 · 21,35 |
-6–15'in en kolay Orta'sı (15,13) 1–5'in Zor'undan zor, 5. bölümden (15,44) zor değil → birikimli ama sıçramasız. 6–15'in 2. döngüsünde Zor/Çok zor'un Orta'lardan zayıf ayrışması kullanıcı kararıyla kabul edildi (tasarım §13).
-
-| Parça | Bölümler | Geçici ad | Çerçeve / not | Durum |
+| Parça | Bölümler | Ad | Ne geliyor | Durum |
 |---|---|---|---|---|
-| 1 | 1–5 | Tanıtım | kap. 4, 2 renk, 2 boş | Tamamlandı |
-| 2 | 6–15 | Alışma | kap. 4, 3 renk, 2 boş | Tamamlandı |
-| 3 | 16–30 | **Green Valley** (kesin, tasarımı sonra) | Kapasite 4 → 5, geçiş noktasını araç seçer; boş bulut kademeli 2 → 1; Shuffle 16'da; dünya listesi bu parçayla yeni aralıklara geçer (tasarım §11b–11d) | **Sıradaki (v3.2)**, onay bekliyor |
-| 4 | 31–60 | Tema 2 | Belirlenmedi | — |
-| 5 | 61–100 | Tema 3 | Belirlenmedi | — |
-**1–100 faz planı (tasarım §11k–11l, 2026-10-15 16:04) — güncel yol haritası:** 1–100'de temalar yalnızca görsel; Faz 1 şablon → Faz 2 araç düzenlemesi → Faz 3 simülasyon → Faz 4 parça parça oyun testi → Faz 5 kapanış. Her adımdan önce/sonra kullanıcıya sor. Hangi adımda kalındığı işlem kaydının en üstünde. Durum (2026-10-15 20:50): Faz 1 bitti; Faz 2.1–2.3 bitti; 2.5 atlandı (kullanıcı); 2.6'nın acil kısmı yapıldı (oyun içi `PuzzleSolver.CheckSolvable`: Shuffle/No Moves dönüşü; telefonda 83 + 2 Extra donması düzeldi). 16–100 deneme verisi Editor'da ve telefonda test edildi, kullanıcı memnun; commit yok. Bölüm haritası `Docs/V3_BOLUM_HARITASI.html`, uygulanan plan `Docs/V3_SABLON.md`. Sıradaki: commit (onayla), sonra Faz 2.4 / Faz 3; açık: tahta ölçeği, final zorluğu (tasarım §15), dünya adları (Faz 5.1).
-**v3.2 planı (tasarım §11e, ilk hali):** 1–15 sabit; hedef eğrisi dengeli, tabloyla onaylatılır, sonra üretilir; sıra renkler → araç → eğri → 16–30 üretimi + dünya listesi → baştan test. **Her adımdan önce kullanıcıya sor.**
-**Çerçeve merdiveni (karar 15.10, tasarım §11c):** çerçeveyi araç puana göre seçecek; kapasite ve hava türü sayısı geri düşmez; yeni tür geldiğinde boş bulut geçici 2'ye dönüp kademeli 1'e iner. Türler 1–100'e kademeli yayılır (31–60: +Rüzgar, 61–100: +Ay, belki +Şimşek). Dağılımda değişiklik gerekirse kullanıcıya sorulur. Bir bölümde tek yenilik, yenilik ilk kez Orta'da. Renkler (v3.2, seçildi): Kar #7FE3F5, Rüzgar #AEB7C2, Şimşek #25358A + beyaz desen. **v3.2 testi kayıt sıfırlanıp 1. bölümden yapılacak** (renkler 1–15'i de etkiliyor).
-Tema adları, tasarımları ve temaya özel özellikleri **henüz belirlenmedi.** 1–100'de şimdilik modifier yok. 101+ eski sistemle kalır.
+| 1 | 1–5 | Tanıtım | 2 renk, kap. 4, 2 boş, öğretici yazılar | Bitti (v3) |
+| 2 | 6–15 | Alışma | Kar (6), "Undo is always safe" (10) | Bitti (v3) |
+| 3 | 16–30 | Green Valley (görsel) | Shuffle 16, serpiştirilmiş dizilim 17, kap. 5 (19), tek boş bulut 21; final 30 | Bitti (v3.2) |
+| 4 | 31–60 | Tema 2 | Rüzgar 31 (2 boşla nefes), tek boş 36'da döner, 1 açık 39, klasik 49; döngüde 1 tuzak; final 60 | Bitti (v3.2) |
+| 5 | 61–100 | Tema 3 | 61–80: yeni görsel tema, klasik 74, tuzaklar 1 → 2, Zor/Çok zor tuzak 75, 78. 81–100: Ay 81, tek boş 87, 1 açık 89, klasik 94, Zor/Çok zor tuzak 95, 98; final 100 | Bitti (v3.2) |
 
-**Yöntem (bölüm aracı, test önce):**
-1. Karar tasarım dokümanına yazılır → çerçeve `V3LevelPlan.FrameFor`'a eklenir.
-2. `V3LevelBuildTests`'e parça testi eklenir, parça `DesignedParts`'a girer; veri yokken testler başarısız olmalı.
-3. Parça `V3LevelTool.PartsToBuild`'e eklenir → **Cloudora/V3/Bölüm Verisini Üret** (veya batch `GenerateLevelDataBatch`).
-   - Her çerçeve için seed 1'den 400 aday, çözücü (en fazla 300.000 durum), çözümsüzler elenir.
-   - Puan = en kısa hamle ×1 + tuzak oranı ×15 + yanıltıcılık ×10 + çıkmaz oranı ×5 + sanal oyuncu fazla hamlesi ×1,5 + sanal oyuncu takılma oranı ×10.
-   - Bant aralıkları çerçevenin aday dağılımından: Orta %30–60, Zor %70–85, Çok zor %90–100 (çakışmasız).
-   - Her bölüme aralıkta hedefe en yakın, parçada tekrar etmeyen, öğretici yazıyı gösteren tahta; aynı banttaki bölümler parça içinde hafifçe zorlaşır.
-4. Testler: döngüde Orta < Zor < Çok zor; aynı bant kolaylaşmaz; aralıklar çakışmaz; yeni parçanın Orta'ları öncekinin Orta'larından zor ve ilk bölüm ≤ önceki parçanın sonu ×1,10; tahtalar tekrarsız; deterministik; veri dosyası araçla uyumlu (`GeneratedDataMatchesBuilder`). Mutasyonla (kodu bilerek bozma) testlerin yakaladığı doğrulanır.
-5. Editor testi (kayıt yedeklenip sıfırlanır) → telefon testi ("Cloudora v3" ayrı paket olarak derlenip kurulur, logcat). Her bölüm için tablo: bant, en kısa çözüm, oyuncu hamlesi, fazla hamle, süre.
-6. İnsan verisi ölçümle uyuşmazsa **Cloudora/V3/Kalibrasyon Raporu**, ağırlık/ölçüt ayarı, parça yeniden üretilir; cihaz verisi teste yazılır (`NaivePlayerAgreesWithDeviceTestData`). Kabul kararı kullanıcınındır. Sonra tasarım §13 ve işlem kaydı güncellenir.
+- **Kurallar:** bir bölümde tek yenilik, Orta'da gelir; kapasite/renk geri düşmez; yeni renkle boş bulut ve dizilim "nefes alır"; No Moves zaman zaman ve bantlara dağılmış; kilitleyen tahta (takılma ≥ 0,5) yalnızca finalde; final en az ortanca uzunlukta ve parçanın en tuzaklısı; hamle sayısı absürt olmamalı (çerçevenin %90'lık değeri).
+- **Puan:** en kısa hamle ×1 + tuzak ×15 + yanıltıcılık ×10 + çıkmaz ×**20** + sanal oyuncu fazla hamlesi ×1,5 + takılma ×10.
+- **Hedef eğrisi (Orta / Zor / Çok zor):** 31–60: 20→24 / 22,5→26,5 / 25,5→28,5 · 61–80: 24→26 / 26,5→28,5 / 28,5→30,5 · 81–100: 26,5→29,5 / 29→32 / 31→34.
+- **Yöntem (değişiklik gerekirse):** önce test (`V32*Tests`), sonra kurucu; önizleme CSV'si ile kontrol; `GenerateLevelDataBatch`; tam test; veri dosyasını öncekiyle satır satır karşılaştır (yalnızca hedeflenen bölümler değişmeli — 59 düzeltmesinde ilk deneme 49/50'yi de değiştirmişti); Editor testi; telefon testi.
+- **İnsan verisi (2026-10-15):** tuzak bölümleri (1 boş) düşünme süresi uzun ama fazla hamle az; planlama bölümleri (2 boş) fazla hamle 2–6. 81+ (5 renk) belirgin daha uzun sürüyor; kullanıcı "81 ve sonrası öncekilere göre epey zorlayıcı". Finaller (60, 100) insan için kolay kaldı.
 
-**16+ için çerçeve merdiveni (v3.2, tasarım §11f):** `Editor/V3LadderBuilder.cs` — mutlak hedef puan eğrisi (her 5 bölümde +1,0), çerçeveyi ve yeniliklerin yerini araç seçer, testler `Tests/Editor/V32LadderTests.cs`. Önizleme menüsü/batch: `V3LevelTool.RunTransitionPreviewBatch` → `Logs/v3-preview-TransitionTheme.csv`. 1–15 eski yoldan (`V3LevelBuilder`), değişmez.
-**Bilinen ölçüm gerçekleri:** 2 boş bulutta çıkmaz/tuzak oluşmaz (zorluk = uzunluk + yanıltıcılık); 1 boş bulutta tuzak ve çözümsüz tahtalar başlar. 1–5 çerçevesinde yalnızca 37 farklı tahta var. Çözücü modifier'ları bilmez (1–100 için sorun değil).
-
-## 8. Build ve test notları
-- Build öncesi Unity Editor kapalı olmalı (proje kilidi). Komut satırından:
-  `GRADLE_USER_HOME=C:\Dev\gradle-cloudora`, `CLOUDORA_DEV_APP_ID=com.yigityvz.cloudora.v3`, `CLOUDORA_DEV_PRODUCT_NAME="Cloudora v3"`, `CLOUDORA_BUILD_OUTPUT=Builds/Android/Cloudora-v3-dev.apk` → `./Build-Android.ps1 -Mode dev`. Editor menüsünden derlenirse paket v1'in üzerine gider.
-- Kurulum: `adb install -r` (yalnızca v3 paketi); kayıt sıfırlamak gerekirse `pm clear com.yigityvz.cloudora.v3`.
-- Editor kaydı: `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\cloudora-save.json` (+ `.bak`); sıfırlamadan önce `yedek-*` klasörüne yedekle.
-- Play Mode'dayken kod değiştirme (sahte `NullReferenceException`'lar).
-- Commit dışı bırakılanlar: `ProjectSettings.asset` (Unity format değişikliği), `.vscode/`.
+## 8. Build, test ve log notları
+- Build öncesi Unity Editor kapalı. Ortam: `GRADLE_USER_HOME=C:\Dev\gradle-cloudora`, `CLOUDORA_DEV_APP_ID=com.yigityvz.cloudora.v3`, `CLOUDORA_DEV_PRODUCT_NAME="Cloudora v3"`, `CLOUDORA_BUILD_OUTPUT=Builds/Android/Cloudora-v3-dev.apk` → `./Build-Android.ps1 -Mode dev -ProjectPath <proje>` (arka planda, ~3 dk). Editor menüsünden derlenirse paket v1'in üzerine gider.
+- adb: `...\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe`. Kurulum `adb install -r`. Telefon kaydı: `/sdcard/Android/data/com.yigityvz.cloudora.v3/files/cloudora-save.json` (+`.bak`): uygulamayı `am force-stop` ile durdur, `pull` → düzenle (`currentLevel`, `highestCompletedLevel`, `failRecord` temizle) → ikisine de `push` → `monkey -p … 1` ile başlat.
+- **logcat:** `adb logcat -v time -s Unity:V` arka planda dosyaya. **Unity batch çalışması adb sunucusunu yeniden başlatır ve logcat yakalamayı keser** → batch'ten sonra yeniden başlat.
+- Telefon PC'den yaklaşık 10 kat yavaş (Shuffle ölçümü): PC'de 100 ms ≈ telefonda 1 sn.
+- Editor kaydı: `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\cloudora-save.json` (+ `.bak`); değiştirmeden önce `yedek-*` klasörüne yedekle. Telefon kaydı yedekleri de burada (`yedek-telefon-*`). **Scratchpad geçicidir**, kalıcı yedekleri oraya koyma.
+- **Loglar (git dışı, `Logs/`):** `Logs/oyun-testleri/`: `2026-10-15-1911-editor-61-100.log`, `2026-10-15-1206-telefon-16-31-eski-plan.txt` (yeniden tasarım öncesi plan), `2026-10-15-2017-telefon-16-83-donma.txt`, `2026-10-15-2046-telefon-83-87-duzeltme.txt`, `2026-10-15-2038-shuffle-yuk-olcumu-eski-kod.csv`, `v32-v3-preview-*.csv`, `v32-v3-map-data.json`. 16–30 ve 31–60 Editor testlerinin ham logları üzerine yazıldı (analizleri `ClaudoraRelease.md` 17:56 ve 18:42'de). `Logs/araclar/`: `make_map.py` (veri → `Logs/v3-map-data.json`), `make_html.py` (→ bölüm haritası), `update_sablon.py` (→ şablon tablosu), `fix59.py` (uygulanmış yama, tarihçe).
+- Play Mode'dayken kod değiştirme.
+- Commit dışı bırakılanlar: `ProjectSettings.asset` (build'in yazdığı keystore alanı + boşluk farkları), `.vscode/`, `Docs/Cloudora 1–100 Şablonu.html`.
 
 ## 9. Açık konular ve bilinen tutarsızlıklar
-- **Açık (tasarım §14–15):** öğretici yazıların görünürlüğü (tutorial ileride), coin sayıları ve başlangıç coini, reklamla can almanın asıl yeri (şimdilik "AD +1"), menüden "bölümü baştan başlat", zorluk sembolü (sprite, parçalar bittikten sonra), tema adları/özellikleri, 101+.
-- **16–30 kurulurken dikkat:**
-  - Dünya kimliği iki yerde: `WorldCatalog` ve `LevelGenerator.WorldId` — birlikte güncellenmeli.
-  - `BalanceProfile.BandFor` dünya kataloğuna bağlı → katalog değişince henüz kurulmamış 31–100'ün üretilen tahtaları da değişir.
-  - Katalog değişince kırılacak testler: `WorldProgressionCrossesBoundaryAndRestoresInStages`, `DifficultyWaveHasFinaleAndEasyWorldReset`, `CatalogUsesV3BoardsAndKeepsTutorialFrame` ("green-valley"); modifier'lar 1–100'den kalkınca `GeneratorIntroducesExpectedModifier` (45/65/85).
-  - 1 boş bulutla "hamle var ama çözüm yok" durumları çoğalır (başarısızlık tetiklenmez).
-  - **Parça içinde çerçeve değişimi:** bant aralıkları her çerçeve için ayrı hesaplanır, ama "aynı bant parça içinde kolaylaşmaz" testi puanları çerçeveden bağımsız karşılaştırır. 1 boş bulutta tuzak/takılma puanı devreye girdiği için 2 → 1 geçişinde puan sıçrayabilir. 1 boş bulutun hangi bölümlerde ve ne sıklıkla geleceği tasarımda kullanıcıyla belirlenmeli.
-- **İleride (kullanıcı):** araç "No Moves"a ulaşılabilirliği de tasarlasın (eski bölümlerde neredeyse imkânsızdı). Çözücüye "hiç hamle kalmayan durum" ölçütü eklenebilir. Tasarım §15.
-- **Test notu:** kullanıcı buton denemelerini (hızlı art arda basmalar dahil) 1–15'te yapar; o bölümlerin hamle/süre verisi zorluk analizine katılmaz.
-- **Zararsız kalıntılar:** `LevelCandidateSelector`'daki "Shuffle yedeği" (`backupCount`) ve ilgili test yorumu; `LevelDefinition.difficultyBand` (eski sistemle doluyor, okunmuyor); `BalanceProfile.DurationTarget` (yalnızca testte).
+- **Final ve ölçü (tasarım §15, kullanıcı "ileride yaparız"):** takılma ölçüsü dikkatli insanı tahmin etmiyor; 60/100 kolay, 59/78/83/90 zorladı. Faz 3'te oyun kayıtları ölçülerle karşılaştırılacak; alternatif: final adaylarını kullanıcı seçer.
+- **Faz 2.6 kalanı (tasarım §15):** büyük tahtada gerçekten çözülemeyen bir Shuffle dizilişi hâlâ 200.000 duruma kadar arar (ölçümde görülmedi); gerekirse toplam bütçe ya da aramayı karelere bölme.
+- **Tahta ölçeği (tasarım §15):** 7 bulutta (81+) ve Extra alınınca tahta küçülüyor; kullanıcı "uzun vadede değiştirelim".
+- **Dünya listesi (Faz 5.1):** ekranda eski adlar (31–40 Rainy Coast, 41–60 Frost Peaks "Frozen", 61–80 sun-desert, 81–100 storm-islands). Dünya kimliği iki yerde: `WorldCatalog` ve `LevelGenerator.WorldId`. Katalog değişince kırılabilecek testler: `WorldProgressionCrossesBoundaryAndRestoresInStages`, `DifficultyWaveHasFinaleAndEasyWorldReset`, `CatalogUsesV3BoardsAndKeepsTutorialFrame`.
+- **101+ sıçraması:** 101 eski sistemde, Rainbow modifier'lı, zorluk puanı 68,5 (100: 34).
+- **Monotonluk:** 5 renkte en kısa çözüm 14–20 hamle; izlenecek.
+- **Kullanıcının tartışmak istediği:** World ekranının kapsamı ve ortaya dokununca kapanması; Shuffle seçim modu daha belirgin olmalı.
+- **Diğer açıklar (tasarım §14–15):** öğretici yazıların görünürlüğü, coin sayıları/başlangıç coini, reklamla can almanın yeri ("AD +1"), menüden "bölümü baştan başlat", zorluk sembolü (sprite), tema adları/özellikleri, Şimşek (6. renk) 1–100'de yok.
+- **Zararsız kalıntılar:** `LevelCandidateSelector`'daki "Shuffle yedeği" (`backupCount`); `LevelDefinition.difficultyBand` (okunmuyor); `BalanceProfile.DurationTarget` (yalnızca testte).
+- **Test notu:** buton denemeleri 1–15'te; o bölümlerin verisi zorluk analizine katılmaz.
 
 ## 10. Bu dosyanın bakımı
-Önemli bir karar, yeni bir kaynak doküman ya da parça tamamlanması olduğunda bu dosya da güncellenir ve değişiklik `ClaudoraRelease.md`'ye yazılır.
+Önemli bir karar, yeni bir kaynak doküman, parça tamamlanması ya da oturum kapanışında bu dosya (özellikle §0) güncellenir ve değişiklik `ClaudoraRelease.md`'ye yazılır.

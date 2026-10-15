@@ -265,7 +265,11 @@ Test geri bildirimine göre zorluk ölçütleri revize edilir; ardından sonraki
 |---|---|---|
 | 1–5 Tanıtım | **Tamamlandı** (2026-10-14): Unity + telefon testleri geçti | Bant aralıkları: Orta %30–60, Zor %70–85, Çok zor %90–100 (çerçevenin aday dağılımında). Sanal oyuncu ölçümüyle kalibre edilip yeniden seçildi (L1, L3, L4 değişti). İnsan verisi: Orta'larda 0–1, Zor/Çok zor'da 1–2 fazla hamle. |
 | 6–15 Alışma | **Tamamlandı** (2026-10-14): Unity + telefon testleri geçti | Çerçeve: kapasite 4, 3 renk, 2 boş; varsayılan bant dilimleri. İnsan verisi (2 test ort.): Orta 0,9 < Zor 1,5 < Çok zor 1,75 fazla hamle; 2. döngüde Zor/Çok zor zayıf ayrışıyor — kullanıcı kararıyla kabul: oyunun başı, radikal artış istenmiyor, ikinci çözümün (ezber) etkisi büyük. |
-| 16–30, 31–60, 61–100 | Tasarlanmadı | |
+| 16–30 Geçiş teması (Green Valley) | **Tamamlandı** (2026-10-15, v3.2): Editor (17:56) + telefon | `Editor/V3LadderBuilder.cs`. Serpiştirilmiş dizilim 17, kapasite 5 19, tek boş bulut 21 (tuzaklar 21, 26, 30). Kullanıcı: dizilim "oyuna renk katmış", sıkıcılık azaldı, 30 en zoru. |
+| 31–60 Tema 2 | **Tamamlandı** (2026-10-15, v3.2): Editor (18:42) + telefon | `Editor/V3ThemeBuilder.cs`. Rüzgar 31, tek boş 36, 1 açık 39, klasik 49; döngüde 1 tuzak. Kullanıcı: "geçişler sırıtmadı, bulmaca hissi verdi". Sonradan final 60 (ortanca uzunluk + en tuzaklı) ve yalnızca 59 düzeltildi. |
+| 61–100 Tema 3 | **Tamamlandı** (2026-10-15, v3.2): Editor (20:00) + telefon | `Editor/V3ThemeBuilder.cs`. Klasik 74; Ay 81; tek boş 87; 1 açık 89; klasik 94; tuzaklar döngüde 1 → 2, Zor/Çok zor tuzak 75, 78, 95, 98. Kullanıcı: 78, 97, 98 düşündürücü/keyifli; 81+ belirgin zorlayıcı. Finaller (60, 100) insan için kolay kaldı (§15). |
+
+Uygulanan plan bölüm bölüm: `Docs/V3_SABLON.md` ("Uygulanan plan"); görsel özet `Docs/V3_BOLUM_HARITASI.html`.
 
 ## 14. İleride eklenecek özellikler (v3 kapsamı dışında)
 - **Coin sistemi (kullanıcı, 2026-10-14):** Oyuna coin sistemi eklenecek. Detaylar (nasıl kazanılacağı, nereye harcanacağı, booster/can/reklam ekonomisiyle ilişkisi) henüz belirlenmedi. İlgili: `GELISTIRME_ONERILERI.md` G3 (booster ekonomisi). Not: Coin ile alınan booster'lar (Extra Cloud, Shuffle, Undo) bölüm zorluğunu etkiler; tasarlanırken v3 zorluk dengesi göz önünde tutulmalı.

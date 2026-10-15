@@ -4,6 +4,21 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-15 20:58 — Kural: her push'tan önce proje hafızası güncellenir; oturum belgeleri commit'lendi
+- **Kullanıcı:** "Proje hafızasına push'tan önce hafızayı güncelleyeceğine dair bir satır da ekle. Daha sonra commit'le değişenleri."
+- **`Docs/PROJE_HAFIZASI.md` §2:** yeni kural — her push'tan önce `PROJE_HAFIZASI.md` (özellikle §0) ve gerekiyorsa `ClaudoraRelease.md` güncellenip commit'lenir; push bu commit'le yapılır. Aynı kural hafıza dosyasına (sürüm/push kuralları) da eklendi.
+- **Commit (onaylı, etiketsiz, push yok):** `PROJE_HAFIZASI.md`, `V3_BOLUM_VE_ZORLUK_TASARIMI.md` (§13), `ClaudoraRelease.md`. Dışarıda: `ProjectSettings.asset`, `.vscode/`, eski şablon HTML'i.
+
+## 2026-10-15 20:56 — Oturum kapanışı: proje hafızası, loglar ve yedekler gözden geçirildi
+- **Kullanıcı:** "Proje hafızasını da güncelle, en son kaldığımız yeri ve yeni oturumda hatırlanması gereken şeyleri not al. İlgili tüm logları tut. Gözden geçir, eksik var mı."
+- **`Docs/PROJE_HAFIZASI.md` baştan güncellendi:** yeni §0 "Nerede kaldık" (v3.2 yerel `73611d2`, push yok; faz durumu; sıradaki seçenekler; telefon kaydı 87, Editor kaydı 101 ve yedekleri); okuma sırası, kurallar (saat `Get-Date` ile; tekrar oynama etkisi), kaynak tablosu (şablon, bölüm haritası, eski şablon HTML'i, loglar), kod haritası (kurucular, `CheckSolvable`, `TryGetBuilt`, testler), parça tablosu (1–100 bitti), puan ağırlıkları (çıkmaz ×20; eski metinde ×5 yazıyordu), hedef eğrisi, build/adb/logcat notları, açık konular.
+- **Tasarım dokümanı §13 (parça durumu):** 16–30, 31–60, 61–100 "Tasarlanmadı" yazıyordu → "Tamamlandı (v3.2)" ve notlar.
+- **Loglar kalıcı yere kopyalandı (`Logs/oyun-testleri/`, git dışı):** Editor 61–100 testi (`Logs/Editor.log` bir sonraki Editor açılışında silinecekti), telefon logcat'leri (12:06 eski plan, 20:17 donma, 20:46 düzeltme), Shuffle yük ölçümü (eski kod), önizleme CSV'leri, harita verisi. 16–30 ve 31–60 Editor testlerinin ham logları daha önce üzerine yazılmıştı (analizleri bu dosyada 17:56 ve 18:42).
+- **Betikler** (`Logs/araclar/`): bölüm haritası, şablon tablosu ve 59 yaması betikleri (scratchpad geçici olduğu için).
+- **Telefon kaydı yedekleri** scratchpad'den `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-telefon-v32-test-oncesi-20261015-2016\` ve `yedek-telefon-v3-kayit-20261015\`'e kopyalandı.
+- **Hafıza dosyaları:** oturum başlangıcı (eski "16–30 onay bekliyor" ifadesi), sürüm/push durumu (v3.2 yerel, push yok), v3 özeti (1–100 bitti) güncellendi.
+- **Not:** bu kayıt ve `PROJE_HAFIZASI.md` / tasarım dokümanı güncellemeleri v3.2 commit'inden sonra yapıldı, commit'siz.
+
 ## 2026-10-15 20:52 — v3.2 commit ve etiketi (yerel; push yok)
 - **Onay:** kullanıcı "Commit + v3.2 etiketi" seçti; eski inceleme sayfası `Docs/Cloudora 1–100 Şablonu.html` commit'e alınmadı (diskte duruyor).
 - **README.md:** 1–100'ün v3 aracından geldiği, bölüm haritası bağlantısı ve test sayısı (192, 4 atlanan) güncellendi.
