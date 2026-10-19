@@ -206,6 +206,98 @@ namespace Cloudora.Tests.Editor
             Assert.That(oneEmpty, Is.GreaterThan(twoEmpty));
         }
 
+        // ---------- v4.1: düşünen oyuncu, takılma / dolaşma ayrımı, ağırlık ----------
+
+        [Test]
+        public void TwoEmptyThreeColorBoardsNeverTrapAnyPlayer()
+        {
+            // 3 renk + 2 boş bulutta çıkmaz yok: takılma yalnızca gerçek tuzağı (çıkmaz duruma düşmeyi) sayar,
+            // uzun dolaşma takılma değildir.
+            var frame = new BoardFrame(4, 3, 2);
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                DifficultyMetrics m = PuzzleSolver.Solve(LevelCandidateFactory.Deal(frame, seed), 4, Limit).Metrics;
+                Assert.That(m.DeadStateRatio, Is.EqualTo(0f), $"seed {seed}");
+                Assert.That(m.NaiveFailureRate, Is.EqualTo(0f), $"seed {seed}");
+                Assert.That(m.ThinkingFailureRate, Is.EqualTo(0f), $"seed {seed}");
+                Assert.That(m.NaiveWanderRate, Is.InRange(0f, 1f), $"seed {seed}");
+            }
+        }
+
+        [Test]
+        public void ThinkingPlayerFallsIntoFewerTrapsThanNaivePlayer()
+        {
+            // Düşünen oyuncu ileriye bakıp kapanan çıkmazdan kaçınır: tuzaklı (1 boş) tahtalarda toplamda belirgin daha az takılır,
+            // hiçbir tahtada düşünmeden oynayandan fazla takılmaz (aynı rastgele seçim sırası).
+            var frame = new BoardFrame(4, 3, 1);
+            float naive = 0f, thinking = 0f;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                PuzzleSolveResult result = PuzzleSolver.Solve(LevelCandidateFactory.Deal(frame, seed), 4, Limit);
+                if (result.Status != SolveStatus.Solved) continue;
+                DifficultyMetrics m = result.Metrics;
+                Assert.That(m.ThinkingFailureRate, Is.InRange(0f, 1f), $"seed {seed}");
+                naive += m.NaiveFailureRate;
+                thinking += m.ThinkingFailureRate;
+            }
+            Assert.That(naive, Is.GreaterThan(0f));
+            Assert.That(thinking, Is.LessThan(naive * 0.7f), $"thinking {thinking:F2} vs naive {naive:F2}");
+        }
+
+        [Test]
+        public void ThinkingPlayerSeesAClosedDeadEndOneMoveAhead()
+        {
+            // Küçük tek boşlu tahta: düşünen oyuncu aynı rastgele sırayla oynar ama kapanan çıkmazları eler, bu yüzden
+            // düşünmeden oynayandan daha sık takılamaz.
+            WeatherType[][] board = { new[] { S, R, S }, new[] { R, S, R }, E() };
+            PuzzleSolveResult result = PuzzleSolver.Solve(board, 3, Limit);
+            Assume.That(result.Status, Is.EqualTo(SolveStatus.Solved));
+            Assert.That(result.Metrics.ThinkingFailureRate, Is.LessThanOrEqualTo(result.Metrics.NaiveFailureRate));
+        }
+
+        [Test]
+        public void LookingFurtherAheadNeverFallsIntoMoreTraps()
+        {
+            // 3 hamle ileri bakan, 2 hamle ileri bakanın gördüğü her kapanan çıkmazı da görür (aynı rastgele sıra):
+            // tuzaklı tahtalarda toplamda daha az takılır.
+            var frame = new BoardFrame(5, 4, 1);
+            float shallow = 0f, deep = 0f;
+            for (int seed = 1; seed <= 60; seed++)
+            {
+                PuzzleSolveResult result = PuzzleSolver.Solve(LevelCandidateFactory.Deal(frame, seed), 5, Limit);
+                if (result.Status != SolveStatus.Solved) continue;
+                shallow += result.Metrics.ShallowThinkingFailureRate;
+                deep += result.Metrics.ThinkingFailureRate;
+                Assert.That(result.Metrics.ShallowThinkingFailureRate, Is.InRange(0f, 1f));
+            }
+            Assert.That(PuzzleSolver.ThinkingDepth, Is.EqualTo(3), "user approved 3 (2026-10-19)");
+            Assert.That(deep, Is.LessThanOrEqualTo(shallow), $"deep {deep:F2} vs shallow {shallow:F2}");
+        }
+
+        [Test]
+        public void NaiveFailureWeighsFifteenInTheScore()
+        {
+            // v4.1 (kullanıcı, 2026-10-19): takılma ×15 — tuzağa aşırı abanmadan hamle sayısıyla dengeli.
+            var low = new DifficultyMetrics(10, 100, 0.1f, 0.5f, 0.1f, 4f, 1f, 0.2f);
+            var high = new DifficultyMetrics(10, 100, 0.1f, 0.5f, 0.1f, 4f, 1f, 0.6f);
+            Assert.That(high.Score - low.Score, Is.EqualTo(0.4f * 15f).Within(1e-4f));
+            Assert.That(DifficultyMetrics.NaiveFailureWeight, Is.EqualTo(15f));
+        }
+
+        [Test]
+        public void MeasurementUsesTheLockedCompletionRuleByDefault()
+        {
+            // Oyun tamamlanmış hazneyi kilitler; araç da varsayılan olarak aynı kuralla ölçer (v4.1).
+            // Kilitsiz kuralda tamamlanmış SSS'den bir S, RS'nin üstüne taşınabilir (yeni durum); kilitli kuralda taşınamaz.
+            WeatherType[][] board = { new[] { S, S, S }, new[] { R, S }, new[] { S, S }, new[] { R, R } };
+            PuzzleSolveResult locked = PuzzleSolver.Solve(board, 3, Limit);
+            PuzzleSolveResult unlocked = PuzzleSolver.Solve(board, 3, Limit, lockCompleted: false);
+            Assert.That(locked.Metrics.ReachableStates, Is.LessThan(unlocked.Metrics.ReachableStates));
+            var replay = new PuzzleState(board.Select(c => new CloudState(3, c)));
+            foreach (Move move in locked.Solution) Assert.That(PuzzleRules.TryApply(replay, move), Is.True);
+            Assert.That(PuzzleRules.IsSolved(replay), Is.True);
+        }
+
         [Test]
         public void NaivePlayerAgreesWithDeviceTestData()
         {
@@ -404,19 +496,20 @@ namespace Cloudora.Tests.Editor
         {
             Assert.That(V3LevelPlan.PartFor(1), Is.EqualTo(V3Part.Intro));
             Assert.That(V3LevelPlan.PartFor(5), Is.EqualTo(V3Part.Intro));
+            // v4.1: parçalar dünyalarla hizalı (tanıtım 1–14, Yeşil Vadi 15–30, Rainy Coast 31–60, Frost Peaks 61–100).
             Assert.That(V3LevelPlan.PartFor(6), Is.EqualTo(V3Part.Adaptation));
-            Assert.That(V3LevelPlan.PartFor(15), Is.EqualTo(V3Part.Adaptation));
-            Assert.That(V3LevelPlan.PartFor(16), Is.EqualTo(V3Part.TransitionTheme));
-            Assert.That(V3LevelPlan.PartFor(30), Is.EqualTo(V3Part.TransitionTheme));
-            Assert.That(V3LevelPlan.PartFor(31), Is.EqualTo(V3Part.Theme2));
-            Assert.That(V3LevelPlan.PartFor(60), Is.EqualTo(V3Part.Theme2));
-            Assert.That(V3LevelPlan.PartFor(61), Is.EqualTo(V3Part.Theme3));
-            Assert.That(V3LevelPlan.PartFor(100), Is.EqualTo(V3Part.Theme3));
+            Assert.That(V3LevelPlan.PartFor(14), Is.EqualTo(V3Part.Adaptation));
+            Assert.That(V3LevelPlan.PartFor(15), Is.EqualTo(V3Part.GreenValley));
+            Assert.That(V3LevelPlan.PartFor(30), Is.EqualTo(V3Part.GreenValley));
+            Assert.That(V3LevelPlan.PartFor(31), Is.EqualTo(V3Part.RainyCoast));
+            Assert.That(V3LevelPlan.PartFor(60), Is.EqualTo(V3Part.RainyCoast));
+            Assert.That(V3LevelPlan.PartFor(61), Is.EqualTo(V3Part.FrostPeaks));
+            Assert.That(V3LevelPlan.PartFor(100), Is.EqualTo(V3Part.FrostPeaks));
             Assert.Throws<ArgumentOutOfRangeException>(() => V3LevelPlan.PartFor(0));
             Assert.Throws<ArgumentOutOfRangeException>(() => V3LevelPlan.PartFor(101));
             Assert.Throws<ArgumentOutOfRangeException>(() => V3LevelPlan.BandFor(101));
-            // Her parçanın son bölümü "Çok zor" olmalı.
-            foreach (int end in new[] { 5, 15, 30, 60, 100 })
+            // Parça sonları (14 hariç: tanıtım dünyalarla birlikte 14'te biter, 14 Orta) "Çok zor".
+            foreach (int end in new[] { 5, 30, 60, 100 })
             {
                 Assert.That(V3LevelPlan.BandFor(end), Is.EqualTo(DifficultyBand.VeryHard), $"part end {end}");
                 if (end < 100) Assert.That(V3LevelPlan.PartFor(end + 1), Is.Not.EqualTo(V3LevelPlan.PartFor(end)));

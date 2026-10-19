@@ -53,11 +53,8 @@ namespace Cloudora.Puzzle
         private GameObject _shuffleCancelArea;
         private LevelDefinition _currentLevel;
         private const int SolverStateLimit = 200000;
-        private Coroutine _solvabilityRoutine;
-        private int _boardRevision;
         private int _uiLives=int.MinValue,_uiCoins=int.MinValue,_uiCompleted=int.MinValue,_uiSeconds=int.MinValue;
         private bool _resourceRefreshQueued=true;
-        private readonly Dictionary<string,SolveStatus> _solvabilityCache=new();
 
         private sealed class PuzzleSnapshot
         {
@@ -287,6 +284,7 @@ namespace Cloudora.Puzzle
             if (levelNumber <= AuthoredLevelCatalog.Count) _currentLevel = AuthoredLevelCatalog.Get(levelNumber);
             else if (!AuthoredLevelCatalog.TryGetBuilt(levelNumber, out _currentLevel)) _currentLevel = LevelGenerator.Generate(levelNumber);
             _baseCloudCount = _currentLevel.clouds.Length;
+            _boardLayout.ReservedTop = string.IsNullOrEmpty(_currentLevel.tutorialCue) ? 0f : AdaptiveBoardLayout.TutorialClearance;
             LoadState(_currentLevel.CreateBoard());
             _overlay.SetLevelInfo(_currentLevel.levelId, _currentLevel.worldId);
             _overlay.SetTutorialCue(_currentLevel.tutorialCue);
@@ -327,9 +325,7 @@ namespace Cloudora.Puzzle
                 return;
             }
 
-            CancelSolvabilityCheck();
             RestoreSnapshot(_undoHistory.Pop());
-            BeginSolvabilityCheck();
             _moveCount = Mathf.Max(0, _moveCount - 1);
             _isCompleted = false;
             _overlay.ShowComplete(false);
@@ -341,7 +337,6 @@ namespace Cloudora.Puzzle
 
         private void LoadState(WeatherType[][] levelData)
         {
-            CancelSolvabilityCheck();
             ClearSelection();
             foreach (CloudContainerView container in _containers)
             {
@@ -432,7 +427,6 @@ namespace Cloudora.Puzzle
 
         private IEnumerator PerformMove(CloudContainerView source, CloudContainerView target, WeatherType type, int count)
         {
-            CancelSolvabilityCheck();
             _inputLocked = true;
             _overlay.SetBusy(true);
             PuzzleSnapshot beforeMove = CaptureSnapshot();
@@ -455,7 +449,13 @@ namespace Cloudora.Puzzle
                     _overlay.ShowComplete(true,_completionReward);_feedback.Complete();
                     if(_adPolicy.RegisterCompletion(_currentLevel.levelId,System.DateTime.UtcNow))_adService.ShowInterstitial();
                 }
-                else BeginSolvabilityCheck();
+                else if (!HasLegalMove())
+                {
+                    // v4.1: başarısızlık yeniden yalnızca hiç legal hamle kalmayınca (v3.1 kuralı). Hamle olup çözüme
+                    // gidilemeyen durumda ekran gelmez; oyuncu Geri Al / Karıştır / Ek Bulut kullanır.
+                    _analytics.Track(AnalyticsEvents.LevelFailed, Params("level", _currentLevel.levelId, "reason", "no_moves", "move_count", _moveCount));
+                    EnterFailState();
+                }
             }
 
             ClearSelection();
@@ -545,7 +545,7 @@ namespace Cloudora.Puzzle
         private void ReturnHome()
         {
             if(_inputLocked)return;
-            CancelShuffleSelection();CancelSolvabilityCheck();
+            CancelShuffleSelection();
             if(_isCompleted)
             {
                 if(_progression.CurrentLevel<WorldCatalog.MaxLevel){_progression.Advance();LoadLevel(_progression.CurrentLevel);}
@@ -592,9 +592,7 @@ namespace Cloudora.Puzzle
                 return;
             }
 
-            CancelSolvabilityCheck();
             AddExtraClouds(1);
-            BeginSolvabilityCheck();
             _undoHistory.Clear();
             _overlay.HideBlock();
             RefreshMetaUI();
@@ -652,7 +650,6 @@ namespace Cloudora.Puzzle
             }
 
             _boosterManager.TryUseSafeShuffle();
-            CancelSolvabilityCheck();
             cloud.RestoreElements(result.Board[index]);
             // Shuffle geri alınamaz: Undo geçmişi temizlenir, Undo butonu söner.
             _undoHistory.Clear();
@@ -708,41 +705,16 @@ namespace Cloudora.Puzzle
             RefreshExtraButton();
         }
 
-        private void CancelSolvabilityCheck()
+        // Tamamlanmış (kilitli) hazneler kaynak olamaz.
+        private bool HasLegalMove()
         {
-            _boardRevision++;
-            if(_solvabilityRoutine!=null){StopCoroutine(_solvabilityRoutine);_solvabilityRoutine=null;}
-        }
-        private void BeginSolvabilityCheck()
-        {
-            CancelSolvabilityCheck();
-            if(_isCompleted || _failed)return;
-            _solvabilityRoutine=StartCoroutine(CheckCurrentBoard(_boardRevision));
-        }
-        private IEnumerator CheckCurrentBoard(int revision)
-        {
-            // Defer one frame so the move can finish and input can resume.
-            yield return null;
-            var board=CaptureSnapshot().board;
-            string key=PuzzleSolver.ReachabilityKey(board,_currentLevel.capacity);
-            if(!_solvabilityCache.TryGetValue(key,out var result))
+            for (int source = 0; source < _containers.Count; source++)
             {
-                var search=new PuzzleSolver.ReachabilitySearch(board,_currentLevel.capacity);
-                do
-                {
-                    result=search.Step();
-                    if(result==SolveStatus.LimitExceeded)yield return null;
-                    if(revision!=_boardRevision)yield break;
-                }while(result==SolveStatus.LimitExceeded);
-                if(_solvabilityCache.Count>512)_solvabilityCache.Clear();
-                _solvabilityCache[key]=result;
+                if (_containers[source].IsComplete || !_containers[source].TryGetTopElement(out WeatherType type)) continue;
+                for (int target = 0; target < _containers.Count; target++)
+                    if (source != target && _modifierRuntime.CanMove(source, target) && _containers[target].CanReceive(type)) return true;
             }
-            _solvabilityRoutine=null;
-            if(revision==_boardRevision && !_isCompleted && result==SolveStatus.Unsolvable)
-            {
-                _analytics.Track(AnalyticsEvents.LevelFailed,Params("level",_currentLevel.levelId,"reason","unsolvable","move_count",_moveCount));
-                EnterFailState();
-            }
+            return false;
         }
 
         private void RequestReward(RewardedPlacement placement, System.Action grant, string successTitle, string successMessage)

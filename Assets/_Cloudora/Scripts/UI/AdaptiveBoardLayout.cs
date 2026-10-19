@@ -10,6 +10,19 @@ namespace Cloudora.UI
         private int _cloudCount;
         private int _capacity;
         private Vector2 _lastSize;
+        private float _reservedTop;
+
+        // Tasarım birimi (390 genişlik): öğretici yazının altı (161 + 22) + pay. Yazı olan bölümde tahta bunun altından başlar.
+        public const float TutorialClearance = 192f;
+
+        public float ReservedTop
+        {
+            get => _reservedTop;
+            set { _reservedTop = Mathf.Max(0f, value); if (_rect != null) Apply(); }
+        }
+
+        public static float UpperAnchor(float safeHeight, float designScale, float reservedTop) =>
+            reservedTop <= 0f ? 0.76f : Mathf.Min(0.76f, 1f - reservedTop * designScale / Mathf.Max(1f, safeHeight));
 
         public void Configure(int cloudCount, int capacity)
         {
@@ -37,7 +50,7 @@ namespace Cloudora.UI
             float designScale=parent.rect.width*(safeMax.x-safeMin.x)/390f;
             float lower=Mathf.Max(.25f,174f*designScale/Mathf.Max(1,safeHeight));
             _rect.anchorMin = new Vector2(Mathf.Lerp(safeMin.x, safeMax.x, 0.05f), Mathf.Lerp(safeMin.y, safeMax.y, lower));
-            _rect.anchorMax = new Vector2(Mathf.Lerp(safeMin.x, safeMax.x, 0.95f), Mathf.Lerp(safeMin.y, safeMax.y, 0.76f));
+            _rect.anchorMax = new Vector2(Mathf.Lerp(safeMin.x, safeMax.x, 0.95f), Mathf.Lerp(safeMin.y, safeMax.y, UpperAnchor(safeHeight, designScale, _reservedTop)));
             _lastSize = _rect.rect.size;
             LayoutMetrics metrics = Calculate(_lastSize, _cloudCount, _capacity);
             _grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;

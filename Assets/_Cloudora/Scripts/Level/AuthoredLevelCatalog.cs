@@ -35,7 +35,7 @@ namespace Cloudora.Level
                 V(12, null),
                 V(13, null),
                 V(14, null),
-                V(15, "İlk dünyanı keşfetmeye hazırsın.")
+                V(15, "Yeni: Karıştır bir hazneyi karıştırır.")
             };
         }
 

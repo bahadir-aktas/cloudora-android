@@ -8,151 +8,230 @@ using NUnit.Framework;
 
 namespace Cloudora.Tests.Editor
 {
-    // v3 parça kurulumu: 1–100'ün zorluk tablosu, seçilen tahtalar ve oyuna bağlanması.
+    // v4.1 bölüm kurulumu (V41LevelBuilder, Docs/V41_TASARIM.md): 1–100'ün planı, seçilen tahtalar ve oyuna bağlanması.
+    // İlk test 100 bölümü baştan kurar (aday havuzları ~3–4 dk); varsayılan 3 dk sınırı yetmez.
+    [Timeout(900000)]
     public sealed class V3LevelBuildTests
     {
-        // 1–15'in öğretici yazıları ve çerçevesi değişmez (tasarım §11).
+        // 1–15'in öğretici yazıları ve çerçevesi (kap. 4, 2 boş).
         private static readonly string[] AuthoredCues =
         {
             "Bir hazneye dokun.", "Aynı hava türünün olduğu hazneyi seç.", "Aynı türden parçalar birlikte akar.", "Boş hazneler sana yer açar.", "Gökyüzünü dengele.",
-            null, null, null, null, "Geri Al ile son hamleni geri çevirebilirsin.", null, null, null, null, "İlk dünyanı keşfetmeye hazırsın."
+            null, null, null, null, "Geri Al ile son hamleni geri çevirebilirsin.", null, null, null, null, "Yeni: Karıştır bir hazneyi karıştırır."
         };
 
-        private static readonly V3Part[] DesignedParts = { V3Part.Intro, V3Part.Adaptation, V3Part.TransitionTheme, V3Part.Theme2, V3Part.Theme3 };
-        private static readonly Dictionary<V3Part, IReadOnlyList<V3LevelResult>> Cache = new();
+        private static readonly V3Part[] AllParts = { V3Part.Intro, V3Part.Adaptation, V3Part.GreenValley, V3Part.RainyCoast, V3Part.FrostPeaks };
+        private static IReadOnlyList<V3LevelResult> _built;
+        private static IReadOnlyList<V3LevelResult> Built => _built ??= V41LevelBuilder.Build();
+        private static V3LevelResult At(int level) => Built[level - 1];
 
-        private static IReadOnlyList<V3LevelResult> Part(V3Part part)
-        {
-            if (!Cache.TryGetValue(part, out IReadOnlyList<V3LevelResult> results))
-                Cache[part] = results = V3LevelBuilder.BuildPart(part);
-            return results;
-        }
-
-        private static IEnumerable<V3Part> Parts() => DesignedParts;
-        private static IReadOnlyList<V3LevelResult> _published;
-        private static IReadOnlyList<V3LevelResult> Published => _published ??= CampaignMoonRollout.Apply(Parts().SelectMany(Part));
-        private const float MediumSeamTolerance = 0.25f;
-
-        // ---------- Parça kurulumu ----------
+        // ---------- Plan ----------
 
         [Test]
-        public void IntroUsesFrameAndPattern() => AssertFrameAndPattern(V3Part.Intro, 1, 5, "cap4/c2/e2");
-
-        [Test]
-        public void AdaptationUsesFrameAndPattern() => AssertFrameAndPattern(V3Part.Adaptation, 6, 15, "cap4/c3/e2");
-
-        private static void AssertFrameAndPattern(V3Part part, int first, int last, string frame)
+        public void BuildCoversOneToHundredWithTheFivePattern()
         {
-            IReadOnlyList<V3LevelResult> results = Part(part);
-            Assert.That(results.Select(r => r.Level), Is.EqualTo(Enumerable.Range(first, last - first + 1)));
-            foreach (V3LevelResult result in results)
+            Assert.That(Built.Select(r => r.Level), Is.EqualTo(Enumerable.Range(1, 100)));
+            foreach (V3LevelResult r in Built)
             {
-                Assert.That(result.Band, Is.EqualTo(V3LevelPlan.BandFor(result.Level)));
-                Assert.That(result.Frame.ToString(), Is.EqualTo(frame), $"level {result.Level}");
-                Assert.That(result.Primary.Result.Status, Is.EqualTo(SolveStatus.Solved));
-                Assert.That(result.Window.Contains(result.Primary.Score), Is.True, $"level {result.Level}");
+                Assert.That(r.Band, Is.EqualTo(V3LevelPlan.BandFor(r.Level)), $"level {r.Level}");
+                Assert.That(r.Primary.Result.Status, Is.EqualTo(SolveStatus.Solved), $"level {r.Level}");
             }
         }
 
         [Test]
-        public void BoardsAreDistinctAcrossAllParts()
+        public void FramesFollowThePlan()
         {
-            List<string> keys = Parts().SelectMany(Part).Select(r => r.Primary.CanonicalKey).ToList();
+            // 1–5 iki renk, 6–30 üç, 31–60 dört (Rüzgâr 31), 61–100 beş (Ay temayla 61'de); kap. 5 16'da, kap. 6 81'de;
+            // 1 boş 20'den önce yok, 20'de gelir; 1–15 klasik dizilim.
+            foreach (V3LevelResult r in Built)
+            {
+                int level = r.Level;
+                Assert.That(r.Frame.ColorCount, Is.EqualTo(level <= 5 ? 2 : level <= 30 ? 3 : level <= 60 ? 4 : 5), $"level {level}");
+                Assert.That(r.Frame.Capacity, Is.EqualTo(level < 16 ? 4 : level < 81 ? 5 : 6), $"level {level}");
+                if (level < 20) Assert.That(r.Frame.EmptyCount, Is.EqualTo(2), $"level {level}");
+                if (level <= 15) Assert.That(r.Frame.IsPacked, Is.True, $"level {level}");
+            }
+            Assert.That(At(20).Frame.EmptyCount, Is.EqualTo(1), "single empty arrives at 20 (user 18:43)");
+            Assert.That(At(20).Novelty, Is.EqualTo(V3Novelty.FewerEmpty));
+            Assert.That(At(15).Novelty, Is.EqualTo(V3Novelty.Shuffle));
+            Assert.That(At(61).Novelty, Is.EqualTo(V3Novelty.NewColor), "Moon arrives with the Frost Peaks theme");
+            Assert.That(At(81).Novelty, Is.EqualTo(V3Novelty.LargerCapacity));
+        }
+
+        [Test]
+        public void ScatteredLayoutsOnlyWhereTheyLetThePlayerBreathe()
+        {
+            // Dağınık dizilim mümkün olduğunca az (kullanıcı 18:16): yalnızca nefes bölümlerinde ve orta takılmada.
+            foreach (V3LevelResult r in Built.Where(r => !r.Frame.IsPacked))
+                Assert.That(V41LevelBuilder.IsBreath(r.Level) || r.Trap == TrapClass.Medium, Is.True, $"level {r.Level} {r.Frame} {r.Trap}");
+        }
+
+        [Test]
+        public void BoardsAreDistinct()
+        {
+            List<string> keys = Built.Select(r => r.Primary.CanonicalKey).ToList();
             Assert.That(keys.Distinct().Count(), Is.EqualTo(keys.Count));
         }
 
-        [TestCaseSource(nameof(Parts))]
-        public void HarderBandsScoreHigherWithinEachCycle(V3Part part)
+        [Test]
+        public void HarderBandsScoreHigherWithinEachCycle()
         {
-            foreach (IGrouping<int, V3LevelResult> cycle in Part(part).GroupBy(r => (r.Level - 1) / 5))
+            foreach (IGrouping<int, V3LevelResult> cycle in Built.GroupBy(r => (r.Level - 1) / 5).Where(g => g.Any(r => r.Band == DifficultyBand.Hard)))
             {
                 float medium = cycle.Where(r => r.Band == DifficultyBand.Medium).Max(r => r.Primary.Score);
                 float hard = cycle.Single(r => r.Band == DifficultyBand.Hard).Primary.Score;
-                float veryHard = cycle.Single(r => r.Band == DifficultyBand.VeryHard).Primary.Score;
-                Assert.That(hard, Is.GreaterThan(medium), $"{part} cycle {cycle.Key}");
-                Assert.That(veryHard, Is.GreaterThan(hard), $"{part} cycle {cycle.Key}");
+                Assert.That(hard, Is.GreaterThan(medium), $"cycle {cycle.Key}");
+                V3LevelResult veryHard = cycle.SingleOrDefault(r => r.Band == DifficultyBand.VeryHard);
+                if (veryHard != null) Assert.That(veryHard.Primary.Score, Is.GreaterThan(hard), $"cycle {cycle.Key}");
             }
-        }
-
-        [TestCaseSource(nameof(Parts))]
-        public void SameBandLevelsDoNotGetEasierWithinPart(V3Part part)
-        {
-            // Alışma etkisi: parça içinde aynı banttaki bölümler hafifçe zorlaşır, asla kolaylaşmaz.
-            foreach (IGrouping<DifficultyBand, V3LevelResult> band in Part(part).GroupBy(r => r.Band))
-            {
-                float[] scores = band.OrderBy(r => r.Level).Select(r => r.Primary.Score).ToArray();
-                for (int i = 1; i < scores.Length; i++)
-                    Assert.That(scores[i], Is.GreaterThanOrEqualTo(scores[i - 1]), $"{part} {band.Key} #{i}");
-            }
-        }
-
-        [TestCaseSource(nameof(Parts))]
-        public void BandWindowsDoNotOverlap(V3Part part)
-        {
-            IReadOnlyList<V3LevelResult> results = Part(part);
-            if (!float.IsNaN(results[0].Target)) Assert.Ignore("Ladder parts use absolute targets (V32LadderTests), not band windows.");
-            ScoreWindow medium = results.First(r => r.Band == DifficultyBand.Medium).Window;
-            ScoreWindow hard = results.First(r => r.Band == DifficultyBand.Hard).Window;
-            ScoreWindow veryHard = results.First(r => r.Band == DifficultyBand.VeryHard).Window;
-            Assert.That(hard.Min, Is.GreaterThan(medium.Max));
-            Assert.That(veryHard.Min, Is.GreaterThan(hard.Max));
         }
 
         [Test]
-        public void PartTransitionsAreCumulativeWithoutJumps()
+        public void SameBandBarelyGetsEasierWithinAPart()
         {
-            // Zorluk etiketleri parça parça aynı şeyi ifade etmez (tasarım §2):
-            // yeni parçanın Orta'ları öncekinin Orta'larından zor, ama ilk Orta öncekinin Çok zor'undan belirgin şekilde zor değil.
-            for (int i = 1; i < DesignedParts.Length; i++)
+            // Takılma sınıfları karıştığı için aynı bant parça içinde en çok SameBandSlack kadar geri düşebilir.
+            foreach (IGrouping<(V3Part, DifficultyBand), V3LevelResult> band in Built.GroupBy(r => (V3LevelPlan.PartFor(r.Level), r.Band)))
             {
-                IReadOnlyList<V3LevelResult> previous = Part(DesignedParts[i - 1]);
-                IReadOnlyList<V3LevelResult> current = Part(DesignedParts[i]);
-                float previousMediumMax = previous.Where(r => r.Band == DifficultyBand.Medium).Max(r => r.Primary.Score);
-                float currentMediumMin = current.Where(r => r.Band == DifficultyBand.Medium).Min(r => r.Primary.Score);
-                float previousFinale = previous.Last().Primary.Score;
-                float firstMedium = current.First().Primary.Score;
-                // Tema eğrileri sınırda aynı değerde birleşir (ör. 31–60 Orta 20→24, 61–80 Orta 24→26): küçük pay (kullanıcı 19:22).
-                Assert.That(currentMediumMin, Is.GreaterThan(previousMediumMax - MediumSeamTolerance), $"{DesignedParts[i]} mediums must be harder");
-                Assert.That(firstMedium, Is.LessThanOrEqualTo(previousFinale * 1.10f), $"{DesignedParts[i]} starts with a jump");
+                float best = float.MinValue;
+                foreach (V3LevelResult r in band.OrderBy(r => r.Level))
+                {
+                    Assert.That(r.Primary.Score, Is.GreaterThanOrEqualTo(best - V41LevelBuilder.SameBandSlack - 1e-4f), $"level {r.Level}");
+                    best = Math.Max(best, r.Primary.Score);
+                }
+            }
+        }
+
+        [Test]
+        public void MostLevelsHitTheirTargetScore()
+        {
+            int onTarget = Built.Count(r => Math.Abs(r.Primary.Score - r.Target) <= V41LevelBuilder.TargetTolerance);
+            Assert.That(onTarget, Is.GreaterThanOrEqualTo(80), string.Join(", ", Built.Where(r => Math.Abs(r.Primary.Score - r.Target) > V41LevelBuilder.TargetTolerance)
+                .Select(r => $"{r.Level}:{r.Primary.Score:F1}/{r.Target:F1}")));
+        }
+
+        // ---------- Takılma deseni ----------
+
+        [Test]
+        public void EveryCycleFromTwentyOneHasTwoHighTwoMediumAndOneZero()
+        {
+            // Kurulan bölümlerin sınıfları (ilk tercih tutmazsa kurucu döngünün başka geçerli dağılımını seçer).
+            Dictionary<int, TrapClass> plan = Built.ToDictionary(r => r.Level, r => r.Trap);
+            for (int first = 21; first <= 96; first += 5)
+            {
+                TrapClass[] cycle = Enumerable.Range(first, 5).Select(l => plan[l]).ToArray();
+                Assert.That(cycle.Count(c => c == TrapClass.High || c == TrapClass.Finale), Is.EqualTo(2), $"cycle {first}");
+                Assert.That(cycle.Count(c => c == TrapClass.Medium), Is.EqualTo(2), $"cycle {first}");
+                Assert.That(cycle.Count(c => c == TrapClass.Zero), Is.EqualTo(1), $"cycle {first}");
+                Assert.That(plan[first + 4], Is.Not.EqualTo(TrapClass.Zero), $"cycle {first}: no zero on Very Hard");
+            }
+            Assert.That(plan[20], Is.EqualTo(TrapClass.High));
+            foreach (int finale in new[] { 30, 60, 100 }) Assert.That(plan[finale], Is.EqualTo(TrapClass.Finale));
+            foreach (int breath in new[] { 31, 61, 81 }) Assert.That(plan[breath], Is.EqualTo(TrapClass.Zero), $"breath {breath}");
+            // "Sıfır" Orta'da daha olası (kullanıcı 18:16).
+            int[] zeros = plan.Where(p => p.Value == TrapClass.Zero && p.Key >= 21 && !V41LevelBuilder.IsBreath(p.Key)).Select(p => p.Key).ToArray();
+            Assert.That(zeros.Count(l => V3LevelPlan.BandFor(l) == DifficultyBand.Medium), Is.GreaterThan(zeros.Count(l => V3LevelPlan.BandFor(l) == DifficultyBand.Hard)));
+        }
+
+        [Test]
+        public void TrapRatesFollowTheirClassAndThinkingPlayersPass()
+        {
+            foreach (V3LevelResult r in Built)
+            {
+                DifficultyMetrics m = r.Primary.Result.Metrics;
+                float slack = r.Tier == 2 ? V41LevelBuilder.RelaxedTrapSlack : 0f;
+                float thinkingSlack = r.Tier == 2 ? V41LevelBuilder.RelaxedThinkingSlack : 0f;
+                Assert.That(m.NaiveFailureRate, Is.InRange(r.TrapRange.Low - slack - 1e-4f, r.TrapRange.High + slack + 1e-4f), $"level {r.Level} {r.Trap}");
+                Assert.That(m.ThinkingFailureRate, Is.LessThanOrEqualTo(V41LevelBuilder.ThinkingLimitFor(r.Trap, r.Level) + thinkingSlack + 1e-4f), $"level {r.Level}");
+            }
+            // Derin tuzak şartları (31+) eklenince 5 renkte gevşetme 5 → 7 oldu (önizleme 2026-10-19 21:40); sınır 8.
+            Assert.That(Built.Count(r => r.Tier == 2), Is.LessThanOrEqualTo(8), "relaxed trap ranges must stay rare");
+        }
+
+        [Test]
+        public void NoMovesNeverInTheFirstMovesAndEverySingleEmptyLevelCanReachIt()
+        {
+            foreach (V3LevelResult r in Built)
+            {
+                int depth = r.Primary.Result.Metrics.NoMovesDepth;
+                if (depth >= 0) Assert.That(depth, Is.GreaterThanOrEqualTo(V41LevelBuilder.MinNoMovesDepth), $"level {r.Level}");
+                if (r.Frame.EmptyCount == 1) Assert.That(depth, Is.GreaterThanOrEqualTo(V41LevelBuilder.MinNoMovesDepth), $"level {r.Level}");
+            }
+        }
+
+        [Test]
+        public void NoMovesComesNoEarlierThanTheFourthMove()
+        {
+            // Kullanıcı (2026-10-19): 3. hamle "spamlayan için ani"; 5'te ikinci test fazla rahat geldi → 4 ("4 hamle erken değil").
+            Assert.That(V41LevelBuilder.MinNoMovesDepth, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void TrapsFromThirtyOneNeedRealThought()
+        {
+            // Öneri 3 (kullanıcı 2026-10-19 "deneyelim"): 31–60 yüksek takılmada 2 hamle ileri bakan da düşer (tuzak 3 hamle düşünmeyi
+            // gerektirir); 61–100'de 3 hamle ileri bakan da arada düşer; final 60 derin. 15–30 öğrenme bölgesi: sınır yok.
+            foreach (V3LevelResult r in Built.Where(r => r.Level >= 31 && (r.Trap == TrapClass.High || (r.Trap == TrapClass.Finale && r.Level < 100))))
+            {
+                DifficultyMetrics m = r.Primary.Result.Metrics;
+                float slack = r.Tier == 2 ? V41LevelBuilder.RelaxedThinkingSlack : 0f;
+                if (r.Frame.ColorCount <= 4)
+                    Assert.That(m.ShallowThinkingFailureRate, Is.GreaterThanOrEqualTo(V41LevelBuilder.ShallowHighMin - slack - 1e-4f), $"level {r.Level}");
+                else
+                    Assert.That(m.ThinkingFailureRate, Is.GreaterThanOrEqualTo(V41LevelBuilder.DeepHighThinkingMin - slack - 1e-4f), $"level {r.Level}");
+            }
+        }
+
+        [Test]
+        public void LastLevelIsTheHardestExamAndMakesCarefulPlayersThink()
+        {
+            // Kullanıcı (Editor testi 2026-10-19): 100 90'dan kolay geldi; "100 özelinde daha zor bir final olabilir".
+            V3LevelResult last = At(100);
+            Assert.That(last.Primary.Score, Is.GreaterThan(Built.Take(99).Max(r => r.Primary.Score)));
+            Assert.That(last.Primary.Result.Metrics.ThinkingFailureRate,
+                Is.InRange(V41LevelBuilder.LastFinaleThinkingMin - 1e-4f, V41LevelBuilder.LastFinaleThinkingMax + 1e-4f));
+            // Editor testi 3 (2026-10-19): gevşetilmiş 2 boşlu 100 "100 için kolay" geldi → 1 boşlu, final aralığı tam, No Moves mümkün.
+            Assert.That(last.Frame.EmptyCount, Is.EqualTo(1));
+            Assert.That(last.Tier, Is.Not.EqualTo(2), "the last exam must not relax its trap range");
+            Assert.That(last.Primary.Result.Metrics.NaiveFailureRate, Is.InRange(last.TrapRange.Low, last.TrapRange.High));
+            Assert.That(last.Primary.Result.Metrics.NoMovesDepth, Is.GreaterThanOrEqualTo(V41LevelBuilder.MinNoMovesDepth));
+        }
+
+        [Test]
+        public void FinalesAreExamsAndNotShort()
+        {
+            foreach (int finale in new[] { 30, 60, 100 })
+            {
+                V3LevelResult r = At(finale);
+                Assert.That(r.Trap, Is.EqualTo(TrapClass.Finale));
+                Assert.That(r.Primary.Result.Metrics.OptimalMoves, Is.GreaterThanOrEqualTo(V41LevelBuilder.MedianMoves(r.Frame)), $"level {finale}");
             }
         }
 
         [Test]
         public void TutorialCuesAreDemonstratedByTheBoard()
         {
-            IReadOnlyList<V3LevelResult> intro = Part(V3Part.Intro);
             // L3 "Aynı türden parçalar birlikte akar.": en kısa çözümde en az bir grup (2+) hamlesi.
-            Assert.That(intro[2].Primary.Result.Solution.Any(m => m.Count >= 2), Is.True);
+            Assert.That(At(3).Primary.Result.Solution.Any(m => m.Count >= 2), Is.True);
             // L4 "Boş hazneler sana yer açar.": en kısa çözüm boş bir buluta en az bir hamle yapar.
-            Assert.That(UsesEmptyCloud(intro[3].Primary), Is.True);
+            Assert.That(UsesEmptyCloud(At(4).Primary), Is.True);
         }
 
         [Test]
         public void BuildIsDeterministic()
         {
-            foreach (V3Part part in Parts())
-            {
-                IReadOnlyList<V3LevelResult> again = V3LevelBuilder.BuildPart(part);
-                Assert.That(again.Select(r => r.Primary.Seed), Is.EqualTo(Part(part).Select(r => r.Primary.Seed)), part.ToString());
-            }
+            IReadOnlyList<V3LevelResult> again = V41LevelBuilder.Build();
+            Assert.That(again.Select(r => r.Primary.Seed), Is.EqualTo(Built.Select(r => r.Primary.Seed)));
+            Assert.That(again.Select(r => r.Frame.ToString()), Is.EqualTo(Built.Select(r => r.Frame.ToString())));
         }
 
         [Test]
         public void BuiltLevelsAreValidLevelDefinitions()
         {
-            foreach (V3LevelResult result in Parts().SelectMany(Part))
+            foreach (V3LevelResult result in Built)
             {
                 LevelDefinition definition = result.Primary.ToLevelDefinition(result.Level, "intro", null);
                 Assert.That(PuzzleValidator.Validate(definition, out string error), Is.True, $"level {result.Level}: {error}");
             }
-        }
-
-        [Test]
-        public void UndesignedPartsAreRejected()
-        {
-            // 16+ sabit çerçeve kullanmaz (çerçeveyi merdiven/tema kurucusu seçer: V32LadderTests, V32ThemeTests, V32Theme3Tests).
-            Assert.Throws<NotSupportedException>(() => V3LevelPlan.FrameFor(16));
-            Assert.Throws<NotSupportedException>(() => V3LevelPlan.FrameFor(61));
         }
 
         // ---------- Üretilen veri dosyası ve oyuna bağlanma ----------
@@ -161,20 +240,17 @@ namespace Cloudora.Tests.Editor
         public void GeneratedDataMatchesBuilder()
         {
             // Veri dosyası elle değiştirilmiş ya da araç değişip yeniden üretilmemişse burada yakalanır.
-            Assert.That(V3LevelData.BuiltParts, Is.EqualTo(DesignedParts), "regenerate V3LevelData");
-            foreach (V3Part part in V3LevelData.BuiltParts)
+            Assert.That(V3LevelData.BuiltParts, Is.EqualTo(AllParts), "regenerate V3LevelData");
+            foreach (V3LevelResult result in Built)
             {
-                foreach (V3LevelResult result in Published.Where(r=>V3LevelPlan.PartFor(r.Level)==part))
-                {
-                    V3LevelEntry entry = V3LevelData.Find(result.Level);
-                    Assert.That(entry, Is.Not.Null, $"level {result.Level} missing — regenerate V3LevelData");
-                    Assert.That(entry.Seed, Is.EqualTo(result.Primary.Seed), $"level {result.Level}");
-                    Assert.That(entry.Band, Is.EqualTo(result.Band));
-                    Assert.That(entry.Capacity, Is.EqualTo(result.Frame.Capacity));
-                    Assert.That(entry.Board, Is.EqualTo(V3BoardText.Format(result.Primary.Board)));
-                    Assert.That(entry.Score, Is.EqualTo(result.Primary.Score).Within(1e-4f));
-                    Assert.That(entry.OptimalMoves, Is.EqualTo(result.Primary.Result.Metrics.OptimalMoves));
-                }
+                V3LevelEntry entry = V3LevelData.Find(result.Level);
+                Assert.That(entry, Is.Not.Null, $"level {result.Level} missing — regenerate V3LevelData");
+                Assert.That(entry.Seed, Is.EqualTo(result.Primary.Seed), $"level {result.Level}");
+                Assert.That(entry.Band, Is.EqualTo(result.Band));
+                Assert.That(entry.Capacity, Is.EqualTo(result.Frame.Capacity));
+                Assert.That(entry.Board, Is.EqualTo(V3BoardText.Format(result.Primary.Board)));
+                Assert.That(entry.Score, Is.EqualTo(result.Primary.Score).Within(1e-4f));
+                Assert.That(entry.OptimalMoves, Is.EqualTo(result.Primary.Result.Metrics.OptimalMoves));
             }
         }
 
@@ -190,7 +266,7 @@ namespace Cloudora.Tests.Editor
                 Assert.That(definition.tutorialCue, Is.EqualTo(AuthoredCues[level - 1]), $"level {level}");
                 Assert.That(definition.capacity, Is.EqualTo(4));
                 Assert.That(definition.worldId, Is.EqualTo("green-valley"));
-                Assert.That(definition.generated, Is.False, "1–15 must stay authored: Shuffle stays locked until 16");
+                Assert.That(definition.generated, Is.False);
                 Assert.That(definition.seed, Is.EqualTo(entry.Seed));
                 Assert.That(definition.difficultyScore, Is.EqualTo(entry.Score).Within(1e-4f));
                 Assert.That(PuzzleValidator.Validate(definition, out string error), Is.True, error);
@@ -199,9 +275,9 @@ namespace Cloudora.Tests.Editor
         }
 
         [Test]
-        public void LevelsNotYetRebuiltStayOnOldSystem()
+        public void LevelsAfterTheCampaignStayOnOldSystem()
         {
-            // 101+ eski üreticiyle kalır (16–100 deneme olarak veride; 61–100 2026-10-15 19:00'dan beri).
+            // 101+ eski üreticide kalır (oyun 100'de biter; v4).
             Assert.That(V3LevelData.Find(101), Is.Null);
             Assert.That(AuthoredLevelCatalog.TryGetBuilt(101, out _), Is.False);
             Assert.That(LevelGenerator.Generate(101).generated, Is.True);
@@ -213,10 +289,9 @@ namespace Cloudora.Tests.Editor
         }
 
         [Test]
-        public void TransitionLevelsLoadFromV3Data()
+        public void BuiltLevelsLoadFromV3Data()
         {
-            // v3.2: 16–30 oyunda veri dosyasından gelir (eski üretici değil); Shuffle 16'da açık kalır.
-            for (int level = 16; level <= 30; level++)
+            for (int level = 16; level <= 100; level++)
             {
                 V3LevelEntry entry = V3LevelData.Find(level);
                 Assert.That(entry, Is.Not.Null, $"level {level} missing — regenerate V3LevelData");
@@ -229,7 +304,6 @@ namespace Cloudora.Tests.Editor
                 Assert.That(PuzzleValidator.Validate(definition, out string error), Is.True, error);
             }
             Assert.That(AuthoredLevelCatalog.TryGetBuilt(15, out _), Is.False, "1–15 stay in the authored catalog");
-            Assert.That(Cloudora.Puzzle.PuzzleController.IsShuffleUnlocked(16), Is.True);
         }
 
         // ---------- Tahta metni ----------

@@ -53,7 +53,8 @@ namespace Cloudora.UI
             DesignUI.ResourcesBar(root,out o._coinsLabel,out o._livesLabel,out o._status);
             o._worldLabel=DesignUI.Label(root,"",30,84,330,18,12,DesignUI.Muted,TextAnchor.MiddleCenter);
             o._levelLabel=DesignUI.Label(root,"",30,108,330,34,26,null,TextAnchor.MiddleCenter);
-            o._tutorialLabel=DesignUI.Label(root,"",28,155,334,35,12,DesignUI.Muted,TextAnchor.MiddleCenter);
+            // Öğretici yazı beyaz ve tek satır: uzun yazı haznelere taşmasın diye 16 puntodan en çok 12'ye küçülür (v4.1, kullanıcı).
+            o._tutorialLabel=DesignUI.Label(root,"",28,161,334,22,16,DesignUI.White,TextAnchor.MiddleCenter);o._tutorialLabel.resizeTextForBestFit=true;o._tutorialLabel.resizeTextMinSize=12*3;o._tutorialLabel.resizeTextMaxSize=16*3;
             o._modeLabel=DesignUI.Label(root,"",28,155,334,35,12,DesignUI.C("#ffd464"),TextAnchor.MiddleCenter);
             o._difficulty=DesignUI.Panel(root,"Difficulty",145,146,100,22,"#366c7788","#23475788",11,"#a8d5df44",1);o._difficulty.raycastTarget=false;
             o._difficultyLabel=DesignUI.Label(o._difficulty.transform,"",0,0,100,22,10,null,TextAnchor.MiddleCenter);
@@ -90,7 +91,7 @@ namespace Cloudora.UI
             o._failDetail=DesignUI.Label(fail,"",24,130,298,42,14,DesignUI.Muted,TextAnchor.MiddleCenter);
             o._coinsButton=DesignUI.Button(fail,"Güvenli Hamleye Dön",24,192,298,50,onContinueWithCoins,"green");o._coinsButton.name="CoinsButton";
             o._retryButton=DesignUI.Button(fail,"Yeniden Başlat",24,256,298,48,onRetry);o._retryButton.name="RetryButton";
-            o._adButton=DesignUI.Button(fail,"Ödülle Devam Et",24,318,298,44,onContinueWithAd);o._adButton.name="AdButton";
+            o._adButton=DesignUI.Button(fail,"Reklam İzle ve Devam Et",24,318,298,44,onContinueWithAd);o._adButton.name="AdButton";
             o._failHomeLabel=DesignUI.Button(fail,"Ana Sayfa · −1 can",24,380,298,44,onMenu).GetComponentInChildren<Text>();
             o._blockingPanel=o.Modal("BlockingPanel",264,out var block);
             o._blockingPanel.AddComponent<Button>().onClick.AddListener(o.HideBlock);
@@ -136,16 +137,16 @@ namespace Cloudora.UI
         public void SetUndoAvailable(bool available)=>_undoButton.interactable=available;
         public void SetShuffleAvailable(bool available)=>_shuffleButton.interactable=available;
         public void SetExtraAvailable(bool available){var g=_extraButton.GetComponent<CanvasGroup>();if(!g)g=_extraButton.gameObject.AddComponent<CanvasGroup>();g.alpha=available?1:.45f;}
-        public void SetLevelInfo(int level,string world){_backdrop.SetWorld(level,world);_level=level;_shuffleName.text=level<16?"16. bölümde":"Karıştır";var band=Cloudora.Level.V3LevelPlan.BandFor(Mathf.Clamp(level,1,100));_difficultyLabel.text=band==Cloudora.Level.DifficultyBand.VeryHard?"ÇOK ZOR":band==Cloudora.Level.DifficultyBand.Hard?"ZOR":"ORTA";UpdateDifficulty();_levelLabel.text=$"Bölüm {level}";_worldLabel.text=level<=15?"":DesignUI.WorldName(world);}
+        public void SetLevelInfo(int level,string world){_backdrop.SetWorld(level,world);_level=level;_shuffleName.text=level<Cloudora.Level.V3LevelPlan.ShuffleUnlockLevel?$"{Cloudora.Level.V3LevelPlan.ShuffleUnlockLevel}. bölümde":"Karıştır";var band=Cloudora.Level.V3LevelPlan.BandFor(Mathf.Clamp(level,1,100));_difficultyLabel.text=band==Cloudora.Level.DifficultyBand.VeryHard?"ÇOK ZOR":band==Cloudora.Level.DifficultyBand.Hard?"ZOR":"ORTA";UpdateDifficulty();_levelLabel.text=$"Bölüm {level}";_worldLabel.text=level<=15?"":DesignUI.WorldName(world);}
         public void SetTutorialCue(string cue){_tutorialLabel.text=cue??"";UpdateDifficulty();}
         public void SetModeHint(string hint){_modeLabel.text=hint??"";UpdateDifficulty();}
         private void UpdateDifficulty(){_difficulty.gameObject.SetActive(_level>=15&&string.IsNullOrEmpty(_tutorialLabel.text)&&string.IsNullOrEmpty(_modeLabel.text));}
-        public void SetLives(int lives,string countdown){if(_shownLives==lives&&_shownCountdown==countdown)return;_shownLives=lives;_shownCountdown=countdown;_livesLabel.text=$"{lives}/5";_status.text=lives>=5?"DOLU":countdown;_pauseHomeLabel.text=lives>0?"Ana Sayfaya Dön · −1 can":"Ana Sayfaya Dön · Bölümü bırak";_failHomeLabel.text=lives>0?"Ana Sayfa · −1 can":"Ana Sayfa · Bölümü bırak";}
+        public void SetLives(int lives,string countdown){if(_shownLives==lives&&_shownCountdown==countdown)return;_shownLives=lives;_shownCountdown=countdown;_livesLabel.text=$"{lives}/5";_status.text=lives>=5?"DOLU":countdown;if(_milestone)_milestone.SetResources(_coinsLabel.text,_livesLabel.text,_status.text);_pauseHomeLabel.text=lives>0?"Ana Sayfaya Dön · −1 can":"Ana Sayfaya Dön · Bölümü bırak";_failHomeLabel.text=lives>0?"Ana Sayfa · −1 can":"Ana Sayfa · Bölümü bırak";}
         public void SetCoins(int coins){_coinsLabel.text=coins.ToString("N0",System.Globalization.CultureInfo.GetCultureInfo("tr-TR"));if(_milestone)_milestone.SetResources(_coinsLabel.text,_livesLabel.text,_status.text);}
         public void SetBoosters(int undo,int extra,int shuffle,bool adAvailable){_undoBadge.text=Charge(undo,adAvailable);_extraBadge.text=Charge(extra,adAvailable);_shuffleBadge.text=Charge(shuffle,adAvailable);}
         private static string Charge(int value,bool ad)=>value<=0&&ad?"+":value.ToString();
         public void ShowComplete(bool show,int coinsEarned=0){if(!show && _milestone){DesignUI.Remove(_milestone.gameObject);_milestone=null;}_completePanel.SetActive(show);_completeTitle.text=$"Bölüm {_level} tamamlandı!";_completeReward.text=$"+{coinsEarned}";}
-        public void ShowFail(FailOptions o){if(_failKnown&&_shownFail.Equals(o)&&_failPanel.activeSelf)return;_shownFail=o;_failKnown=true;_failPanel.SetActive(true);_retryButton.interactable=o.RetryAvailable;_adButton.interactable=o.AdAvailable;_coinsButton.interactable=o.CoinsAffordable;_retryButton.GetComponentInChildren<Text>().text=o.RetryFree?"Yeniden Başlat • Ücretsiz":"Yeniden Başlat · −1 can";_coinsButton.GetComponentInChildren<Text>().text=$"Devam Et · {o.CoinCost} jeton";_failDetail.text="Bu dizilimden çözüme ulaşılamıyor. Baştan dene veya son güvenli hamlene dön.";}
+        public void ShowFail(FailOptions o){if(_failKnown&&_shownFail.Equals(o)&&_failPanel.activeSelf)return;_shownFail=o;_failKnown=true;_failPanel.SetActive(true);_retryButton.interactable=o.RetryAvailable;_adButton.interactable=o.AdAvailable;_coinsButton.interactable=o.CoinsAffordable;_retryButton.GetComponentInChildren<Text>().text=o.RetryFree?"Yeniden Başlat • Ücretsiz":"Yeniden Başlat · −1 can";_coinsButton.GetComponentInChildren<Text>().text=$"Devam Et · {o.CoinCost} jeton";_failDetail.text="Yapılacak hamle kalmadı. Baştan dene veya son güvenli hamlene dön.";}
         public void HideFail()=>_failPanel.SetActive(false);
         public void ShowBlock(string title,string detail){
             if(title.Contains("Yenilendi")){HideBlock();ShowToast(title,detail);return;}

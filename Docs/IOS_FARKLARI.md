@@ -1,6 +1,7 @@
 # iOS sürümünün v3.2'den farkları ve Android v4
 
 > **Durum:** son hal, 2026-10-19 13:09. Android'e birebir uyarlandı (v4); fark incelemesi (§1–10), ölçüm (§10b), uyarlama (§10c) ve telefon testi (§11). Görsel özet: `Docs/IOS_FARKLARI.html`.
+> **v4.1 notu (2026-10-19):** v4.1'de Ç1 (başarısızlık yeniden yalnızca hiç hamle kalmayınca), Ç3 (Ay 61'de, Frost Peaks ile) değişti; Karıştır 15'te; bölümler yeniden kuruldu, `CampaignMoonRollout` kaldırıldı. Ayrıntı `Docs/V41_TASARIM.md`.
 > **Kullanıcı kararı:** "ios'da neyse aynısı olsun" — §10'daki çelişkilerin hiçbiri değiştirilmedi; ileride ayrı ayrı karar verilecek.
 > **Kaynak:** `https://github.com/yigityvz/cloudora-ios` (kullanıcı verdi), dal `main`, HEAD `1ee4334`. Salt okunur kopya: `iOS-inceleme\cloudora-ios\`.
 > **Karşılaştırma tabanı:** bizim v3.2 (`d7c9416`, `cloudora-bahadir` / `bahadir-claude-versions`).

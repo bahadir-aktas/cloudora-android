@@ -1,5 +1,7 @@
 # v3 1–100 Şablonu (arka plan planı)
 
+> **v4.1 notu (2026-10-19):** bölümler `Editor/V41LevelBuilder.cs` ile yeniden kuruldu; bu belge tarihçedir. Güncel: `Docs/V41_TASARIM.md`, `Docs/V41_BOLUM_HARITASI.html`.
+
 > **v4 notu (2026-10-19):** v4'te (iOS'tan birebir) Ay 60'ta başlar; 60–80'in 21 tahtası `Editor/CampaignMoonRollout.cs` ile yeniden seçildi (puan ±0,3, en kısa çözüm 61–80'de 15–19). Aşağıdaki "Uygulanan plan" v3.2 halidir; güncel karşılaştırma `Docs/IOS_FARKLARI.md` §3.1 ve §10b.
 
 > Faz planı: tasarım dokümanı §11l. Bu dosya 1–100'ün genel şablonudur; gerekirse revize edilir (kullanıcı, 2026-10-15).

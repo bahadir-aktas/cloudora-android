@@ -56,8 +56,8 @@ namespace Cloudora.Tests.Editor
         {
             // 1–15 sabit: yeni ölçüt puana katılmaz.
             V3LevelEntry entry = V3LevelData.Find(10);
-            // Shipped seed/score calibration is archival; gameplay searches use the locked default.
-            float score = PuzzleSolver.Solve(entry.CreateBoard(),entry.Capacity,Limit,lockCompleted:false).Metrics.Score;
+            // v4.1: araç da oyunun kilitli kuralıyla ölçer.
+            float score = PuzzleSolver.Solve(entry.CreateBoard(), entry.Capacity, Limit).Metrics.Score;
             Assert.That(score, Is.EqualTo(entry.Score).Within(1e-4f));
         }
 

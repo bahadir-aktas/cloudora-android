@@ -292,11 +292,12 @@ namespace Cloudora.Tests.Editor
         }
 
         [Test]
-        public void ShuffleUnlocksAtSixteenByLevelNumber()
+        public void ShuffleUnlocksAtFifteenByLevelNumber()
         {
-            Assert.That(V3LevelPlan.ShuffleUnlockLevel, Is.EqualTo(16));
-            Assert.That(PuzzleController.IsShuffleUnlocked(15), Is.False);
-            Assert.That(PuzzleController.IsShuffleUnlocked(16), Is.True);
+            // v4.1 (kullanıcı, 2026-10-19): Karıştır Yeşil Vadi'nin ilk bölümüyle (15) açılır.
+            Assert.That(V3LevelPlan.ShuffleUnlockLevel, Is.EqualTo(15));
+            Assert.That(PuzzleController.IsShuffleUnlocked(14), Is.False);
+            Assert.That(PuzzleController.IsShuffleUnlocked(15), Is.True);
             Assert.That(PuzzleController.IsShuffleUnlocked(250), Is.True);
         }
 

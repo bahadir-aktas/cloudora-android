@@ -1,6 +1,35 @@
 # crVersion — Cloudora Versiyon Kaydı
 
-`bahadir-claude-versions` dalındaki versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur ve git etiketiyle işaretlenir. Major değişiklikler yeni ana numara alır (`v1`, `v2`, `v3`, `v4`, … → sıradaki `v5`); bir versiyona sonradan gelen eklemeler ara numara alır (`v3.1`, `v3.2`, …; sıradaki `v4.1`). GitHub'a push yalnızca kullanıcının her seferinde ayrıca verdiği onayla yapılır (iki hedef birlikte: takım reposu `cloudora-bahadir` + `bahadir-aktas/cloudora-android` `main`).
+`bahadir-claude-versions` dalındaki versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur ve git etiketiyle işaretlenir. Major değişiklikler yeni ana numara alır (`v1`, `v2`, `v3`, `v4`, … → sıradaki `v5`); bir versiyona sonradan gelen eklemeler ara numara alır (`v3.1`, `v3.2`, …; sıradaki `v4.2`). GitHub'a push yalnızca kullanıcının her seferinde ayrıca verdiği onayla yapılır (iki hedef birlikte: takım reposu `cloudora-bahadir` + `bahadir-aktas/cloudora-android` `main`).
+
+---
+
+## v4.1 — Bölümler yeni zorlukla yeniden kuruldu; başarısızlık kuralı eski haline
+
+- **Tarih:** 2026-10-19
+- **Commit:** bu dosyanın güncellendiği commit (etiket `v4.1`). Taban v4 (`0604618`); v4 etiketi değişmedi.
+- **Kapsam (kullanıcı):** "bölümleri yeni zorluğa göre yeniden oluşturacağız" — oyun daha zor, zorluk hamle sayısından çok tuzaktan; düşünerek oynayan geçsin, düşünmeden oynayan tıkansın. Kararlar ve sonuçlar: `Docs/V41_TASARIM.md`; harita `Docs/V41_BOLUM_HARITASI.html`.
+
+### Değişiklikler
+1. **Başarısızlık kuralı eski haline:** yalnızca hiç legal hamle kalmayınca (tamamlanmış hazne hamle sayılmaz); arka plan çözülebilirlik araması kaldırıldı (`PuzzleController.HasLegalMove`). Panel metni "Yapılacak hamle kalmadı. Baştan dene veya son güvenli hamlene dön.", düğme "Reklam İzle ve Devam Et".
+2. **Karıştır 15'te** (`ShuffleUnlockLevel = 15`); 15'in yazısı "Yeni: Karıştır bir hazneyi karıştırır.".
+3. **Öğretici yazı** 16 punto, beyaz, tek satır (sığmazsa 12'ye küçülür); yazılı bölümde tahta yazının altından başlar (`AdaptiveBoardLayout.ReservedTop`).
+4. **Kurtuluş ekranı can sayacı** güncelleniyor (iOS'tan gelen hata).
+5. **Ölçü (`PuzzleSolver`):** kilitli kural varsayılan; takılma ×15; takılma yalnızca çıkmaza düşmek (dolaşma ayrı); iki düşünen oyuncu (3 ve 2 hamle ileri).
+6. **Yeni kurucu `Editor/V41LevelBuilder.cs`** (eski `V3LevelBuilder`, `V3LadderBuilder`, `V3ThemeBuilder`, `CampaignMoonRollout` ve testleri kaldırıldı): parçalar dünyalarla hizalı; kap. 5 16, 1 boş 20, Rüzgâr 31, Ay 61, kap. 6 81; puan eğrisi 1–5 11,5 … 61–100 Çok zor 41, final 100 44; her döngüde 2 yüksek / 2 orta / 1 sıfır takılma; 3 hamle ileri bakan ≤ %10; 31+ derin tuzak; No Moves en erken 4. hamle; 100 1 boşlu, en zor bölüm.
+7. **Araçlar:** `V3LevelTool.RunV41PreviewBatch`, `RunV41InventoryReportBatch`; harita betiği `Logs/araclar/make_v41_html.py` (git dışı).
+8. **Testler:** `V3LevelBuildTests` yeni kurucuya göre; `LevelToolTests` yeni ölçü testleri; `PuzzleFeelTests` tahta/yazı yerleşimi; `RenderingReuseTests` Editor'deki "Azaltılmış hareket" tercihinden bağımsız.
+
+### Doğrulama
+- **EditMode:** 197 test; 194 geçti, 0 başarısız, 3 atlandı (2 grafik, 1 elle ölçüm).
+- **Editor:** 4 tur oyun testi (kalibrasyon 13 bölüm, sonra 7, 6, 1); kararlar bu testlere göre (No Moves 3 → 5 → 4, öneri 3, 100 güçlendirme).
+- **Telefon (S24 FE, "Cloudora v4.1" `com.yigityvz.cloudora.v41`, QA APK 70 MB):** 1, 15, 20, 30, 61, 81, 100; çökme yok; kap. 6'da 2 Ek Bulut + 3 Karıştır sorunsuz.
+
+### Bilinen sınırlar / açık konular
+- 6 bölümde (64, 74, 84, 89, 94, 99; 5 renk) takılma aralığı biraz gevşetildi.
+- 15–30'da derin tuzak yok (küçük tahta); oradaki zorluk takılma ve No Moves'tan.
+- Başarısızlık ekranı telefonda görülmedi; çıkmazı fark ettirme (parlama) ve hamle logu ileride; temalar ve dünya resimleri ileride; kurtuluş ekranında gri şerit; ekip APK'sı v4'te.
+- Hata (düzeltildi): onaylanan düşünme derinliği 3 koda geç girdi; ilk iki Editor testi 2 hamleyle seçilmiş veriyle yapıldı.
 
 ---
 

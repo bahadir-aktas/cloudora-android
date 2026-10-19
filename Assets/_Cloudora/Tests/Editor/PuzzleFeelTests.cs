@@ -197,6 +197,18 @@ namespace Cloudora.Tests.Editor
         }
 
         [Test]
+        public void TutorialCueKeepsTheBoardBelowTheText()
+        {
+            // v4.1 (Editor testi 2026-10-19): 2 sıralı tahta (10, 15) üst sınıra kadar uzanıp öğretici yazının üstüne biniyordu.
+            // 9:16 ekranda güvenli yükseklik 693 tasarım birimi; yazı 161–183 arasında.
+            const float height = 693f;
+            Assert.That(AdaptiveBoardLayout.UpperAnchor(height, 1f, 0f), Is.EqualTo(0.76f));
+            float top = AdaptiveBoardLayout.UpperAnchor(height, 1f, AdaptiveBoardLayout.TutorialClearance);
+            Assert.That((1f - top) * height, Is.GreaterThanOrEqualTo(161f + 22f));
+            Assert.That(top, Is.GreaterThan(0.5f), "the board must keep most of its room");
+        }
+
+        [Test]
         public void WorldProgressionCrossesBoundaryAndRestoresInStages()
         {
             WorldDefinition valley = WorldCatalog.ForLevel(1);

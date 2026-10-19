@@ -45,6 +45,9 @@ namespace Cloudora.Tests.Editor
         public IEnumerator RepeatedMovesReuseGlassAndBoundedRegionsAndKeepUndoAccurate()
         {
             UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,UnityEditor.SceneManagement.NewSceneMode.Single);
+            // Efekt nesnesi yalnızca hareket azaltılmamışken oluşur; Editor'deki oyuncu tercihi testi etkilemesin (v4.1).
+            int reducedMotion=PlayerPrefs.GetInt("Cloudora.ReducedMotion",0);PlayerPrefs.SetInt("Cloudora.ReducedMotion",0);
+            try{
             yield return new EnterPlayMode();
             var host=new GameObject("Reuse canvas",typeof(RectTransform),typeof(Canvas));
             var source=Make(host.transform,"Source");var target=Make(host.transform,"Target");
@@ -74,6 +77,8 @@ namespace Cloudora.Tests.Editor
             yield return mover.Animate(source,target,WeatherType.Sun,1);
             Assert.That(host.GetComponentInChildren<WeatherFlowGraphic>(true).GetEntityId(),Is.EqualTo(effectId));
             Object.Destroy(host);yield return null;yield return new ExitPlayMode();
+            }
+            finally{PlayerPrefs.SetInt("Cloudora.ReducedMotion",reducedMotion);}
         }
 
         [Test]

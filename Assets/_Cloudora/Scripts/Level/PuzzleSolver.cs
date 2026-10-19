@@ -22,7 +22,8 @@ namespace Cloudora.Level
         // çıkmaz olmadığı için 1–15 puanları değişmez.
         public const float DeadStateWeight = 20f;
         public const float NaiveExcessWeight = 1.5f;
-        public const float NaiveFailureWeight = 10f;
+        // v4.1 (kullanıcı, 2026-10-19): 10 → 15 — tuzak daha çok sayılsın ama hamle de kıymetli kalsın.
+        public const float NaiveFailureWeight = 15f;
 
         public readonly int OptimalMoves;        // en kısa çözüm uzunluğu (-1: çözümsüz)
         public readonly int ReachableStates;     // ulaşılabilir farklı tahta durumu
@@ -31,14 +32,25 @@ namespace Cloudora.Level
         public readonly float TrapMoveRatio;     // en kısa yollar üzerinde, çıkmaza götüren hamlelerin oranı
         public readonly float AverageChoices;    // en kısa yollar üzerinde, durum başına ortalama legal hamle
         public readonly float NaiveExcessMoves;  // sanal oyuncunun, çözdüğü oyunlarda en kısa çözüme göre ortalama fazla hamlesi
-        public readonly float NaiveFailureRate;  // sanal oyuncunun takıldığı (çıkmaz / hamle sınırı) oyun oranı
+        public readonly float NaiveFailureRate;  // sanal oyuncunun çıkmaza düştüğü (takıldığı) oyun oranı
         public readonly int NoMovesDepth;        // v3.2: hiç legal hamle kalmayan (No Moves) duruma en kısa uzaklık (-1: yok); puana katılmaz
         public readonly float NoMovesStateRatio; // v3.2: ulaşılabilir durumlar içinde No Moves durumlarının oranı; puana katılmaz
+        // v4.1: düşünen oyuncunun (kapanan çıkmazı ileriye bakarak gören) çıkmaza düştüğü oyun oranı; puana katılmaz, seçimde sınır.
+        public readonly float ThinkingFailureRate;
+        // v4.1: sanal oyuncunun çıkmaza düşmeden hamle sınırını aştığı (dolaştığı) oyun oranı; takılma sayılmaz, puana katılmaz.
+        public readonly float NaiveWanderRate;
+        // v4.1: yalnızca ShallowThinkingDepth (2) hamle ileri bakan oyuncunun takılma oranı; tuzağın ne kadar derin olduğunu
+        // gösterir (3 hamle ileri bakan görüyor ama 2 hamle ileri bakan düşüyorsa tuzak "derin"). Puana katılmaz.
+        public readonly float ShallowThinkingFailureRate;
 
         public DifficultyMetrics(int optimalMoves, int reachableStates, float deadStateRatio,
             float progressMoveRatio, float trapMoveRatio, float averageChoices,
-            float naiveExcessMoves = 0f, float naiveFailureRate = 0f, int noMovesDepth = -1, float noMovesStateRatio = 0f)
+            float naiveExcessMoves = 0f, float naiveFailureRate = 0f, int noMovesDepth = -1, float noMovesStateRatio = 0f,
+            float thinkingFailureRate = 0f, float naiveWanderRate = 0f, float shallowThinkingFailureRate = 0f)
         {
+            ShallowThinkingFailureRate = shallowThinkingFailureRate;
+            ThinkingFailureRate = thinkingFailureRate;
+            NaiveWanderRate = naiveWanderRate;
             NoMovesDepth = noMovesDepth;
             NoMovesStateRatio = noMovesStateRatio;
             NaiveExcessMoves = naiveExcessMoves;
@@ -62,13 +74,15 @@ namespace Cloudora.Level
             DeadStateRatio.Equals(other.DeadStateRatio) && ProgressMoveRatio.Equals(other.ProgressMoveRatio) &&
             TrapMoveRatio.Equals(other.TrapMoveRatio) && AverageChoices.Equals(other.AverageChoices) &&
             NaiveExcessMoves.Equals(other.NaiveExcessMoves) && NaiveFailureRate.Equals(other.NaiveFailureRate) &&
-            NoMovesDepth == other.NoMovesDepth && NoMovesStateRatio.Equals(other.NoMovesStateRatio);
+            NoMovesDepth == other.NoMovesDepth && NoMovesStateRatio.Equals(other.NoMovesStateRatio) &&
+            ThinkingFailureRate.Equals(other.ThinkingFailureRate) && NaiveWanderRate.Equals(other.NaiveWanderRate) &&
+            ShallowThinkingFailureRate.Equals(other.ShallowThinkingFailureRate);
 
         public override bool Equals(object obj) => obj is DifficultyMetrics other && Equals(other);
-        public override int GetHashCode() => HashCode.Combine(HashCode.Combine(OptimalMoves, ReachableStates, DeadStateRatio, ProgressMoveRatio, TrapMoveRatio, AverageChoices, NaiveExcessMoves, NaiveFailureRate), NoMovesDepth, NoMovesStateRatio);
+        public override int GetHashCode() => HashCode.Combine(HashCode.Combine(OptimalMoves, ReachableStates, DeadStateRatio, ProgressMoveRatio, TrapMoveRatio, AverageChoices, NaiveExcessMoves, NaiveFailureRate), NoMovesDepth, NoMovesStateRatio, ThinkingFailureRate, HashCode.Combine(NaiveWanderRate, ShallowThinkingFailureRate));
 
         public override string ToString() =>
-            $"moves={OptimalMoves} states={ReachableStates} dead={DeadStateRatio:F3} progress={ProgressMoveRatio:F3} trap={TrapMoveRatio:F3} choices={AverageChoices:F2} naive_excess={NaiveExcessMoves:F2} naive_fail={NaiveFailureRate:F3} no_moves_depth={NoMovesDepth} no_moves_states={NoMovesStateRatio:F3} score={Score:F2}";
+            $"moves={OptimalMoves} states={ReachableStates} dead={DeadStateRatio:F3} progress={ProgressMoveRatio:F3} trap={TrapMoveRatio:F3} choices={AverageChoices:F2} naive_excess={NaiveExcessMoves:F2} naive_fail={NaiveFailureRate:F3} no_moves_depth={NoMovesDepth} no_moves_states={NoMovesStateRatio:F3} thinking_fail={ThinkingFailureRate:F3} shallow_thinking_fail={ShallowThinkingFailureRate:F3} naive_wander={NaiveWanderRate:F3} score={Score:F2}";
     }
 
     public sealed class PuzzleSolveResult
@@ -176,10 +190,12 @@ namespace Cloudora.Level
                 legalMoves += edges[i].Length;
             }
 
-            (float naiveExcess, float naiveFailure) = SimulateNaivePlayer(states, keys, index, toGoal, capacity, optimal, naiveStyle,lockCompleted);
+            (float naiveExcess, float naiveFailure, float naiveWander) = SimulateNaivePlayer(states, keys, index, edges, toGoal, capacity, optimal, naiveStyle, lockCompleted, 0);
+            (_, float thinkingFailure, _) = SimulateNaivePlayer(states, keys, index, edges, toGoal, capacity, optimal, naiveStyle, lockCompleted, ThinkingDepth);
+            (_, float shallowFailure, _) = SimulateNaivePlayer(states, keys, index, edges, toGoal, capacity, optimal, naiveStyle, lockCompleted, ShallowThinkingDepth);
             var metrics = new DifficultyMetrics(optimal, count, deadRatio,
                 (float)(progressSum / onPath.Count), trapMoves / (float)legalMoves, legalMoves / (float)onPath.Count,
-                naiveExcess, naiveFailure, noMovesDepth, noMovesRatio);
+                naiveExcess, naiveFailure, noMovesDepth, noMovesRatio, thinkingFailure, naiveWander, shallowFailure);
             return new PuzzleSolveResult(SolveStatus.Solved, metrics, BuildSolution(start, capacity, index, toGoal,lockCompleted));
 
             int Register(int[] state, int stateDepth)
@@ -197,27 +213,39 @@ namespace Cloudora.Level
         // Her hamleye basit bir çekicilik puanı verilir (bulutu tamamlamak, aynı renge istiflemek iyi; tamamlanmış
         // bulutu bozmak, bütün bir bulutu boşa taşımak, son hamleyi geri almak kötü) ve hamle bu puanlara göre
         // olasılıkla seçilir. Seçenekler kanonik sırayla ele alınır, böylece sonuç bulut sırasından bağımsızdır.
-        // Çıkmaz bir duruma düşmek ya da hamle sınırını aşmak "takılma" sayılır.
+        // Çıkmaz bir duruma düşmek "takılma" sayılır; çıkmaza düşmeden hamle sınırını aşmak "dolaşma"dır (v4.1: ayrı).
+        // v4.1 düşünen oyuncu: aynı tercihlerle oynar ama bir hamlenin ardından ThinkingDepth hamle ileriye bakar; o kadar
+        // içinde bütün devamları görülüp hiçbiri çözüme gitmeyen (kapanan) çıkmaza giden hamleyi seçmez. Yalnızca bu tür
+        // hamleler kalmışsa yine de birini seçer.
         public const int NaiveRuns = 200;
+        public const int ThinkingDepth = 3;          // kullanıcı onayı 2026-10-19 ("3 olsun")
+        public const int ShallowThinkingDepth = 2;
         private const double ReversalFactor = 0.05; // ≈ e^-3: az önceki duruma geri dönmek çok nadir
 
-        private static (float Excess, float Failure) SimulateNaivePlayer(List<int[]> states, List<StateKey> keys,
-            Dictionary<StateKey, int> index, int[] toGoal, int capacity, int optimal, NaivePlayerStyle style,bool lockCompleted)
+        private static (float Excess, float Failure, float Wander) SimulateNaivePlayer(List<int[]> states, List<StateKey> keys,
+            Dictionary<StateKey, int> index, List<int[]> edges, int[] toGoal, int capacity, int optimal, NaivePlayerStyle style,
+            bool lockCompleted, int thinkingDepth)
         {
             var options = new Dictionary<int, (int[] Children, double[] Weights)>();
+            var closedDeadEnds = new Dictionary<int, bool>();
             var random = new DeterministicRandom(keys[0].GetHashCode());
             int moveCap = optimal * 4 + 20;
             long excess = 0;
-            int solved = 0, failed = 0;
+            int solved = 0, failed = 0, wandered = 0;
             for (int run = 0; run < NaiveRuns; run++)
             {
                 int node = 0, previous = -1, moves = 0;
-                bool stuck = false;
+                bool stuck = false, wander = false;
                 while (toGoal[node] != 0)
                 {
-                    if (toGoal[node] == Unreached || moves >= moveCap) { stuck = true; break; }
+                    if (toGoal[node] == Unreached) { stuck = true; break; }
+                    if (moves >= moveCap) { wander = true; break; }
                     if (!options.TryGetValue(node, out var choice))
-                        options[node] = choice = NaiveOptions(states[node], keys[node], index, capacity, style,lockCompleted);
+                    {
+                        choice = NaiveOptions(states[node], keys[node], index, capacity, style, lockCompleted);
+                        if (thinkingDepth > 0) choice = AvoidClosedDeadEnds(choice, edges, toGoal, closedDeadEnds, thinkingDepth);
+                        options[node] = choice;
+                    }
                     if (choice.Children.Length == 0) { stuck = true; break; }
 
                     double total = 0;
@@ -234,10 +262,47 @@ namespace Cloudora.Level
                     moves++;
                 }
                 if (stuck) failed++;
+                else if (wander) wandered++;
                 else { solved++; excess += moves - optimal; }
             }
             float averageExcess = solved > 0 ? excess / (float)solved : moveCap - optimal;
-            return (averageExcess, failed / (float)NaiveRuns);
+            return (averageExcess, failed / (float)NaiveRuns, wandered / (float)NaiveRuns);
+        }
+
+        private static (int[] Children, double[] Weights) AvoidClosedDeadEnds((int[] Children, double[] Weights) choice,
+            List<int[]> edges, int[] toGoal, Dictionary<int, bool> cache, int depth)
+        {
+            var children = new List<int>();
+            var weights = new List<double>();
+            for (int i = 0; i < choice.Children.Length; i++)
+            {
+                int child = choice.Children[i];
+                if (toGoal[child] == Unreached && IsClosedDeadEnd(child, edges, cache, depth)) continue;
+                children.Add(child);
+                weights.Add(choice.Weights[i]);
+            }
+            return children.Count == 0 ? choice : (children.ToArray(), weights.ToArray());
+        }
+
+        // Çıkmaz durumdan ThinkingDepth hamle içinde gidilebilen bütün durumlar görülüp yenisi kalmıyorsa çıkmaz "kapanır":
+        // ileriye bakan oyuncu bu kadar hamlede çıkış olmadığını görür. (Çıkmazdan gidilen her durum da çıkmazdır.)
+        private static bool IsClosedDeadEnd(int start, List<int[]> edges, Dictionary<int, bool> cache, int depth)
+        {
+            if (cache.TryGetValue(start, out bool closed)) return closed;
+            var seen = new HashSet<int> { start };
+            var frontier = new List<int> { start };
+            closed = false;
+            for (int ply = 0; ply <= depth; ply++)
+            {
+                var next = new List<int>();
+                foreach (int n in frontier)
+                foreach (int c in edges[n])
+                    if (seen.Add(c)) next.Add(c);
+                if (next.Count == 0) { closed = true; break; }
+                frontier = next;
+            }
+            cache[start] = closed;
+            return closed;
         }
 
         private static double Weight((int[] Children, double[] Weights) choice, int i, int previous) =>

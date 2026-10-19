@@ -34,8 +34,8 @@ namespace Cloudora.Editor
             EditorApplication.Exit(ok ? 0 : 1);
         }
 
-        // Kurulmuş parçalar; yeni bir parça tasarlandıkça buraya eklenir.
-        private static readonly V3Part[] PartsToBuild = { V3Part.Intro, V3Part.Adaptation, V3Part.TransitionTheme, V3Part.Theme2, V3Part.Theme3 };
+        // v4.1: 1–100 tek kurucuyla (V41LevelBuilder) kurulur.
+        private static readonly V3Part[] PartsToBuild = { V3Part.Intro, V3Part.Adaptation, V3Part.GreenValley, V3Part.RainyCoast, V3Part.FrostPeaks };
         private const string DataPath = "Assets/_Cloudora/Scripts/Level/V3LevelData.Generated.cs";
 
         [MenuItem("Cloudora/V3/Bölüm Verisini Üret")]
@@ -69,7 +69,7 @@ namespace Cloudora.Editor
             code.Append("        public static readonly V3Part[] BuiltParts = { ")
                 .Append(string.Join(", ", PartsToBuild.Select(p => "V3Part." + p))).Append(" };\r\n\r\n");
             code.Append("        private static readonly V3LevelEntry[] Entries =\r\n        {\r\n");
-            var campaign=CampaignMoonRollout.Apply(PartsToBuild.SelectMany(V3LevelBuilder.BuildPart));
+            IReadOnlyList<V3LevelResult> campaign = V41LevelBuilder.Build();
             foreach (V3Part part in PartsToBuild)
             {
                 code.Append($"            // {part}\r\n");
@@ -79,7 +79,7 @@ namespace Cloudora.Editor
                     code.Append($"            new V3LevelEntry({r.Level}, DifficultyBand.{r.Band}, {r.Frame.Capacity}, {r.Primary.Seed}, " +
                                 $"{r.Primary.Score.ToString("R", CultureInfo.InvariantCulture)}f, {m.OptimalMoves}, " +
                                 $"\"{V3BoardText.Format(r.Primary.Board)}\"),\r\n");
-                    Debug.Log($"CLOUDORA_V3 level={r.Level} band={r.Band} frame={r.Frame} window={r.Window} seed={r.Primary.Seed} {m}");
+                    Debug.Log($"CLOUDORA_V3 level={r.Level} band={r.Band} frame={r.Frame} target={F(r.Target)} trap={r.Trap} tier={r.Tier} seed={r.Primary.Seed} {m}");
                 }
             }
             code.Append("        };\r\n    }\r\n}\r\n");
@@ -88,57 +88,36 @@ namespace Cloudora.Editor
             return true;
         }
 
-        // v3.2: çerçeve merdiveniyle kurulacak parçanın önizlemesi — veri dosyasına yazmaz, yalnızca tablo üretir
-        // (Logs/v3-preview-<parça>.csv). Kullanıcı onaylayınca parça PartsToBuild'e eklenip veri üretilir.
-        [MenuItem("Cloudora/V3/Önizleme: Geçiş Teması (16–30)")]
-        public static void RunTransitionPreview() => WritePreview(V3Part.TransitionTheme);
+        // v4.1: 1–100 önizlemesi — veri dosyasına yazmaz, yalnızca tablo üretir (Logs/v41-preview.csv).
+        [MenuItem("Cloudora/V3/Önizleme: 1–100 (v4.1)")]
+        public static void RunV41Preview() => WritePreview();
 
-        public static void RunTransitionPreviewBatch()
-        {
-            bool ok;
-            try { ok = WritePreview(V3Part.TransitionTheme); }
-            catch (System.Exception exception)
-            {
-                Debug.LogError($"CLOUDORA_V3 preview failed: {exception}");
-                ok = false;
-            }
-            EditorApplication.Exit(ok ? 0 : 1);
-        }
+        public static void RunV41PreviewBatch() => RunReportBatch(WritePreview);
 
-        // Faz 2.2: 31–60 (Tema 2) önizlemesi — veri dosyasına yazmaz.
-        [MenuItem("Cloudora/V3/Önizleme: Tema 2 (31–60)")]
-        public static void RunTheme2Preview() => WritePreview(V3Part.Theme2);
-
-        public static void RunTheme2PreviewBatch() => RunReportBatch(() => WritePreview(V3Part.Theme2));
-
-        [MenuItem("Cloudora/V3/Önizleme: Tema 3 (61–100)")]
-        public static void RunTheme3Preview() => WritePreview(V3Part.Theme3);
-
-        public static void RunTheme3PreviewBatch() => RunReportBatch(() => WritePreview(V3Part.Theme3));
-
-        private static bool WritePreview(V3Part part)
+        private static bool WritePreview()
         {
             var timer = Stopwatch.StartNew();
-            IReadOnlyList<V3LevelResult> results = CampaignMoonRollout.Apply(PartsToBuild.SelectMany(V3LevelBuilder.BuildPart)).Where(r=>V3LevelPlan.PartFor(r.Level)==part).ToArray();
+            IReadOnlyList<V3LevelResult> results = V41LevelBuilder.Build();
             timer.Stop();
-            var csv = new StringBuilder("level,band,target,score,deviation,frame,novelty,seed,optimal_moves,progress_ratio,dead_ratio,trap_ratio,naive_excess,naive_fail,no_moves_depth,no_moves_states,board\n");
+            var csv = new StringBuilder("level,band,part,target,score,deviation,frame,novelty,trap_class,trap_low,trap_high,tier,seed,optimal_moves,progress_ratio,dead_ratio,trap_ratio,naive_excess,naive_fail,thinking_fail,naive_wander,no_moves_depth,no_moves_states,board,shallow_thinking_fail\n");
             foreach (V3LevelResult r in results)
             {
                 DifficultyMetrics m = r.Primary.Result.Metrics;
-                csv.AppendLine(string.Join(",", r.Level, r.Band, F(r.Target), F(r.Primary.Score), F(r.Primary.Score - r.Target), r.Frame,
-                    r.Novelty, r.Primary.Seed, m.OptimalMoves, F(m.ProgressMoveRatio), F(m.DeadStateRatio), F(m.TrapMoveRatio), F(m.NaiveExcessMoves),
-                    F(m.NaiveFailureRate), m.NoMovesDepth, F(m.NoMovesStateRatio), V3BoardText.Format(r.Primary.Board)));
-                Debug.Log($"CLOUDORA_V3_PREVIEW level={r.Level} band={r.Band} target={F(r.Target)} score={F(r.Primary.Score)} frame={r.Frame} novelty={r.Novelty} seed={r.Primary.Seed} {m}");
+                csv.AppendLine(string.Join(",", r.Level, r.Band, V3LevelPlan.PartFor(r.Level), F(r.Target), F(r.Primary.Score), F(r.Primary.Score - r.Target), r.Frame,
+                    r.Novelty, r.Trap, F(r.TrapRange.Low), F(r.TrapRange.High), r.Tier, r.Primary.Seed, m.OptimalMoves, F(m.ProgressMoveRatio), F(m.DeadStateRatio),
+                    F(m.TrapMoveRatio), F(m.NaiveExcessMoves), F(m.NaiveFailureRate), F(m.ThinkingFailureRate), F(m.NaiveWanderRate), m.NoMovesDepth,
+                    F(m.NoMovesStateRatio), V3BoardText.Format(r.Primary.Board), F(m.ShallowThinkingFailureRate)));
+                Debug.Log($"CLOUDORA_V41_PREVIEW level={r.Level} band={r.Band} target={F(r.Target)} score={F(r.Primary.Score)} frame={r.Frame} novelty={r.Novelty} trap={r.Trap} tier={r.Tier} seed={r.Primary.Seed} {m}");
             }
             foreach (BoardFrame frame in results.Select(r => r.Frame).Distinct())
             {
-                IReadOnlyList<LevelCandidate> pool = V3LadderBuilder.Pool(frame);
-                Debug.Log($"CLOUDORA_V3_PREVIEW_POOL frame={frame} usable={pool.Count} score[min/p50/max]={F(pool.First().Score)}/{F(pool[pool.Count / 2].Score)}/{F(pool.Last().Score)}");
+                IReadOnlyList<LevelCandidate> pool = V41LevelBuilder.Pool(frame);
+                Debug.Log($"CLOUDORA_V41_PREVIEW_POOL frame={frame} usable={pool.Count} score[min/p50/max]={F(pool.First().Score)}/{F(pool[pool.Count / 2].Score)}/{F(pool.Last().Score)}");
             }
             string directory = Path.Combine(Directory.GetCurrentDirectory(), "Logs");
             Directory.CreateDirectory(directory);
-            File.WriteAllText(Path.Combine(directory, $"v3-preview-{part}.csv"), csv.ToString());
-            Debug.Log($"CLOUDORA_V3 preview written part={part} ms={timer.ElapsedMilliseconds}");
+            File.WriteAllText(Path.Combine(directory, "v41-preview.csv"), csv.ToString());
+            Debug.Log($"CLOUDORA_V41 preview written ms={timer.ElapsedMilliseconds}");
             return true;
         }
 
@@ -171,6 +150,22 @@ namespace Cloudora.Editor
 
         public static void RunInventoryReportBatch() => RunReportBatch(() => WriteLayoutReport(InventoryFrames().ToArray(), "inventory"));
 
+        // v4.1 Faz 2: yeni ölçüyle (kilitli kural, takılma ×15, düşünen oyuncu) 1–100'de kullanılacak çerçeveler.
+        private static IEnumerable<BoardFrame> V41InventoryFrames()
+        {
+            yield return new BoardFrame(4, 2, 2);
+            yield return new BoardFrame(4, 3, 2);
+            foreach (int colors in new[] { 3, 4, 5 })
+            for (int empties = 2; empties >= 1; empties--)
+            for (int open = empties; open >= 0; open--)
+                yield return new BoardFrame(5, colors, empties, open);
+            for (int empties = 2; empties >= 1; empties--)
+            for (int open = empties; open >= 0; open--)
+                yield return new BoardFrame(6, 5, empties, open);
+        }
+
+        public static void RunV41InventoryReportBatch() => RunReportBatch(() => WriteLayoutReport(V41InventoryFrames().ToArray(), "v41-inventory"));
+
         private static void RunReportBatch(System.Func<bool> report)
         {
             bool ok;
@@ -185,23 +180,23 @@ namespace Cloudora.Editor
 
         private static bool WriteLayoutReport(BoardFrame[] frames, string name)
         {
-            var csv = new StringBuilder("frame,seed,status,optimal_moves,states,dead_ratio,progress_ratio,trap_ratio,naive_excess,naive_fail,no_moves_depth,score,board\n");
+            var csv = new StringBuilder("frame,seed,status,optimal_moves,states,dead_ratio,progress_ratio,trap_ratio,naive_excess,naive_fail,thinking_fail,naive_wander,no_moves_depth,score,board\n");
             var summary = new StringBuilder();
             foreach (BoardFrame frame in frames)
             {
                 var timer = Stopwatch.StartNew();
                 CandidateSelection selection = LevelCandidateSelector.Select(frame, new ScoreWindow(float.MinValue, float.MaxValue),
-                    V3LevelBuilder.FirstSeed, V3LevelBuilder.CandidatesPerFrame, 0, V3LevelBuilder.MaxStates);
+                    V41LevelBuilder.FirstSeed, V41LevelBuilder.CandidatesPerFrame, 0, V41LevelBuilder.MaxStates);
                 timer.Stop();
                 foreach (LevelCandidate c in selection.Measured)
                 {
                     DifficultyMetrics m = c.Result.Metrics;
                     csv.AppendLine(string.Join(",", frame, c.Seed, c.Result.Status, m.OptimalMoves, m.ReachableStates, F(m.DeadStateRatio),
-                        F(m.ProgressMoveRatio), F(m.TrapMoveRatio), F(m.NaiveExcessMoves), F(m.NaiveFailureRate), m.NoMovesDepth, F(m.Score),
+                        F(m.ProgressMoveRatio), F(m.TrapMoveRatio), F(m.NaiveExcessMoves), F(m.NaiveFailureRate), F(m.ThinkingFailureRate), F(m.NaiveWanderRate), m.NoMovesDepth, F(m.Score),
                         V3BoardText.Format(c.Board)));
                 }
                 List<LevelCandidate> solved = selection.Measured.Where(c => c.Result.Status == Cloudora.Level.SolveStatus.Solved).ToList();
-                List<LevelCandidate> usable = solved.Where(c => c.Result.Metrics.NaiveFailureRate < V3LadderBuilder.MaxNaiveFailureRate).ToList();
+                List<LevelCandidate> usable = solved.Where(c => c.Result.Metrics.NaiveFailureRate <= V41LevelBuilder.MaxTrap).ToList();
                 string line = $"CLOUDORA_V3_LAYOUT frame={frame} distinct={selection.Measured.Count} solved={solved.Count} usable={usable.Count} " +
                               $"over_limit={selection.LimitExceeded} ms={timer.ElapsedMilliseconds} max_states={MaxOf(selection.Measured.Select(c => c.Result.Metrics.ReachableStates))}";
                 if (usable.Count > 0)
@@ -211,6 +206,7 @@ namespace Cloudora.Editor
                             $" dead[p50/p90]={Pct(usable, c => c.Result.Metrics.DeadStateRatio, 50)}/{Pct(usable, c => c.Result.Metrics.DeadStateRatio, 90)}" +
                             $" progress_p50={Pct(usable, c => c.Result.Metrics.ProgressMoveRatio, 50)}" +
                             $" naive_fail[p50/p90]={Pct(usable, c => c.Result.Metrics.NaiveFailureRate, 50)}/{Pct(usable, c => c.Result.Metrics.NaiveFailureRate, 90)}" +
+                            $" thinking_fail[p50/p90]={Pct(usable, c => c.Result.Metrics.ThinkingFailureRate, 50)}/{Pct(usable, c => c.Result.Metrics.ThinkingFailureRate, 90)}" +
                             $" no_moves={F(usable.Count(c => c.Result.Metrics.NoMovesDepth >= 0) / (float)usable.Count)}";
                 }
                 summary.AppendLine(line);
@@ -240,7 +236,7 @@ namespace Cloudora.Editor
             {
                 V3LevelEntry entry = V3LevelData.Find(level);
                 if (entry == null) continue;
-                DifficultyMetrics m = PuzzleSolver.Solve(entry.CreateBoard(),entry.Capacity,MaxStates,lockCompleted:false).Metrics;
+                DifficultyMetrics m = PuzzleSolver.Solve(entry.CreateBoard(), entry.Capacity, MaxStates).Metrics;
                 Debug.Log($"CLOUDORA_V3_CAL level={level} band={entry.Band} board={entry.Board} {m}");
             }
         }
