@@ -25,13 +25,18 @@ namespace Cloudora.Editor
         [MenuItem("Cloudora/Build/Android Development APK")]
         public static void BuildDevelopmentApk() => Build(false, false);
 
+        // iOS cihaz derlemesinin karşılığı: Development filigranı yok, CLOUDORA_DEVICE_QA test ödüllerini (sahte reklam) açık tutar.
+        // Yan yana kurulum ve ekip testi için; mağazaya gönderilmez.
+        [MenuItem("Cloudora/Build/Android Device QA APK")]
+        public static void BuildDeviceQaApk() => Build(false, false, true);
+
         [MenuItem("Cloudora/Build/Android Release AAB")]
         public static void BuildReleaseAab() => Build(true, false);
 
         [MenuItem("Cloudora/Build/Android Play AAB")]
         public static void BuildPlayAab() => Build(true, true);
 
-        private static void Build(bool release, bool play)
+        private static void Build(bool release, bool play, bool deviceQa = false)
         {
             SigningState signingState = CaptureSigningState();
             string originalProductName = PlayerSettings.productName;
@@ -42,7 +47,7 @@ namespace Cloudora.Editor
             {
                 ConfigureAndroid(release, play);
                 ApplyDevIdentityOverride(release);
-                string fallback = Path.Combine("Builds", "Android", play ? "Cloudora-0.1.0-play.aab" : release ? "Cloudora-0.1.0.aab" : "Cloudora-dev.apk");
+                string fallback = Path.Combine("Builds", "Android", play ? "Cloudora-0.1.0-play.aab" : release ? "Cloudora-0.1.0.aab" : deviceQa ? "Cloudora-qa.apk" : "Cloudora-dev.apk");
                 output = Environment.GetEnvironmentVariable("CLOUDORA_BUILD_OUTPUT") ?? fallback;
                 string directory = Path.GetDirectoryName(output);
                 if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
@@ -52,7 +57,8 @@ namespace Cloudora.Editor
                     scenes = new[] { GameplayScene },
                     locationPathName = output,
                     target = BuildTarget.Android,
-                    options = release ? BuildOptions.CompressWithLz4HC : BuildOptions.Development
+                    options = release || deviceQa ? BuildOptions.CompressWithLz4HC : BuildOptions.Development,
+                    extraScriptingDefines = deviceQa ? new[] { "CLOUDORA_DEVICE_QA" } : null
                 };
                 report = BuildPipeline.BuildPlayer(options);
             }

@@ -1,6 +1,39 @@
 # crVersion — Cloudora Versiyon Kaydı
 
-`bahadir-claude-versions` dalındaki versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur ve git etiketiyle işaretlenir. Major değişiklikler yeni ana numara alır (`v1`, `v2`, `v3`, … → sıradaki `v4`); bir versiyona sonradan gelen eklemeler ara numara alır (`v3.1`, `v3.2`, …). GitHub'a push yalnızca kullanıcının her seferinde ayrıca verdiği onayla yapılır (iki hedef birlikte: takım reposu `cloudora-bahadir` + `bahadir-aktas/cloudora-android` `main`).
+`bahadir-claude-versions` dalındaki versiyonların kaydı. Her versiyon kullanıcı onayıyla oluşturulur ve git etiketiyle işaretlenir. Major değişiklikler yeni ana numara alır (`v1`, `v2`, `v3`, `v4`, … → sıradaki `v5`); bir versiyona sonradan gelen eklemeler ara numara alır (`v3.1`, `v3.2`, …; sıradaki `v4.1`). GitHub'a push yalnızca kullanıcının her seferinde ayrıca verdiği onayla yapılır (iki hedef birlikte: takım reposu `cloudora-bahadir` + `bahadir-aktas/cloudora-android` `main`).
+
+---
+
+## v4 — iOS sürümünün Android'e birebir uyarlaması
+
+- **Tarih:** 2026-10-19
+- **Commit:** bu dosyanın güncellendiği commit (etiket `v4`). Taban v3.2 (`d7c9416`); v3.2 etiketi değişmedi.
+- **Kapsam (kullanıcı):** arkadaşı yigityvz'in iOS reposundaki (`yigityvz/cloudora-ios`, `main` @ `1ee4334`) v3.2 üzerine yaptığı değişiklikler incelendi, belgelendi, ölçüldü ve "ios'da neyse aynısı" olarak Android'e alındı. Farklar ve çelişkiler: `Docs/IOS_FARKLARI.md` + `Docs/IOS_FARKLARI.html`.
+
+### Değişiklikler (iOS'tan, birebir)
+1. **Oynanış kuralları:** tamamlanmış (dolu, tek renk) hazne kilitli; başarısızlık = tahta çözülemez (arka planda tam arama, `PuzzleSolver.ReachabilitySearch`; analytics `reason=unsolvable`); bitmemiş bölümden Ana Sayfa 1 can (1–5 dahil); oyun 100'de biter.
+2. **Bölümler:** Ay 60'ta; 60–80 yeniden seçildi (`Editor/CampaignMoonRollout.cs`). 3 dünya: tanıtım 1–14, Yeşil Vadi 15–30, Rainy Coast 31–60, Frost Peaks 61–100.
+3. **Ekonomi:** Orta / Zor / Çok zor 100 / 200 / 300 coin; devam 500.
+4. **Arayüz:** Figma tasarımı (Nunito), Türkçe metinler, açılış animasyonu, ana sayfa, Dünyalar, duraklatma, sonuç ve kurtuluş ekranları; cam hazneler, element simgeleri.
+5. **Animasyon:** elemente özel aktarım, hazne içi sıvı yükselmesi, 7 element bitiriş sahnesi, kurtuluş animasyonu, azaltılmış hareket tercihi.
+6. **Performans:** nesne havuzu, değişince güncellenen arayüz, kalite ayarında doku küçültme kaldırıldı.
+7. **Testler:** 14 yeni test dosyası; bizim 8 test dosyası iOS'taki haliyle.
+
+### Android'e özel
+- iOS'un sildiği Android katmanı korundu: `CloudoraBuildTools`, `CloudoraAndroidManifestPostprocessor` (+ testi), `Build-Android.ps1`, Android build profili, `BillingMode.json`, `androidjni`, Play belgeleri/görselleri. Bizim belgelerimiz iOS'taki halleriyle değiştirilmedi.
+- **Yeni derleme modu** `Android Device QA APK` (`Build-Android.ps1 -Mode qa`): iOS cihaz derlemesinin karşılığı — Development değil, `CLOUDORA_DEVICE_QA` (sahte reklam/test ödülleri), debug imzası.
+- **Doku ayarı:** 78 tasarım görseline iOS'taki gibi 4096 / RGBA32 / sıkıştırmasız Android ayarı (`.meta` + `Editor/DesignQuality.cs`); varsayılan ayar görüntüyü bozuyordu.
+
+### Doğrulama
+- **EditMode:** 242 test; 236 geçti, 0 başarısız, 6 atlandı (iOS: 241/235/0/6 + Android manifest testi).
+- **Ölçüm (iOS çözücüsüyle, 100 bölüm):** kilit kuralı en kısa çözümü değiştirmiyor; başarısızlığın mümkün olduğu bölüm 26 → 61; 61–80 en kısa çözüm 12–16 → 15–19; oyun içi arama PC'de ≤ 6,1 ms.
+- **Telefon (Galaxy S24 FE, "Cloudora v4" `com.yigityvz.cloudora.v4`, QA APK 70 MB):** genel testler + 14→15, 16, 21, 30, 35, 59–60, 81–83, 99–100; çökme yok, 7 hazne + Extra + Shuffle akıcı. Ekip için aynı APK: `..\APK-ekip\Cloudora-v4.apk` + `KURULUM.txt`.
+
+### Bilinen sınırlar / açık konular
+- **Başarısızlık kuralı (Ç1):** ekran hamle kalmışken gelir ve Undo/Extra sunmaz; 60'ta 4 başarısızlık, Undo kullanılamadı. Karar sonraya.
+- **Temalar güncellenecek (kullanıcı, 2026-10-19):** dünya görselleri, arka planlar, tema adları/tasarımı ileride yenilenecek. Bunun parçası: dünya resimleri düşük çözünürlüklü (aşama başına ~772×1300), büyük ekranlarda bulanık; yüksek çözünürlüklü dışa aktarım gerekiyor.
+- Kurtuluş ekranında can sayacı donuk (iOS'tan); kurtuluş ekranında üst/alt gri şerit (Android); "Ödülle devam et" reklam olduğunu söylemiyor.
+- v3 tasarım kurallarıyla çelişkiler (Ay 60 Çok zor finalde, 1–5 can kuralı, Türkçe metinler seçeneksiz vb.): `Docs/IOS_FARKLARI.md` §10.
 
 ---
 

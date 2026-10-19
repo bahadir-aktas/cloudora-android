@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('dev', 'release', 'play')][string]$Mode = 'dev',
+    [ValidateSet('dev', 'qa', 'release', 'play')][string]$Mode = 'dev',
     [string]$ProjectPath = 'C:\Dev\Cloudora-codex',
     [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.9f1\Editor\Unity.exe'
 )
@@ -12,6 +12,7 @@ if ($ProjectPath -match '[^\x00-\x7F]' -or $ProjectPath.Contains(' ')) {
 }
 
 $method = switch ($Mode) {
+    'qa' { 'Cloudora.Editor.CloudoraBuildTools.BuildDeviceQaApk' }
     'release' { 'Cloudora.Editor.CloudoraBuildTools.BuildReleaseAab' }
     'play' { 'Cloudora.Editor.CloudoraBuildTools.BuildPlayAab' }
     default { 'Cloudora.Editor.CloudoraBuildTools.BuildDevelopmentApk' }

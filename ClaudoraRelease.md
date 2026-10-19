@@ -4,6 +4,207 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-19 13:11 — v4 commit ve etiket (kullanıcı onayı)
+- **Kullanıcı:** "commit at, temaların vs güncelleneceğini not düş".
+- **Not:** temalar (dünya görselleri, arka planlar, tema adları/tasarımı) ileride güncellenecek — `PROJE_HAFIZASI.md` §0, `crVersion.md` v4 "Bilinen sınırlar", `IOS_FARKLARI.md` §11 (+ HTML).
+- **Commit içeriği:** iOS'tan 361 dosya + Android'e özel değişiklikler + belgeler. `ProjectSettings.asset` iOS'taki dosyanın bayt bayt aynısı olarak alındı (derlemenin yazdığı keystore alanı ve satır sonu boşlukları girmesin). Commit dışı: `Assets/Settings/UniversalRenderPipelineGlobalSettings.asset` (Unity'nin eklediği tek `rid` satırı), `Docs/Cloudora 1–100 Şablonu.html` (önceki karar), `.vscode/` (artık `.gitignore`'da).
+- **Etiket:** `v4` (açıklamalı, v3.2 gibi). `v3.2` değişmedi. **Push yok** (ayrı onay).
+
+## 2026-10-19 13:09 — iOS uyarlaması Faz 5: dokümantasyon
+- **Fark dokümanı son hal:** `Docs/IOS_FARKLARI.md` (iOS-inceleme'deki taslakla aynı) — §11 telefon testi tablosu ve bulunanlar; çelişki tablosunun v4 durumu. **HTML:** `Docs/IOS_FARKLARI.html` (`iOS-inceleme\olcum\olcum.csv`'den üretildi; özet kartlar, çelişki tablosu, "başarısızlık ne kadar erken" grafiği, 58–83 en kısa çözüm grafiği, test ve açık işler; açık/koyu tema; Edge başsız modda masaüstü ve koyu görünüm kontrol edildi).
+- **Güncellenenler:** `crVersion.md` (v4 girişi; sıradaki ara sürüm v4.1, major v5), `Docs/PROJE_HAFIZASI.md` (§0 nerede kaldık, okuma sırası, kurallar ✱ ile v4 farkları, kod haritası, build/adb notları, açık konular), `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` ve `Docs/V3_SABLON.md` başına v4 notu, `README.md` (v4 maddesi, test sonucu 236/242).
+- **Düzeltme:** dokümanlara önce tahmini saat (13:10, 13:15) yazılmıştı; `date` ile 13:09'a düzeltildi.
+
+## 2026-10-19 12:58 — v4 telefon testi B5–B8 tamamlandı
+- **B5 (35):** normal oynanışla geçildi (79 sn, 20 hamle; en kısa 16). Bilerek çıkmaz denemesi yapılmadı.
+- **B6 (59 → 60):** 59'da 1 başarısızlık (3. hamle). **60'ta 4 başarısızlık** (6., 9., 9., 10. hamle), 4 reklamla devam (1'er hamle geri), Undo hiç kullanılmadı/kullanılamadı; 54 sn, 16 hamle (en kısa 14). Kullanıcı: "60 zor olabilir, birkaç kere geri sardım … geri alma vs işe yarayabilir". Açıklandı: başarısızlık ekranı yalnızca çözümsüzlük kanıtlanınca gelir (%100 kayıp), ama hamle varken gelir ve Undo/Extra sunmaz; eski kuralla 60'ta ekran hiç çıkmazdı. Karar sonraya (a/b/c).
+- **Kurtuluş ekranı:** ekran görüntüsüyle "Kurtuluşu tekrar izle" görünür (kartın altında). İlk 40 sn'lik kare yakalamasında kullanıcı basmamıştı; ikincisinde kurtuluş resmi ~1 sn → "Azaltılmış hareket" açıkmış (A16'da açık kalmış); kapatınca kullanıcı: "güzeldi". Hata değil. Gözlemler: kurtuluş ekranında can sayacı donuk (03:22, 15:24 — `MilestoneScreen.SetResources` yalnızca açılışta; iOS'ta da aynı), üstte/altta gri şerit (Android).
+- **B7 (81–83):** 7 hazne + Extra + art arda Shuffle (0,5–0,7 sn aralık): "donmadı, akıcı, hepsi sorunsuz". Kullanıcı Extra'nın başta 3 olduğunu düşündü: kodda başlangıç Extra 1 (Undo 3), v3.2'den beri aynı.
+- **B8 (99 → 100):** "Frost Peaks kurtarıldı", "100 bölüm tamamlandı • Ana Sayfa", Dünyalar'da 3 dünya %100, "Üç dünya · 100 bölüm. Yeni maceralar yakında." Kurtuluş tekrarı normal sürede.
+- Kayıt atlamaları: 15 (12:35, kontrol), 35 (12:41), 59 (12:44), 81 (12:55), 99 (12:57). Telefon kaydı şu an 100 bitmiş, coin 2300.
+
+## 2026-10-19 12:40 — Bulanıklığın asıl sebebi: dünya resimlerinin çözünürlüğü (sonraya bırakıldı)
+- Yeni APK (70 MB, 12:33) telefona üzerine kuruldu, ekip APK'sı değiştirildi (SHA-256 `72a0a602…c01329`). Kullanıcı 15'te "bi fark göremedim".
+- **Sebep:** dünya resimleri (`Design/2ce2b`, `232d2`, `84576`) 2340×1300 piksel, içinde 3 aşama yan yana → aşama başına ~772×1300. iOS testi iPhone SE'de (750×1334) ≈ 1:1; S24 FE (1080×2340) ~1,8× büyütüyor. Doku ayarı düzeltmesi yalnızca sıkıştırmayı ve 2340 → 2048 küçültmeyi kaldırdı (iOS ile aynı, kalıyor). `Docs/DesignSources`'ta yüksek çözünürlüklü kaynak yok.
+- **Karar (kullanıcı):** "resimleri güncelleme işini daha sonra yapacağız. notunu al." → Açık iş: yigityvz'den Figma 2×/3× dışa aktarım (aşama başına ≥1080×2340; üçlü ~3300×2340), sonra değiştirip yeni APK. Büyük ekranlı iPhone'ları da etkiler.
+- **Gözlem:** 12:36'da uygulama arka plana geçerken `APP_CMD_LOW_MEMORY`; izlenecek. Telefon USB bağlantısı koptu, logcat durdu.
+
+## 2026-10-19 12:31 — v4 telefon testi (genel + B1–B4) ve bulanık görsel düzeltmesi
+- **Genel testler (A1–A17):** kullanıcı: "gözüme bir şey çarpmadı".
+- **Kayıt atlatma:** v4 kaydı `/sdcard/Android/data/com.yigityvz.cloudora.v4/files/` (adb ile erişilebilir). İlk kayıt (L4, coin 400, can 4) yedek: `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-telefon-v4-20261019-1217\`. Atlamalar: 14 (12:18), 21 (12:22), 30 (12:25); her seferinde `currentLevel`/`highestCompletedLevel`, atlanan öğretici bayrakları "görüldü", `failRecord` boş. İlk denemede Git Bash yol dönüşümü nedeniyle uygulama bir kez durduruldu (kullanıcı L4'teydi, kayıt kaybı yok).
+- **B1 (14→15):** "Tanıtım tamamlandı" ekranı çıktı, sorun yok; 15'in öğretici yazısı en üst bulutların hemen üstünde.
+- **B2 (16–17):** Shuffle çalışıyor.
+- **B3 (21):** tuzak 2 hamlede `level_failed reason=unsolvable`; ekran hemen geliyor. Coinle devam (900 → 400) ve "Ödülle devam et" (= reklam, `method=ad`) 1 hamle geri, çözülebilir duruma döndü. Not: buton metninde "reklam" geçmiyor (metin netliği, dokümana).
+- **B4 (30):** kurtuluş ekranı ("… kurtarıldı") çıktı. Kullanıcı: dünya geçiş animasyonu yok → kodda iOS'ta da yok (`MilestoneScreen.ShowNextWorld` resmi doğrudan değiştirir), eksik değil. Kurtuluş animasyonu = tek üçlü dünya resminin 3 aşaması arasında ~3,5 sn geçiş (`WorldRescueReplay`); kullanıcı emin değil, hızlı geçti. "Kurtuluşu tekrar izle" kartın en altında; görülmedi → sonraki kurtuluşta (60) ekran görüntüsüyle bakılacak.
+- **Hata (Android'e özel) — arka plan görselleri bulanık:** iOS'ta `Resources/Design` altındaki 78 görselin hepsinde iOS ayarı 4096 / RGBA32 / sıkıştırmasız; Android'de ayar yoktu (varsayılan 2048 + sıkıştırma). Dünya resimleri 3 aşamalı geniş tek resim (en büyük kenar 2340) olduğu için hem küçülüyor hem de üçte biri ekrana geriliyordu. **Düzeltme (kullanıcı: "boyutları büyüsün, görüntü kaliteli olsun"):** 78 `.meta` dosyasında Android ayarı iOS ile aynı yapıldı; `Editor/DesignQuality.cs` Android'i de ayarlıyor. Bedel: sıkıştırmasız ~74 MB doku verisi (iOS ile aynı), APK büyür. Splash görselleri iOS'ta da varsayılandı, değişmedi.
+- **Yeniden derleme** başlatıldı (aynı paket; telefona üzerine kurulacak, ilerleme korunur).
+
+## 2026-10-19 12:06 — iOS uyarlaması Faz 6: Cloudora v4 telefona kuruldu, ekip APK'sı hazır
+- **Derleme:** `Build-Android.ps1 -Mode qa` → `Builds/Android/Cloudora-v4-qa.apk` (66.472.133 bayt; `CLOUDORA_BUILD result=Succeeded`, 0 uyarı, 0 hata). aapt2: `com.yigityvz.cloudora.v4`, "Cloudora v4", 0.1.0 (code 1), debuggable değil, izinler yalnızca VIBRATE (+ Android'in iç izni), INTERNET yok.
+- **Telefon (S24 FE):** önce v4 yoktu (v1, v2, v3 ve Efe'nin `claodeera` paketi var; çakışma yok). `adb install` → Success (sıfır kurulum; v3'e dokunulmadı). Açılış: süreç çalışıyor, `game_started`, `level_started level=1`. Exception yok; tek hata satırı bilinen zararsız `AssetPackManager` kontrolü. Logcat arka planda: `Logs/oyun-testleri/2026-10-19-telefon-v4-qa.txt`.
+- **Ekip APK'sı:** `C:\Dev\ClaudeProjects\Android-Cloudora\APK-ekip\Cloudora-v4.apk` (aynı dosya; SHA-256 `1ff313c8…ff1914`) + `KURULUM.txt` (kurulum adımları, test sürümü notları). Paylaşım kullanıcıda.
+- **Durum:** commit yok; `v3.2` etiketi/commit'i değişmedi. Çalışma ağacında iOS aktarımı + `ProjectSettings.asset`/`QualitySettings.asset` (iOS'tan) değişik.
+
+## 2026-10-19 11:59 — iOS uyarlaması Faz 3–4: Android'e birebir aktarım, testler, QA APK derlemesi
+- **Kullanıcı:** "ios'da neyse aynısı olsun. dokumante ederken ekstra belli edersin"; v3.2 etkilenmemeli (etiket/commit aynen kalıyor, yalnızca çalışma ağacı değişti, commit yok); ekip APK'sı "ios un bire bir aynısı (android versiyonunda yapılabildiği kadar)"; tek APK "Cloudora v4".
+- **Aktarım:** `git diff d7c9416 1ee4334` içindeki eklenen/değişen 361 dosya iOS kopyasının çalışma ağacından bayt bayt kopyalandı (kontrol: 361/361 aynı). **Alınmayanlar:** bizim belgelerimiz (`ClaudoraRelease.md`, `crVersion.md`, `README.md`, `Docs/PROJE_HAFIZASI.md`, `Docs/V3_*`, `PROJECT_PROGRESS`, `PRIVACY_RELEASE_REVIEW`, `RELEASE_CHECKLIST`, `StoreAssets/README.md`, `STORE_COPY.md`) ve `Packages/manifest.json` + `packages-lock.json` (iOS yalnızca `androidjni`'yi silmişti; Android için tutuldu). **Silinmeyenler (Android katmanı):** `CloudoraBuildTools.cs`, `CloudoraAndroidManifestPostprocessor.cs`, `Build-Android.ps1`, `Android™` build profili, `BillingMode.json`, `ANDROID_BUILD.md`, `GOOGLE_PLAY_SUBMISSION.md`, `StoreAssets/Play` + `Export-PlayAssets.ps1` (iOS'taki `StoreAssets/Artwork` taşıması alınmadı). Sonuç: iOS ağacıyla kalan farklar yalnızca bunlar (+ iki belgede yalnızca satır sonu).
+- **Android'e özel eklemeler:** `PuzzleFeelTests.ManifestFilterRemovesOnlyInternetPermission` geri eklendi (iOS manifest işleyicisiyle birlikte silmişti). Build aracına `Android Device QA APK` modu (`BuildDeviceQaApk`, `Build-Android.ps1 -Mode qa`): Development değil, `CLOUDORA_DEVICE_QA` tanımlı (iOS cihaz derlemesindeki gibi filigransız + test ödülleri), debug imzası, paket/ad geçersiz kılma izinli.
+- **iOS'a özel dosyalar Android'de:** `CloudoraIosBuildTools.cs` Editor'da derleniyor (iOS modülü gerekmez), `Plugins/iOS/CloudoraAccessibility.mm` yalnızca iOS; açılıştaki sistem "azaltılmış hareket" sorgusu `#if UNITY_IOS` → Android'de yalnızca oyun içi tercih.
+- **EditMode:** 242 test, 236 geçti, 0 başarısız, 6 atlandı (iOS: 241/235/0/6 + geri eklenen manifest testi; atlananlar: 2 grafik gerektiren test + mevcut 4). `Logs/v4-ios-tests.xml`.
+- **Derleme:** `Cloudora v4` (`com.yigityvz.cloudora.v4`) → `Builds/Android/Cloudora-v4-qa.apk` başlatıldı.
+
+## 2026-10-19 11:48 — iOS uyarlaması Faz 2: iki kuralla ölçüm
+- **Kullanıcı:** iOS projesini Unity'de açmak gerekmiyor (hız öncelikli; testler uyarlamadan sonra bizim projede); ölçüm onaylandı; Editor oyun testi Android uyarlamasından sonra. APK ekip arkadaşlarına test için verilecek, hızlı olmalı.
+- **Ölçüm:** scratchpad konsol programı, iOS çözücü dosyaları salt okunur bağlandı; sonuç `iOS-inceleme\olcum\olcum.csv`, özet `IOS_FARKLARI.md` §10b.
+- **Bulgular:** kilit kuralı en kısa çözümü hiçbir bölümde değiştirmiyor, puanı en çok −0,83 düşürüyor. Yeni başarısızlık kuralıyla başarısızlık mümkün bölüm 26 → 61; 1. hamlede başarısızlık 3 → 7 bölüm (26, 50, 55, 78, 95, 98, 100). 61–80 en kısa çözüm 12–16 → 15–19 (puan ±0,3). Oyun içi arama PC'de ≤ 6,1 ms (performans sorunu yok). Hafif kod incelemesinde hata yok; analytics nedeni `unsolvable` oldu.
+
+## 2026-10-19 11:45 — iOS uyarlaması Faz 1: fark incelemesi, doküman taslağı
+- **Kullanıcı kararları:** doküman Markdown + HTML; Faz 1–2 boyunca `iOS-inceleme` klasöründe, son hali Faz 5'te `Docs/IOS_FARKLARI.md`; ayrıntı: özellik bazlı + dosya listesi.
+- **Taslak:** `C:\Dev\ClaudeProjects\Android-Cloudora\iOS-inceleme\IOS_FARKLARI.md` (kod çalıştırılmadı; `git diff d7c9416 1ee4334` + iOS `Docs/IOS_*.md`). HTML özet Faz 2 ölçümleriyle.
+- **Net fark:** 390 dosya (+21.739 / −3.596); 102 kod/ayar/belge, 87 oyun görseli/font, 73 Figma SVG.
+- **Oynanışı değiştirenler:** (1) tamamlanmış hazne kilitli (`PuzzleRules.CanApply`, çözücüde `lockCompleted`; ölçüm araçları bilerek kilitsiz); (2) başarısızlık = tahta çözülemez (`ReachabilitySearch`, arka planda), eskiden "hiç hamle yok"; (3) bitmemiş bölümden Ana Sayfa 1 can (1–5 dahil); (4) ödül 100/200/300, devam 500; (5) Ay 60'ta, 60–80'in 21 tahtası `CampaignMoonRollout` ile yeniden seçildi; 3 dünya (tanıtım 1–14, 15–30, 31–60, 61–100); oyun 100'de biter.
+- **Diğer:** Figma arayüzü (Türkçe), açılış animasyonu, cam hazneler, element aktarım/bitiriş efektleri, performans (nesne havuzu), Android katmanı silinmiş; 14 yeni, 8 değişmiş test dosyası.
+- **Çelişkiler (dokümanda Ç1–Ç10, kullanıcıya bildirildi):** başarısızlık kuralı (§6b), kilit + kilitsiz ölçüm, Ay 60 (yenilik Orta'da / nefes / final), 1–5 can, ekonomi, dünya aralıkları ve 15'in öğretici yazısı, 101+ kapalı, Türkçe metinler seçeneksiz, bilgi penceresi, rüzgâr rengi. iOS reposunun kendi belgeleri arasında da çelişkiler var (`IOS_DESIGN_IMPLEMENTATION.md` eskimiş; dünya aralıkları iki farklı belgede farklı).
+
+## 2026-10-19 11:36 — iOS uyarlaması Faz 0: hazırlık ve yedekler
+- **Kullanıcı:** arkadaşının (yigityvz) iOS reposundaki, v3.2 üzerine yaptığı değişiklikler incelenecek, belgelenecek, simüle edilecek; sonra Android'e birebir uyarlanıp test edilecek; telefona ve arkadaşlar için APK. Faz planı (0 hazırlık · 1 fark incelemesi · 2 simülasyon/hata arama · 3 Android uyarlaması · 4 test · 5 dokümantasyon · 6 APK'lar · 7 commit/push) onaylandı: "her fazda ayrıca soru sor".
+- **Hata (kullanıcı uyardı):** repoyu kullanıcı göndermeden kendim bulup scratchpad'e klonlamıştım. Kullanıcı aynı repoyu verdi: `https://github.com/yigityvz/cloudora-ios` (tek dal `main`, HEAD `1ee4334`). Hafızaya kural yazıldı: dış kaynağı kullanıcı verir.
+- **Kopya:** `C:\Dev\ClaudeProjects\Android-Cloudora\iOS-inceleme\cloudora-ios\` (proje reposu dışında, salt okunur inceleme; 94 LFS dosyası içerikli). Scratchpad'deki geçici kopya silindi. v3.2 (`d7c9416`) üzerinde 3 commit: `7026e3a` (16 Eki, v3.2'nin iOS'a aktarımı), `bee01d3` (16 Eki, repo yalnızca iOS), `1ee4334` (19 Eki 02:13, görsel/hareket/100 bölüm kampanyası).
+- **Çalışma dalı (kullanıcı):** `bahadir-claude-versions`.
+- **Yedekler (kullanıcı: Editor, APK, loglar; telefon ilerlemesi önemsiz, sıfırdan başlanacak):**
+  - Editor kaydı (L81, coin 150) → `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-editor-ios-uyarlama-oncesi-20261019-1135\` (SHA eşleşti).
+  - APK → `Builds/Android/Cloudora-v3.2-dev.apk` (`Cloudora-v3-dev.apk`'nin kopyası, SHA eşleşti).
+  - Loglar → `Logs/oyun-testleri/2026-10-17-2134-editor-1-12-yeni-oyuncu.log`, `Logs/oyun-testleri/2026-10-15-2158-editor-sunum.log`.
+- **Oturum başı kontrolleri (11:15–11:30):** EditMode 196 / 192 geçti / 0 başarısız / 4 atlandı; kalibrasyon 100/100 bölümde en kısa çözüm ve puan `V3_SABLON.md` uygulanan planla aynı; üç önizleme CSV'si `Logs/oyun-testleri/v32-v3-preview-*.csv` ile bayt bayt aynı. `GenerateLevelDataBatch` çalıştırılmadı (`Assets/`'e yazar; `GeneratedDataMatchesBuilder` testi geçti). Editor oyun testi için Unity açılmadı.
+
+## 2026-10-19 11:11 — Yeni oturum: proje hafızası ve ilgili dokümanlar okundu
+- **Okunanlar:** `Docs/PROJE_HAFIZASI.md`, `ClaudoraRelease.md` üst kayıtları (2026-10-15 21:05 → 2026-10-17 21:05), `Docs/V3_BOLUM_VE_ZORLUK_TASARIMI.md` (tamamı), `crVersion.md` (tamamı), `Docs/V3_SABLON.md` (ilkeler, eğri, uygulanan plan), `Docs/V3_CERCEVE_ENVANTERI.md` (yöntem, bulgular).
+- **Doğrulama:** `git ls-remote` — `upstream/cloudora-bahadir` ve `origin/main` = `d7c9416`, `v3.2` etiketi uzakta. Yerel HEAD `d7c9416`; commit'lenmemiş: `ClaudoraRelease.md` (2026-10-15 21:05 sonrası ve 2026-10-17 kayıtları), `ProjectSettings.asset`, `.vscode/`, `Docs/Cloudora 1–100 Şablonu.html`. Unity Editor kapalı (kilit dosyası yok).
+- **Tutarsızlıklar (kullanıcıya bildirildi):** `PROJE_HAFIZASI.md` §0 push'u hâlâ "yapılacak", §4 v3.2'yi "yalnızca yerel" diyor (push 2026-10-15 21:05'te yapıldı); §0 Editor kaydını 101 diyor, kayıt 2026-10-17 21:05'ten beri 81'de; hafızada 2026-10-17 Efe APK incelemesi yok.
+- Testler bu kayıtta çalıştırılmadı (kullanıcı onayı bekleniyor).
+
+## 2026-10-17 21:05 — Editor kaydı 81. bölüme alındı
+- **Kullanıcı:** "durdurdum, bölüm 81e sar".
+- **Önce:** sıfırdan oynanmış kayıt `currentLevel` 13, `highestCompletedLevel` 12, coin 150, Undo 3, Extra 1, Shuffle 1, can 5; `failRecord` boş.
+- **Yedek:** `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-editor-81-oncesi-20261017-2105\` (SHA eşleşti).
+- **İşlem:** `cloudora-save.json` ve `.bak`'ta `currentLevel` 81, `highestCompletedLevel` 80; diğer alanlar (coin, haklar, öğretici bayrakları) aynı kaldı.
+
+## 2026-10-17 20:57 — Editor kaydı sıfırlandı (yeni oyuncu gibi 1. bölümden)
+- **Kullanıcı:** "yedeği al, yeni oyuncu gibi baslayalım".
+- **Önce:** `currentLevel` 101, `highestCompletedLevel` 100, coin 175, 15 öğretici yazı görüldü işaretli.
+- **Yedek:** `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-editor-yeni-oyuncu-oncesi-20261017-2057\` (`cloudora-save.json` + `.bak`, SHA eşleşti).
+- **İşlem:** iki kayıt dosyası silindi; `LocalJsonSaveService.Load` dosya yoksa `SaveData.Defaults()` döndürür → Play'de 1. bölüm, varsayılan coin/can/haklar, öğretici yazılar açık. Ses/titreşim ayarı PlayerPrefs'te, değişmedi. Editor açıktı.
+
+## 2026-10-17 12:26 — Efe v4.3.1 telefon testi bitti; Efe incelemesi kapanış özeti
+- **Kullanıcı:** "genel anlamda güzel. Beğenemediğim tek kısım bölümlerin zorluğu ve ilk 100'de çizdiğimiz çerçeveye aykırı olması."
+- **Log (12:18–12:25, ~7 dk):** çökme yok; 55 kez `Coroutine continue failure` (v4.0'da 19 dakikada 15 — efektlerle artmış görünüyor; oyun devam etti). Logcat durduruldu.
+- **Özet (v3.2 → Efe):** v3.2-dev = bizim v3.2 + ikon/ad; v4.0 = baştan yazılmış oyun (Türkçe arayüz, tüpler, bölgeler, menü/bölüm seçimi, sis/donmuş, yeni 100 bölüm); v4.3.1 = v4.0 + bölge sahneleri ve hava efektleri, bölümler aynı. Kullanıcı görünüş/oynanışı beğendi; bölüm zorluğu ve 1–100 çerçevesine (O,O,Z,O,ÇZ, kademeli artış, tek yenilik, nefes, kilitleyen tahta yalnızca finalde) aykırılık beğenilmedi — ölçümle uyumlu.
+- **Kural hatırlatma:** Efe'nin APK'larından hiçbir şey projeye/versiyonlara eklenmedi; ekleme ancak kullanıcının açık onayıyla.
+
+## 2026-10-17 12:20 — Efe v4.3.1 telefona kuruldu (v4.0'ın üzerine, kullanıcı onayıyla)
+- **Kullanıcı:** "bunun telefon incelemesini yapalım. yaparken coini 10000 yap. üstüne kurabilirsin."
+- **Kurulum:** `adb install -r` → Success, 4.3.1 (v4.0'ı güncelledi; aynı paket ve imza).
+- **Coin 10000 yapılamadı:** release build, `run-as: package not debuggable`; Android 12+ ve hedef API 36 nedeniyle `adb backup` uygulama verisini vermez; oyunda coin hilesi yok. Kullanıcı seçimi: coinsiz devam ("Tüm Bölümleri Aç" kullanılabilir).
+- **Açılış:** ana menü 500 coin, 5/5 can, "Bölge 1 · Buzlu Göl", ilerleme noktaları boş, "Oyna · Bölüm 1" — v4.0 testindeki ilerleme görünmüyor (sebep doğrulanamadı: kayıt sürüm değişiminde sıfırlanmış ya da v4.0'da bölümler yalnızca test kilidiyle açılmış olabilir). Ekran görüntüsü yalnızca oyun öndeyken alındı (`v431-acilis.png`).
+- **Log:** `Efe-inceleme\loglar\2026-10-17-telefon-v431.txt` (arka planda).
+
+## 2026-10-17 12:15 — Efe'nin APK'ları: 3. adım v4.3.1 (yalnızca inceleme)
+- **Manifest:** yalnızca versiyon 4.3.1 (code 40301); paket, izinler, Android kaynakları ve ikon (Unity logosu) v4.0 ile aynı. İmza v4.0 ile aynı anahtar.
+- **Bölümler:** `levels` dosyası v4.0 ile bayt bayt aynı → zorluk ölçümü ve HTML raporu v4.3.1 için de geçerli.
+- **Kod:** 18 → 22 sınıf; yeni `FxRunner`, `WeatherFx`, `RegionScene`, `RegionTheme`. Bölge başına sahne/animasyon (YesilVadi, RuzgarliGecit, BuzluGol, SisliTepeler, AyIsigiOrmani, DoluKayaliklari, SimsekZirvesi, GokkusagiSelalesi, GokBahcesi, BulutKoprusu), hava türüne göre parçacık efektleri (yağmur, kar, rüzgâr, ay, şimşek, gökkuşağı, dolu, güneş), tahta sallama/esneme, parlama; eski "damla uçuşu" (`FlyDrop`) kaldırıldı. Test araçları: efekt performansı (en yoğun parçacık, en kötü kare süresi), hızlı art arda hamle testi, "animasyon sırasında Geri Al tahtayı ve görünümü doğru geri yükler" kontrolü.
+- **Varlıklar:** 40 yeni sprite (18 `fx_`, 22 `rg_`: şimşek, köprü, kelebek, bulut denizi, sis, uçan adalar, ay yolu, yaprak, gökkuşağı, fırtına…); yeni toplamalı (additive) UI shader. Ses, video, font değişmedi. Kodda `Art/region{0}_spring/_winter` yolu var ama APK'da bölgeye özel arka plan resmi yok (yalnızca v4.0'daki `bg_spring`/`bg_winter`).
+- **Görseller:** `Efe-inceleme\v431-yeni-gorseller.png`, `Efe-inceleme\v40-gorseller.png`.
+
+## 2026-10-17 11:44 — Efe v4.0 telefon testi bitti
+- **Kullanıcı:** "bitirdim, benim seviyeme göre bölümler çok zor." Ölçümle uyumlu (24'ten itibaren bizim 100'ün üstü; 52 kilitleyen tahta).
+- **Log (11:20–11:39, ~19 dk):** çökme yok; Efe'nin derlemesinde 15 kez `Coroutine continue failure` (Unity hatası; oyun devam etti). Release build olduğu için hamle/süre logu yok; oynanan bölümler ve deneme sayıları logdan çıkarılamıyor.
+- **Kullanıcı geri bildirimi:** "50 baya zorladı, undo ve shuffle falan kullandım. Ortalama hamleler 18 üstü, bazıları 25 falan." Ölçümle karşılaştırma: L50 (Çok zor, 7 renk, 9 tüp, donmuş) puan 44,2 (100 bölümde 11. en zor), en kısa çözüm 23, çıkmaz oranı 0,27 (Efe'nin en yükseklerinden), takılma 0,955; durum uzayı küçük (499) ama dörtte biri çıkmaz → Undo/Shuffle ihtiyacı beklenen. En kısa çözüm 26'dan itibaren 18+ (69 bölüm), 72'den itibaren 25+ (17 bölüm); bizde en uzun 19. İnsanın söylediği hamle sayıları en kısa çözümlerle uyumlu (fazla hamle az, süre/düşünme yükü yüksek).
+- **Gizlilik:** test sonunda alınan ekran görüntüsü telefonda açık bir aramayı göstereceği için açılmadan silindi. Logcat kaydı durduruldu.
+
+## 2026-10-17 11:21 — Efe v4.0 telefona kuruldu (yalnızca inceleme)
+- **Kullanıcı:** "4.0'ı telefon için hazırla, bir de oyunu görmüş olayım."
+- **Önce:** telefonda `com.yigityvz.cloudora`, `.v2`, `.v3` vardı; `claodeera` yoktu (çakışma yok). `adb install` (üzerine yazma değil) → Success, 4.0.0-claodeera (code 40). Güvenli Klasör kullanıcısı (150) için "permission" uyarısı çıktı; ana kullanıcıya kurulumu etkilemiyor.
+- **Açılış:** uygulama açıldı; ana menü: 500 güneş coini, can 5/5, "Bölge 1 · Buzlu Göl", "Vadi donmuş…", Oyna · Bölüm 1, Bölümler. Release build: bizim `[Analytics]`/`[Input]` satırları yok, hamleler logdan izlenemiyor.
+- **Log:** `Efe-inceleme\loglar\2026-10-17-telefon-v40.txt` (logcat arka planda), açılış ekranı `v40-acilis.png`. Exception yok (yalnızca Unity'nin zararsız `AssetPackManager` kontrolü).
+
+## 2026-10-17 11:12 — Efe v4.0 karşılaştırması HTML sayfası
+- **Kullanıcı:** "bu karşılaştırmaları bir html dosyası yap".
+- **Dosya:** `C:\Dev\ClaudeProjects\Android-Cloudora\Efe-inceleme\efe-v40-bolum-karsilastirmasi.html` (repo dışı yeni klasör; repoya eklenmedi). Tek dosya, dış bağımlılık yok; açık/koyu tema.
+- **İçerik:** özet kutuları; bölüm bölüm puan grafiği (Efe/bizim, L100 çizgisi) ve takılma grafiği (0,5 sınırı), üzerine gelince değerler; dünya/parça tabloları ve ortalama çubuk grafiği; kademeli artış ilkeleri tablosu; bizim eğride karşılık tablosu; etiket tutarlılığı; donmuş/sis; diğer gözlemler; 100 bölümün filtrelenebilir tablosu; yöntem ve doğrulama.
+- **Kontrol:** Edge başsız modda masaüstü (1200 px), telefon (375 px) ve koyu temada ekran görüntüsüyle bakıldı; grafik sağındaki etiket çakışması düzeltildi.
+
+## 2026-10-17 11:05 — Efe v4.0 bölümleri bizim araçla ölçüldü (yalnızca inceleme, projeye bir şey eklenmedi)
+- **Yöntem:** scratchpad'de konsol programı; projedeki `PuzzleSolver.cs`, `Move.cs`, `WeatherType.cs`, `DeterministicRandom.cs`, `V3BoardText.cs` yalnızca okunarak bağlandı (değişmedi). Efe'nin 8 renge çıkması nedeniyle çözücünün scratchpad kopyası: renk kodu 3 → 4 bit, joker yok, donmuş tüp kuralı (ilk tüp tamamlanana kadar giriş/çıkış yok). Puan formülü, ağırlıklar ve sanal oyuncu aynı.
+- **Kural doğrulaması:** Efe'nin kayıtlı 100 çözümü alttan üste okuma + bizim hamle kuralı (grup sığdığı kadar) + bu donmuş kuralıyla 100/100 geçerli.
+- **Araç doğrulaması:** orijinal çözücü bizim 100 bölümde aracın kayıtlı puanını birebir verdi (en büyük fark 0,0001). Geniş kopya: deterministik ölçüler 100/100 aynı; sanal oyuncu tohumu nedeniyle puan farkı ort. 0,25, en çok 1,1.
+- **Bulgular (Efe v4.0):** puan 5,0 → 50,5; 24. bölüm bizim eğrinin tepesini (L100 ≈ 31,8) geçiyor, 66 bölüm bizim en zor bölümümüzden (L100, 34,0) zor. Dünya ortalamaları 18,1 / 25,7 / 33,0 / 34,4 / 36,9 / 37,6 / 38,3 / 42,2 / 42,5 / 41,8 (son 30 bölüm düz, hep 8 renk 10 tüp). Takılma ≥ 0,5 olan 52 bölüm (Orta ve 2 Kolay dahil; bizde yalnızca finaller 30/60/100). Etiket ters çifti %15 (51/332; bizde %3, 18/574). Dünya geçişinde sıfırlanma −13,2'ye kadar. Yeni renk "nefes" olmadan geliyor (L26 +8,4, L46 +6,4). Sis puana girmiyor (insan için ek zorluk); donmuş ort. +1,7. Kayıtlı çözümler en kısadan ort. 5,1 hamle uzun. Efe'nin `randomWinRate` ölçüsü bizim puanla güçlü ilişkili (Spearman −0,80).
+- **Dosyalar (scratchpad):** `olcum/efe40.csv`, `olcum/efe40-donmussuz.csv`, `olcum/biz-full.csv`, `olcum/biz-dogrulama.csv`, `olcum/analiz.txt`, `olcum/efe-v40-bolum-tablosu.txt`.
+
+## 2026-10-17 10:54 — Efe'nin APK'ları: 2. adım v4.0-claodeera (yalnızca inceleme, hiçbir şey uygulanmadı)
+- **Taban:** Efe'nin v3.2'si (bizim v3.2 ile oyun olarak aynı). Araçlar: aapt2, ELF/metadata karşılaştırması, UnityPy (scratchpad'e kuruldu).
+- **Sonuç: v3.2'nin üstüne ekleme değil, oyunun baştan yazılması.** Bizim oyun sınıflarımızın hiçbiri yok (`PuzzleController`, `PuzzleSolver`, `V3LevelData`, `CloudShuffler`, `GameplayOverlay`, `CoinEconomy`… yalnızca `SaveData` adı kaldı). Yeni kod 18 sınıf: `App`, `Core.Board/Solver/WeatherInfo`, `Level.LevelCatalog`, `Progression.SaveData`, `TestRunner`, `UI.Art/BackgroundView/GameScreen/LevelSelectScreen/MenuScreen/Popup/Sfx/TransitionView/TubeView/Tween/UIFactory`. Sahnede tek nesne `Cloudora` (+ kamera).
+- **Bölümler:** `levels` JSON (100 bölüm, 10 dünya × 10). Kapasite hep 4; renk 2→8, tüp 3→10, boş 2; desen her 10'da K,K,O,K,O,O,Z,O,Z,ÇZ ("Kolay" var); sis (21+), donmuş (41+). Bizim 100 bölümün hiçbiriyle aynı tahta yok (renk/sıra bağımsız karşılaştırma, ≤6 renkli bölümler).
+- **Oyun/arayüz (yazılardan):** arayüz Türkçe; "tüp/hazne" görünümü; ana menü, bölüm seçme ekranı, duraklatma, ayarlar (yalnızca ses), ilerlemeyi sıfırlama, test için "Tüm Bölümleri Aç"; 10 bölge adı (Yeşil Vadi, Rüzgârlı Geçit, Buzlu Göl, Sisli Tepeler, Ay Işığı Ormanı, Dolu Kayalıkları, Şimşek Zirvesi, Gökkuşağı Şelalesi, Gök Bahçesi, Bulut Köprüsü); "vadi donmuş → bahar" hikâyesi, bölge ödülü (+2 Geri Al, +1 Ek Bulut, +1 Karıştır); yeni hava Dolu; donmuş ve sisli bulut; geçiş videosu (478×850, 24 fps, 10 sn) ve final videosu; güneş coini ile satın alma (can doldurma, Geri Al); ek bulut bölüm başına 1; Karıştır Geri Al ile geri alınabiliyor ("shuffle: undo restores"); Retry/devam yerine "Yeniden Dene" (1 can).
+- **Kalkanlar:** reklam (AdMob/FakeAd), analytics, titreşim; İngilizce metinler; bizim v3 aracı ve bölüm verisi. Kayıt: PlayerPrefs anahtarı `cloudora.save.v1` (bizde JSON dosyası).
+- **Manifest:** 4.0.0-claodeera (code 40), release, INTERNET (oyunda sunucu adresi yok; Video/WebRequest modülü kaynaklı görünüyor), VIBRATE yok, yeni SDK/activity yok.
+- **İkon:** Unity'nin varsayılan logosu (özel ikon yok). Yeni görseller: bahar/kış arka planı (resim), tüp parçaları, buz, kuş, yaprak, Nunito fontu, ikon seti. Görsel özet ve video scratchpad'de.
+
+## 2026-10-17 10:39 — Efe'nin APK'ları: inceleme başladı (yalnızca inceleme); 1. adım v3.2-dev
+- **Kaynak:** `Efe - APK lar\` (repo dışı, kullanıcı elle koydu): `Cloudora-v3.2-dev.apk`, `Cloudora-v4.0-claodeera.apk`, `Cloudora-v4.3.1.apk`. Sıra versiyon sırası; versiyon versiyon incelenecek.
+- **Kural (kullanıcı):** bu klasördeki hiçbir şey onay olmadan projeye/versiyonlara eklenmeyecek; incelemeler uygulanmayacak, amaç yalnızca neyin değiştiğini görmek. Hafızaya yazıldı. APK'lar yalnızca scratchpad'e açıldı.
+- **Kimlikler (aapt2):** v3.2-dev `com.yigityvz.cloudora.v32` "Cloudora v3.2", 0.1.0, debug, VIBRATE. v4.0 `com.yigityvz.cloudora.claodeera` "Cloudora", 4.0.0-claodeera (code 40), release (debug değil), INTERNET (VIBRATE yok). v4.3.1 aynı paket, 4.3.1 (code 40301), INTERNET. Telefondaki paketlerle (v1, v2, v3) çakışma yok.
+- **Derin kontrol (kullanıcı "%100 emin misin" dedi; ilk "kod aynı" ifadesi yalnızca metadata'ya dayanıyordu):** `libil2cpp.so` ve `libgame.so` bütün ELF bölümleri (.text, .rodata, .data, il2cpp) aynı, yalnızca build-id farklı → oyun mantığı aynı. Unity nesneleri (UnityPy, 2468/2468): sahne ve bütün oyun varlıkları aynı; farklı olanlar `PlayerSettings` (ürün adı + bir kimlik), `BuildSettings` (yetki anahtarı), `CloudoraReleaseConfig` (içerik aynı, satır sonu), test çerçevesi bilgi dosyası, kullanılmayan bir Unity arazi shader'ı (`WavingDoublePass`, varyant farkı). `lib_burst_generated.so`: Unity paketlerinin veri kopyaları (bizim Burst kodumuz yok). İmza: Efe'nin kendi debug anahtarı (üç APK'da aynı), bizimkinden farklı.
+- **v3.2-dev ↔ bizim v3.2 APK'sı (`Builds/Android/Cloudora-v3-dev.apk`, 2026-10-15 20:45):** oyun kodu birebir aynı (`global-metadata.dat` SHA eşit). Farklar: uygulama adı/paket, build kimliği ve IP (`boot.config`), uygulama ikonu (bizimki güneş+bulut+damla+kar; Efe'ninki düz beyaz bulut, mavi degrade). Yeniden derlemeden kaynaklanan ikili farklar (`libil2cpp.so` vb.).
+
+## 2026-10-17 10:24 — Arkadaşın yeni versiyonları: GitHub kontrolü (yanlış iz)
+- **Kullanıcı:** "arkadaşım benim versiyonumun üstüne yeni versiyonlar çıkmış." `upstream` (yigityvz/cloudora-android) fetch: yeni dal/etiket yok (`cloudora-yigit` 7388052, `main` 39338b3, `codex/phase2-15` a18a3e4 aynı).
+- **Yan bulgu:** `yigityvz/cloudora-ios` reposunda v3.2'nin (`d7c9416`) üstüne iki commit var (2026-10-16): `7026e3a` "Port cloudora-bahadir v3.2 to iOS without gameplay changes" (merge; iOS build araçları, `Docs/IOS_*`, `ProjectSettings.asset`, `PROJE_HAFIZASI.md`, `ClaudoraRelease.md`, README eklemeleri) ve `bee01d3` "Make repository iOS-only…". İnceleme için scratchpad'e salt okunur kopya alındı; yerel repoya dokunulmadı.
+- **Kullanıcı:** kastedilen başka bir arkadaş; GitHub'da değil, dosyaları elle gönderecek. İnceleme dosyalar gelince yapılacak.
+
+## 2026-10-17 10:18 — Yeni oturum: proje hafızası okundu, durum doğrulandı
+- **Okunanlar:** `Docs/PROJE_HAFIZASI.md`, `ClaudoraRelease.md` üst kayıtları, `crVersion.md` (tamamı), tasarım dokümanı §11l ve §13–15.
+- **Doğrulama:** `git ls-remote` — `upstream/cloudora-bahadir` ve `origin/main` = `d7c9416`, `v3.2` etiketi iki tarafta (→ `73611d2`). Push yapılmış.
+- **Tutarsızlıklar (kullanıcıya bildirildi):** `PROJE_HAFIZASI.md` §0 push'u "yapılacak" diye anlatıyor (21:04'te yazıldı, push 21:05'te yapıldı); 21:05–21:56 kayıtları (push sonucu + sunum) commit'lenmemiş. Editor kaydı sunumdan sonra 101'de ama sunum kaydıyla (coin 175, can 3); sunum öncesi kayıt `yedek-sunum-oncesi-20261015-2120\` içinde (coin 1680), geri yüklenmedi.
+- Unity Editor kapalı. Testler bu kayıtta çalıştırılmadı (kullanıcı onayı bekleniyor).
+
+## 2026-10-15 21:56 — Sunum: Editor kaydı 100'e alındı
+- **Kullanıcı:** "Durdurdum, 100." (94–97 oynanmıştı; kayıt 98'deydi, coin 155, can 4.) Kayıt: `currentLevel` 100, `highestCompletedLevel` 99; başarısızlık kaydı temiz.
+
+## 2026-10-15 21:51 — Sunum: Editor kaydı 94'e alındı
+- **Kullanıcı:** "Durdurdum, 94'e sar." (87 ve 88 oynanmıştı; kayıt 89'daydı.) Kayıt: `currentLevel` 94, `highestCompletedLevel` 93; başarısızlık kaydı temiz.
+
+## 2026-10-15 21:48 — Sunum: Editor kaydı 87'ye alındı
+- **Kullanıcı:** "87'yi aç, durdurdum." Kayıt: `currentLevel` 87, `highestCompletedLevel` 86; başarısızlık kaydı temiz.
+
+## 2026-10-15 21:47 — Sunum: 75'te tuzak ve çözüm sayıları; Editor kaydı 81'e alındı
+- **75 tuzağı (çözücüyle):** en kısa No Moves yolu 3 hamle (E'nin Yağmur'u → A, E'nin Rüzgar'ı → B, C'nin Kar'ı → boş E); ikinci yol 4 hamle. Kullanıcı 3 hamlede kilitledi (`level_failed move_count=3`), Retry yaptı.
+- **75 sayıları (oyun kurallarıyla, bulut sırası ayrı sayılarak):** 252 ulaşılabilir durum, 41'i çıkmaz (2'si No Moves), 120 çözülmüş görünüm; tekrar eden durum içermeyen kazanma yolları toplam **60.960** (12 hamle: 24 … 18 hamle: 10.856 … 23 hamle: 176).
+- **Kayıt (Play durdurulduktan sonra):** `currentLevel` 81, `highestCompletedLevel` 80; başarısızlık kaydı temiz.
+
+## 2026-10-15 21:43 — Sunum: Editor kaydı 75. bölüme alındı
+- **Kullanıcı:** "75'e sar." 30 tamamlanmıştı (63 sn, 12 hamle), 31 başlamıştı; Play durduruldu.
+- **Kayıt:** `currentLevel` 75, `highestCompletedLevel` 74; başarısızlık kaydı temiz; coin ve haklar aynı.
+
+## 2026-10-15 21:40 — Sunum: 21'de tuzak gösterildi; Editor kaydı 30. bölüme alındı
+- **Kullanıcı:** 21'i baştan yükletti ve tuzağa nasıl düşüleceğini sordu. Çözücüyle bulundu: 21'de No Moves'a giden tek yol 2 hamle (C'deki Güneş → D, C'deki Yağmur → A). Kullanıcı 21'i 2 hamlede kilitledi (`level_failed move_count=2`), Retry yaptı.
+- **Kayıt (Play durdurulduktan sonra):** (L21, coin 90, Undo 3, Extra 0, Shuffle 1) → `currentLevel` 30, `highestCompletedLevel` 29; başarısızlık kaydı temiz.
+
+## 2026-10-15 21:31 — Sunum: Editor kaydı 19. bölüme alındı
+- **Kullanıcı:** "Bölümü 19'a sar." Play durduruldu (kayıt 9. bölümdeydi: en yüksek 8, coin 100, Undo 1, Extra 0, Shuffle 1).
+- **Kayıt (`.json` ve `.bak`):** `currentLevel` 19, `highestCompletedLevel` 18; 1–15 atlandığı için öğretici bayrakları "görüldü"; başarısızlık kaydı temiz. Coin ve haklar olduğu gibi.
+
+## 2026-10-15 21:20 — Sunum için Editor kaydı 1. bölüme alındı
+- **Kullanıcı:** "Unity'yi açıyorum. 1. bölüme al, sunum yapacağım." Unity Editor kullanıcı tarafından açıldı (21:19); Play'e henüz basılmamıştı.
+- **Yedek:** (L101, en yüksek 100, coin 1680, öğretici bayrakları görülmüş) `yedek-sunum-oncesi-20261015-2120\` (SHA eşleşti).
+- **Yeni kayıt (`.json` ve `.bak`):** yeni oyuncu gibi — `currentLevel` 1, `highestCompletedLevel` 0, can 5, Undo 3 / Extra 1 / Shuffle 1, coin 0, öğretici yazılar yeniden görünsün diye `tutorialFlags` sıfır, başarısızlık kaydı temiz. Ses ve titreşim ayarları korundu.
+- **Not:** sunumdan sonra eski kayda dönmek için yedek klasördeki iki dosya geri kopyalanır.
+
+## 2026-10-15 21:05 — v3.2 push edildi (iki hedef)
+- **Onay:** kullanıcı push planını onayladı ("Evet, push et").
+- **upstream** (yigityvz/cloudora-android) `cloudora-bahadir`: `ae54acc..d7c9416`, yeni etiket `v3.2`. **origin** (bahadir-aktas/cloudora-android) `main`: `ae54acc..d7c9416`, yeni etiket `v3.2`. Force yok.
+- **Doğrulama (`git ls-remote`):** iki dal da `d7c9416`; `v3.2` etiketi iki tarafta da yereldeki etiket nesnesiyle aynı (`5cf6a64` → commit `73611d2`).
+- Bu kayıt push'tan sonra yazıldı; bir sonraki commit'le birlikte gidecek.
+
 ## 2026-10-15 21:04 — Push öncesi proje hafızası güncellendi ve commit'lendi
 - **Kullanıcı:** "Commit'lenecekleri commit'le, daha sonra push'a geçelim."
 - **Kural gereği (her push'tan önce hafıza):** `Docs/PROJE_HAFIZASI.md` §0 push durumuyla güncellendi (v3.2 + belge commit'leri, push planı, sonucun nerede yazacağı).

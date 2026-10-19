@@ -1,5 +1,7 @@
 # v3 — Bölüm ve Zorluk Tasarımı (1–100)
 
+> **v4 notu (2026-10-19):** v4, iOS sürümünün (yigityvz/cloudora-ios `1ee4334`) Android'e birebir uyarlamasıdır ve bu belgedeki bazı kararlardan ayrılır: Ay 60'ta (60–80 yeniden seçildi), başarısızlık = tahta çözülemez (§6b'deki "hiç hamle yok" yerine), tamamlanmış hazne kilitli, ekonomi 100/200/300 – devam 500, bitmemiş bölümden Ana Sayfa 1 can, 3 dünya (tanıtım 1–14), oyun 100'de biter. Bu belge v3 kararlarının tarihçesidir; farklar ve gerekçeleri: `Docs/IOS_FARKLARI.md` (§10 çelişkiler Ç1–Ç10).
+
 Kullanıcının (Bahadır) 2026-10-14'te verdiği tasarım tanımı ve soru-cevaplar. v3 çalışmasının referansıdır; kararlar netleştikçe güncellenir.
 
 ---
