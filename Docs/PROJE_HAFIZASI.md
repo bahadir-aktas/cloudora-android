@@ -1,13 +1,13 @@
 # Cloudora — Proje Hafızası (Claude için oturum başlangıcı)
 
 > Her oturumun başında **ilk iş bu dosyayı oku.** Projeyi anlamak için nelere bakılacağını, hangi kuralların geçerli olduğunu ve işin nerede kaldığını özetler. Ayrıntı her zaman kaynak dosyadadır; burada yazanla kaynak çelişirse **kaynak doğrudur**, bu dosya düzeltilir.
-> Son güncelleme: 2026-10-19 13:09 (v4 commit öncesi).
+> Son güncelleme: 2026-10-19 13:15 (v4 push öncesi).
 
 ---
 
 ## 0. Nerede kaldık (2026-10-19) — yeni oturumda önce bunu oku
 - **v4 = iOS sürümünün Android'e birebir uyarlaması.** Kaynak: kullanıcının verdiği `https://github.com/yigityvz/cloudora-ios` (`main` @ `1ee4334`); salt okunur kopya `C:\Dev\ClaudeProjects\Android-Cloudora\iOS-inceleme\cloudora-ios\` (+ ölçüm `iOS-inceleme\olcum\`). Kullanıcı: "ios'da neyse aynısı olsun", farklar belgede işaretlenir. **Farklar ve çelişkiler: `Docs/IOS_FARKLARI.md` (+ `.html`)** — önce bunu oku; v3 tasarım belgeleri artık tarihçe + not.
-- **Durum:** çalışma ağacında v4 hazır, testler geçti, telefon testi bitti. Commit/etiket `v4` kullanıcı onayıyla (Faz 7); push ayrı onayla. `v3.2` (`73611d2`) ve uzak repolar (`d7c9416`) değişmedi; v3.2 2026-10-15 21:05'te iki repoya push edildi.
+- **Durum:** v4 commit `0604618` + etiket `v4` (2026-10-19 13:11, kullanıcı onayı); üstünde bu belge commit'i. **Push (kullanıcı 13:15: "v4 olarak pushla, önceki dal ile aynı"):** bu commit'le birlikte `upstream` (yigityvz/cloudora-android) `cloudora-bahadir` + `origin` (bahadir-aktas/cloudora-android) `main`, etiket `v4`. Push öncesi uzak repolar `d7c9416` (v3.2 belgeleri). Sonucu `ClaudoraRelease.md` en üstte; yeni oturumda `git ls-remote` ile doğrula. `v3.2` (`73611d2`) değişmedi.
 - **Testler:** EditMode 242 → 236 geçti, 0 başarısız, 6 atlandı (2 grafik gerektiren + 4 eski).
 - **APK:** `Builds/Android/Cloudora-v4-qa.apk` ("Cloudora v4", `com.yigityvz.cloudora.v4`, QA modu, 70 MB); ekip için kopya `C:\Dev\ClaudeProjects\Android-Cloudora\APK-ekip\Cloudora-v4.apk` + `KURULUM.txt`. v3.2 APK yedeği `Builds/Android/Cloudora-v3.2-dev.apk`.
 - **Planlanan (kullanıcı, 2026-10-19 13:11: "temaların vs güncelleneceğini not düş"):** temalar (dünya görselleri, arka planlar, tema adları/tasarımı vb.) ileride güncellenecek; yüksek çözünürlüklü dünya resimleri bu işin parçası.
@@ -76,7 +76,7 @@
 
 ## 4. Proje özeti
 - Unity **6000.5.9f1**, Android, dikey, tek parmakla hava sıralama bulmacası. Ana yazar **yigityvz**; Bahadır katkıda bulunan. Tek sahne `Assets/_Cloudora/Scenes/02_Gameplay.unity`; arayüz kodla oluşturulur.
-- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`), v3.2 (`73611d2`), **v4 (onayla, commit sonrası)**. v3/v3.1 2026-10-15 00:32'de, v3.2 21:05'te iki repoya push edildi.
+- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`), v3.2 (`73611d2`), **v4 (`0604618`)**. v3/v3.1 2026-10-15 00:32'de, v3.2 21:05'te, v4 2026-10-19 (13:15 sonrası) iki repoya push edildi.
 - **iOS sürümü:** yigityvz'in ayrı reposu `yigityvz/cloudora-ios` (`main`); v4 bunun `1ee4334`'ünün Android karşılığı.
 - **Telefon (Samsung Galaxy S24 FE, adb `R5CXA3032LP`):** "Cloudora" (v1), "Cloudora v2", "Cloudora v3" (`com.yigityvz.cloudora.v3`, v3.2 derlemesi), **"Cloudora v4"** (`com.yigityvz.cloudora.v4`, QA derlemesi) ve Efe'nin `com.yigityvz.cloudora.claodeera` yan yana.
 

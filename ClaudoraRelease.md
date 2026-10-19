@@ -4,6 +4,12 @@ Claude Code tarafından bu projede yapılan her işlemin kaydı. En yeni kayıt 
 
 ---
 
+## 2026-10-19 13:15 — v4 push öncesi: hafıza güncellendi, ekip APK'sı kontrolü
+- **Kullanıcı:** "v4 olarak pushla, önceki dal ile aynı. temaların falan güncelleneceğini notları kaydet. ekip apksı son haliyle güncel mi?"
+- **Ekip APK'sı:** `..\APK-ekip\Cloudora-v4.apk` = `Builds/Android/Cloudora-v4-qa.apk` (12:33, bayt bayt aynı). 12:33'ten sonra `Assets/`, `Packages/`, `ProjectSettings/` içinde oyuna giren değişiklik yok (yalnızca belgeler; `ProjectSettings.asset` iOS haliyle aynı içerik, yalnızca boşluk/keystore gürültüsü farkı) → APK commit'lenen v4 ile aynı oyun.
+- **Notlar:** temaların güncelleneceği notu proje belgelerinde (13:11) + Claude kalıcı hafızasında (`v4-themes-to-update`).
+- **Push planı:** `PROJE_HAFIZASI.md` §0/§4 + bu kayıt commit'lenir; ardından `git push upstream bahadir-claude-versions:cloudora-bahadir`, `git push origin bahadir-claude-versions:main`, ikisine `v4` etiketi. Force yok.
+
 ## 2026-10-19 13:11 — v4 commit ve etiket (kullanıcı onayı)
 - **Kullanıcı:** "commit at, temaların vs güncelleneceğini not düş".
 - **Not:** temalar (dünya görselleri, arka planlar, tema adları/tasarımı) ileride güncellenecek — `PROJE_HAFIZASI.md` §0, `crVersion.md` v4 "Bilinen sınırlar", `IOS_FARKLARI.md` §11 (+ HTML).
