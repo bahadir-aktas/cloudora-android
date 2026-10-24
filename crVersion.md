@@ -28,7 +28,7 @@
 ### Bilinen sınırlar / açık konular
 - 6 bölümde (64, 74, 84, 89, 94, 99; 5 renk) takılma aralığı biraz gevşetildi.
 - 15–30'da derin tuzak yok (küçük tahta); oradaki zorluk takılma ve No Moves'tan.
-- Başarısızlık ekranı telefonda görülmedi; çıkmazı fark ettirme (parlama) ve hamle logu ileride; temalar ve dünya resimleri ileride; kurtuluş ekranında gri şerit; ekip APK'sı v4'te.
+- Başarısızlık ekranı telefonda görülmedi; çıkmazı fark ettirme (parlama) ve hamle logu ileride; temalar ve dünya resimleri ileride; kurtuluş ekranında gri şerit. Ekip APK'sı: `..\APK-ekip\Cloudora-v4.1.apk` (push sonrası, 2026-10-19 23:04).
 - Hata (düzeltildi): onaylanan düşünme derinliği 3 koda geç girdi; ilk iki Editor testi 2 hamleyle seçilmiş veriyle yapıldı.
 
 ---

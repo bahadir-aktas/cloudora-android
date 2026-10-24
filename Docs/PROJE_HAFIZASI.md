@@ -1,18 +1,21 @@
 # Cloudora — Proje Hafızası (Claude için oturum başlangıcı)
 
 > Her oturumun başında **ilk iş bu dosyayı oku.** Projeyi anlamak için nelere bakılacağını, hangi kuralların geçerli olduğunu ve işin nerede kaldığını özetler. Ayrıntı her zaman kaynak dosyadadır; burada yazanla kaynak çelişirse **kaynak doğrudur**, bu dosya düzeltilir.
-> Son güncelleme: 2026-10-19 23:00 (v4.1 commit öncesi).
+> Son güncelleme: 2026-10-24 11:04 (2026-10-24 docs commit'i ve push öncesi).
 
 ---
 
-## 0. Nerede kaldık (2026-10-19 gece) — yeni oturumda önce bunu oku
+## 0. Nerede kaldık (2026-10-24) — yeni oturumda önce bunu oku
 - **v4.1 = v4 (iOS uyarlaması) üzerine bölümlerin yeni zorlukla yeniden kurulması.** **Kararlar, kurallar ve sonuçlar: `Docs/V41_TASARIM.md`** (önce onu oku); 100 bölümün görsel özeti `Docs/V41_BOLUM_HARITASI.html`. Ayrıntılı konuşma ve gerekçeler `ClaudoraRelease.md` 2026-10-19 17:28 → 23:00.
-- **Durum:** v4.1 commit + etiket `v4.1` (`bahadir-claude-versions`, kullanıcı: "önce commit sonra push"). **Push:** kullanıcının ayrı onayıyla, iki hedef (`upstream` `cloudora-bahadir` + `origin` `main`, etiket `v4.1`). Sonucu `ClaudoraRelease.md` en üstte; yeni oturumda `git ls-remote` ile doğrula. Push öncesi uzak repolar `6bfd142` (v4 belgeleri).
+- **Durum:** v4.1 commit `5cae26a` + etiket `v4.1` (`bahadir-claude-versions`); **2026-10-19 23:03'te iki hedefe push edildi** (`upstream` `cloudora-bahadir` + `origin` `main`, etiket `v4.1`; önceki `6bfd142`). **2026-10-24:** push sonrası belge güncellemeleri + `Docs/TEMA_ATLASI.html` + `Docs/COIN_EKONOMISI.html` tek bir docs commit'inde (bu dosya da içinde; `git log --oneline -3`), kullanıcı onayıyla iki hedefe push edildi (yeni etiket yok). Yeni oturumda `git ls-remote` ile doğrula.
 - **Testler:** EditMode **197 / 194 / 0 / 3** (atlanan: 2 grafik gerektiren, 1 elle ölçüm). Kurulum testi ~4–6 dk sürer (100'ün 300.000'lik havuzu); `V3LevelBuildTests` sınıfında `[Timeout(900000)]`.
 - **Oyun testleri (2026-10-19):** Editor'de 4 tur (13 + 7 + 6 + 1 bölüm) ve telefonda 7 bölüm; çökme yok. Son tur yorumları: "düşünmeye itti, beğendim", final 100 "zorlandım, doğru tercihleri yapmazsan tuzakta kalıyorsun". Başarısızlık ekranı telefonda görülmedi (No Moves'a düşülmedi).
-- **APK:** `Builds/Android/Cloudora-v4.1-qa.apk` ("Cloudora v4.1", `com.yigityvz.cloudora.v41`, QA, 70 MB); telefonda v4'ün yanında. Ekip APK'sı (`..\APK-ekip\`) hâlâ v4 — güncellenmedi.
-- **Sıradaki / açık (kullanıcı kararı bekleyen):** temalar ve yüksek çözünürlüklü dünya resimleri ("daha sonra"); kurtuluş ekranında üst/alt gri şerit ("şimdilik boş ver"); çıkmazda mantıklı çözümün parlaması (fikir, `V41_TASARIM.md` §11); oyunun hamleleri loga yazması (kalibrasyon için); ekip APK'sının v4.1'e güncellenmesi.
-- **Cihaz/kayıt durumu:** Editor kaydı 100 bitmiş (coin 7050); test öncesi yedek `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-editor-v41-test-oncesi-20261019-1933\` (L81). Editor'de "Azaltılmış hareket" açık (kullanıcı tercihi; `RenderingReuseTests` artık bundan bağımsız). Telefonda v4.1 kaydı 100'de. Unity Editor kapalı.
+- **APK:** `Builds/Android/Cloudora-v4.1-qa.apk` ("Cloudora v4.1", `com.yigityvz.cloudora.v41`, QA, 70 MB); telefonda v4'ün yanında. **Ekip için:** `..\APK-ekip\Cloudora-v4.1.apk` + `KURULUM.txt` (v4.1; SHA-256 `767f28c9…`); `Cloudora-v4.apk` önceki sürüm olarak orada.
+- **Yeni iş (2026-10-24, fikir aşaması, kod yok):** 101–500 dünyaları — temalar 40'ar (belki sonra 50), her dünyada tema + feature + yeni element, elementler rotasyonla (tahtada en çok 5–6 renk). Fikir sayfası `Docs/TEMA_ATLASI.html` (+ claude.ai Artifact `https://claude.ai/artifact/BF7Zfaht3rRVqXJB1YPcWd`): 18 tema, 91 feature, 19 element × 4 çizim × 4 renk. Kullanıcı seçimini bekliyor (sayfadaki "Seçimlerimi kopyala").
+- **Coin çalışması (2026-10-24, fikir, kod yok):** `Docs/COIN_EKONOMISI.html` (+ Artifact `https://claude.ai/artifact/NDx1ocDRYUs1Lo1mfseBYR`): 43 harcama seçeneği, önerilen 8'li set, kazanç önerileri, denge hesaplayıcısı. Reklamla alınanlar bugünkü gibi kalıyor (kullanıcı). Seçim bekliyor.
+- **Başka makineden / bulut oturumundan devam (2026-10-24, kullanıcı bilgisayarı kapattı):** repo `bahadir-aktas/cloudora-android` `main` (= `upstream` `cloudora-bahadir`). Orada Unity, testler, APK ve telefon yok → §1 adım 8–9 yapılamaz, kullanıcıya söyle; yalnızca belge/kod/fikir işi. Claude'un yerel kalıcı hafızası orada yok; kuralları §2'den al, ek olarak: Efe'nin APK'ları (`..\Efe - APK lar`) yalnızca incelenir, onaysız hiçbir şey eklenmez; oyuncuya görünen metinde 3–4 seçenek; kullanıcının hızlı art arda basmaları kasıtlı buton testidir. Artifact'ler claude.ai hesabında (linkler yukarıda); güncellemek için `Docs/*.html`'den baştaki/sondaki HTML iskeleti çıkarılıp aynı URL'ye yayınlanır. Push yine her seferinde ayrı onayla.
+- **Sıradaki / açık (kullanıcı kararı bekleyen):** Dünya Atlası ve Coin Ekonomisi seçimleri (sayfalardaki "Seçimlerimi kopyala" metni); temalar ve yüksek çözünürlüklü dünya resimleri ("daha sonra"); kurtuluş ekranında üst/alt gri şerit ("şimdilik boş ver"); çıkmazda mantıklı çözümün parlaması (fikir, `V41_TASARIM.md` §11); oyunun hamleleri loga yazması (kalibrasyon için).
+- **Cihaz/kayıt durumu:** Editor kaydı 100 bitmiş (coin 7350); test öncesi yedek `%USERPROFILE%\AppData\LocalLow\YigitYvz\Cloudora\yedek-editor-v41-test-oncesi-20261019-1933\` (L81). Editor'de "Azaltılmış hareket" açık (kullanıcı tercihi; `RenderingReuseTests` artık bundan bağımsız). Telefonda v4.1 kaydı 100 bitmiş (telefon testinin logundan; telefon şu an bağlı değil). Unity Editor kapalı. 2026-10-24 oturum başı: testler 197 / 194 / 0 / 3, kalibrasyon v4.1 verisiyle 100/100 aynı.
 
 ## 1. Oturum başında okuma sırası
 1. **Bu dosya** (önce §0).
@@ -51,6 +54,8 @@
 | Kaynak | İçerik | Durum |
 |---|---|---|
 | `Docs/V41_TASARIM.md` | v4.1: amaç, kural değişiklikleri, bölüm yapısı, ölçü, takılma deseni ve aralıkları, No Moves, puan eğrisi, test sonuçları, ileride | **Güncel, v4.1 referansı** |
+| `Docs/COIN_EKONOMISI.html` | Coin harcama seçenekleri (8 grup), kazanç önerileri, gerçek para notları, 1–500 denge hesaplayıcısı, çakışmalar | Fikir, seçim bekliyor; asıl kaynak bu dosya (Artifact'e iskelet çıkarılarak yayınlanır) |
+| `Docs/TEMA_ATLASI.html` | 101–500 fikirleri: plan (10×40 / 5×40+4×50), 18 tema (yigityvz'in 13 dünyasından 10'u + 8 yeni), feature varyasyonları (hamle/süre/gecikme/kodda hazır), element çizim ve renkleri, rotasyon, çakışmalar | Fikir, seçim bekliyor. Asıl kaynak bu dosya (scratchpad geçici); Artifact'i güncellemek için baştaki/sondaki HTML iskeleti çıkarılıp aynı URL'ye yayınlanır |
 | `Docs/V41_BOLUM_HARITASI.html` | 100 bölüm: özet, puan/hedef ve takılma grafikleri, kurallar, filtreli kartlar (tahta çizimi, çerçeve, takılma 3 oyuncu, çıkmaz, No Moves) | Güncel; `Logs/araclar/make_v41_html.py` ile üretilir |
 | `Docs/IOS_FARKLARI.md` + `.html` | v4: iOS sürümünün v3.2'den farkları, çelişkiler Ç1–Ç10, ölçüm, telefon testi | v4 referansı (v4.1 notu başında) |
 | `Docs/IOS_*.md` (iOS'tan) | yigityvz'in iOS kayıtları | Kaynak belge; aralarında eskimiş ifadeler var |
@@ -65,12 +70,12 @@
 | `Logs/araclar/` (git dışı) | `make_v41_html.py` (v4.1 harita); eski v3 betikleri (`make_map.py`, `make_html.py`, `update_sablon.py`, `fix59.py`) | |
 | `Logs/v41-preview-*.csv`, `Logs/v41-envanter-*` (git dışı) | v4.1 önizlemeleri (`-1` ilk kurulum, `-2` No Moves 5, `-3` öneri 3, `-4` son hal = veri; `-nm4`, `-nm4b`, `-b2`, `-b2b` simülasyonlar) ve envanterler (derinlik 2/3) | |
 | `..\iOS-inceleme\`, `..\Efe-inceleme\` (repo dışı) | iOS reposu kopyası ve ölçümleri; Efe APK incelemesi | Tarihsel kaynak |
-| `..\APK-ekip\` (repo dışı) | Ekip için `Cloudora-v4.apk` + `KURULUM.txt` | v4 (v4.1 değil) |
+| `..\APK-ekip\` (repo dışı) | Ekip için `Cloudora-v4.1.apk` + `KURULUM.txt` (+ önceki `Cloudora-v4.apk`) | v4.1 |
 | Hafıza dizini (`%USERPROFILE%\.claude\projects\…\memory\`) | Kullanıcı tercihleri ve kurallar | Her oturumda otomatik yüklenir |
 
 ## 4. Proje özeti
 - Unity **6000.5.9f1**, Android, dikey, tek parmakla hava sıralama bulmacası. Ana yazar **yigityvz**; Bahadır katkıda bulunan. Tek sahne `Assets/_Cloudora/Scenes/02_Gameplay.unity`; arayüz kodla.
-- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`), v3.2 (`73611d2`), v4 (`0604618`), **v4.1** (bu commit). v4'e kadarkiler iki repoya push edildi.
+- **Dal:** `bahadir-claude-versions`. Etiketler: v1 (`adaa0b8`), v2 (`61088e4`), v3 (`b0b2f13`), v3.1 (`ae54acc`), v3.2 (`73611d2`), v4 (`0604618`), **v4.1** (`5cae26a`). Hepsi iki repoya push edildi.
 - **iOS sürümü:** `yigityvz/cloudora-ios`; v4 bunun `1ee4334`'ünün Android karşılığı.
 - **Telefon (Galaxy S24 FE, adb `R5CXA3032LP`):** "Cloudora" (v1), "Cloudora v2", "Cloudora v3", "Cloudora v4", **"Cloudora v4.1"** (`com.yigityvz.cloudora.v41`) ve Efe'nin `claodeera` paketi yan yana.
 
@@ -128,7 +133,6 @@
 - **Hamle logu yok:** oyun hamleleri tek tek yazmıyor; kalibrasyon için eklenebilir.
 - **Gevşetilen 6 bölüm** (5 renk): takılma aralığının biraz altında / düşünen sınırının biraz üstünde; havuz büyütülerek azaltılabilir.
 - **Başarısızlık ekranı** v4.1 metinleriyle telefonda görülmedi (Editor'de görüldü).
-- **Ekip APK'sı** v4'te; v4.1'e güncellenmedi.
 - v3'ten kalanlar: Shuffle çözücüsünün büyük tahtada 200.000 sınırı (ölçümde sorun yok), World ekranı / Shuffle seçim modu tartışması, zorluk sembolü sprite değil yazı.
 - **Zararsız kalıntılar:** `PuzzleSolver.ReachabilitySearch` (oyunda kullanılmıyor, testleri var), `LevelCandidateSelector` `backupCount`, `LevelDefinition.difficultyBand`.
 

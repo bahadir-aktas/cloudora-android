@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Cloudora Coin Ekonomisi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Düzen: hazine defteri — üstte özet ve sekmeler; harcama yerleri kart kartı, hesaplayıcı solda seçimler sağda grafik. Yazı tipi oyunla aynı (Nunito). */
+:root{
+  --bg:#F5F2EA; --surface:#FFFFFF; --surface2:#EEE8DA; --fg:#1F1B12; --muted:#665E4C; --line:#DCD3BF;
+  --accent:#B9790A; --accent-ink:#FFFFFF; --coin:#E7A821; --danger:#C3433B; --ok:#2B8A57;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --grid:#E6DFCF; --chart-bg:#FFFFFF;
+  --z0:#2B8A57; --z1:#7A8F2B; --z2:#C27C12; --z3:#C3433B;
+  --font-d:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif; --font-b:"Nunito","Segoe UI",system-ui,sans-serif; --font-m:"IBM Plex Mono",ui-monospace,Consolas,monospace; --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15130E; --surface:#1F1C15; --surface2:#29251C; --fg:#F1ECDF; --muted:#B4AA92; --line:#3A3528;
+  --accent:#F2C14E; --accent-ink:#15130E; --coin:#F2C14E; --danger:#F07A72; --ok:#5CC793;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#2F2B21; --chart-bg:#1F1C15;
+  --z0:#5CC793; --z1:#B5C95A; --z2:#F2B24C; --z3:#F07A72; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15130E; --surface:#1F1C15; --surface2:#29251C; --fg:#F1ECDF; --muted:#B4AA92; --line:#3A3528;
+  --accent:#F2C14E; --accent-ink:#15130E; --coin:#F2C14E; --danger:#F07A72; --ok:#5CC793;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#2F2B21; --chart-bg:#1F1C15;
+  --z0:#5CC793; --z1:#B5C95A; --z2:#F2B24C; --z3:#F07A72; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--font-d);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(28px,4.4vw,42px);font-weight:900}
+h2{font-size:23px;font-weight:900} h3{font-size:17px;font-weight:800} h4{font-size:15px;font-weight:800}
+p{margin:0}
+.mono{font-family:var(--font-m);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.lbl{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.jsstate{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--danger);color:#fff;font-weight:800}
+
+header.top{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding-block:28px 18px}
+.coinmark{width:72px;height:72px}
+header.top .sub{color:var(--muted);max-width:72ch;margin-top:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:18px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.fact b{font-family:var(--font-m);font-size:20px}
+.fact span{font-size:12.5px;color:var(--muted)}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:6px;overflow-x:auto;padding-block:10px;border-bottom:1px solid var(--line);margin-bottom:22px}
+nav.tabs a{flex:0 0 auto;text-decoration:none;color:var(--muted);font-weight:800;padding:8px 14px;border-radius:999px}
+nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+nav.tabs a:hover{color:var(--fg)} nav.tabs a[aria-current="page"]:hover{color:var(--accent-ink)}
+section.view{display:grid;gap:20px}
+.intro{max-width:78ch;color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer}
+.btn:hover{border-color:var(--accent)} .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:800;cursor:pointer;color:var(--muted)}
+.fchip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+input[type=search],input[type=number]{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0}
+input[type=search]{width:220px;max-width:100%}
+input[type=number]{width:86px}
+
+/* Özet */
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;align-content:start}
+.panel ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.pick{display:flex;gap:10px;align-items:flex-start}
+.pick .n{flex:0 0 auto;font-family:var(--font-m);font-weight:600;color:var(--accent)}
+
+/* Kartlar */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;align-content:start}
+.card.onay{border-style:dashed}
+.card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .grp{font-size:11.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.card .price{font-family:var(--font-m);font-weight:600;white-space:nowrap}
+.card .price small{display:block;font-family:var(--font-b);font-weight:700;color:var(--muted);font-size:11.5px;text-align:right}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:11.5px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.z0{color:var(--z0)} .pill.z1{color:var(--z1)} .pill.z2{color:var(--z2)} .pill.z3{color:var(--z3)}
+.card dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;margin:0;font-size:13.5px}
+.card dt{color:var(--muted);font-weight:700} .card dd{margin:0} .card .risk{color:var(--danger)}
+.card .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:2px}
+.star{border:0;background:transparent;cursor:pointer;padding:4px;border-radius:8px;color:var(--muted);line-height:0}
+.star[aria-pressed="true"]{color:var(--coin)} .star svg{width:20px;height:20px}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800;cursor:pointer}
+.chk input{width:17px;height:17px;accent-color:var(--accent)}
+
+/* Hesaplayıcı */
+.calc{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:18px;align-items:start}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.list h4{padding:10px 14px;background:var(--surface2);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;padding:9px 14px;border-top:1px solid var(--line);align-items:center}
+.row .nm{font-weight:800;font-size:13.5px}
+.row .inp{grid-column:2;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--muted)}
+.row.off .inp{display:none}
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:12px;min-width:0;position:sticky;top:calc(64px + env(safe-area-inset-top,0px))}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--fg);font-weight:700}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.chart{position:relative;min-width:0}
+.chart svg{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;box-shadow:0 6px 20px rgba(0,0,0,.18);min-width:170px}
+.tip .t{font-weight:900;margin-bottom:3px}
+.tip .r{display:flex;justify-content:space-between;gap:12px} .tip .r b{font-family:var(--font-m)}
+.tip .r span{display:inline-flex;align-items:center;gap:6px}
+.tip .r i{display:inline-block;width:10px;height:3px;border-radius:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.kpi{background:var(--surface2);border-radius:10px;padding:8px 10px;display:grid}
+.kpi b{font-family:var(--font-m);font-size:17px} .kpi span{font-size:12px;color:var(--muted)}
+.verdict{font-weight:800;padding:10px 12px;border-radius:10px;background:var(--surface2)}
+.verdict.bad{color:var(--danger)} .verdict.good{color:var(--ok)}
+details summary{cursor:pointer;font-weight:800}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+.rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:6px}
+.rule ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.conflict{border-left:4px solid var(--danger)}
+pre.export{white-space:pre-wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;font-family:var(--font-m);font-size:12.5px;max-height:520px;overflow:auto;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:20}
+/* Market önizlemesi: oyunun koyu cam arayüzüne benzer sabit bir görünüm (iki temada aynı) */
+.mk{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:22px;align-items:start}
+.phone{--ph-bg1:#4F8CC9;--ph-bg2:#A9CDEE;--ph-glass:rgba(10,37,54,.72);--ph-glass2:rgba(10,37,54,.5);--ph-fg:#F3FBFF;--ph-muted:#B9D3E4;--ph-gold:#F2C14E;--ph-line:rgba(182,221,226,.28);
+ position:relative;width:100%;max-width:360px;height:660px;border-radius:34px;overflow:hidden;border:8px solid #16202C;background:linear-gradient(180deg,var(--ph-bg1),var(--ph-bg2));color:var(--ph-fg);box-shadow:0 18px 50px rgba(0,0,0,.28);display:grid;grid-template-rows:auto auto 1fr}
+.ph-top{display:flex;justify-content:space-between;align-items:center;padding:14px 14px 8px}
+.ph-title{font-weight:900;font-size:20px;text-shadow:0 1px 6px rgba(0,0,0,.25)}
+.ph-coin{display:inline-flex;align-items:center;gap:6px;background:var(--ph-glass);border:1px solid var(--ph-line);border-radius:999px;padding:4px 10px 4px 5px;font-weight:900;font-family:var(--font-m);font-size:14px}
+.ph-coin i{width:18px;height:18px;border-radius:50%;background:var(--ph-gold);display:inline-block}
+.ph-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 12px 8px;min-height:8px}
+.ph-tabs button{flex:0 0 auto;border:1px solid var(--ph-line);background:var(--ph-glass2);color:var(--ph-fg);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:800;cursor:pointer}
+.ph-tabs button[aria-pressed="true"]{background:var(--ph-gold);color:#2A1E00;border-color:var(--ph-gold)}
+.ph-body{overflow-y:auto;padding:0 12px 16px;display:grid;gap:12px;align-content:start}
+.ph-sec{display:grid;gap:6px}
+.ph-sec h5{margin:0;font-size:13px;font-weight:900;letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.ph-shelf{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 4px;scrollbar-width:none}
+.ph-shelf::-webkit-scrollbar,.ph-body::-webkit-scrollbar,.ph-tabs::-webkit-scrollbar{display:none}
+.ph-body,.ph-tabs{scrollbar-width:none}
+.ph-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:6px}
+.ph-item{position:relative;border:1px solid var(--ph-line);background:var(--ph-glass);color:var(--ph-fg);border-radius:14px;padding:6px 6px 7px;display:grid;gap:4px;justify-items:center;cursor:pointer;min-width:92px;font:inherit;text-align:center}
+.ph-grid .ph-item{min-width:0}
+.ph-item .nm{font-size:11.5px;font-weight:800;line-height:1.2}
+.ph-item .pr{font-family:var(--font-m);font-size:11.5px;color:var(--ph-gold);font-weight:600}
+.ph-item.own .pr{color:#8FE3B0}
+.ph-item.lock{opacity:.55}
+.ph-item .badge{position:absolute;top:-5px;right:-4px;background:#E2557A;color:#fff;font-size:9.5px;font-weight:900;padding:1px 6px;border-radius:999px}
+.ph-hero{border:1px solid var(--ph-line);background:var(--ph-glass);border-radius:18px;padding:10px;display:grid;gap:8px}
+.ph-hero .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ph-hero .row3 .ph-item{min-width:0}
+.ph-hero .ttl{display:flex;justify-content:space-between;font-weight:900;font-size:13px}
+.ph-hero .ttl span{font-family:var(--font-m);color:var(--ph-muted);font-weight:600}
+.ph-prog{height:8px;border-radius:999px;background:var(--ph-glass2);overflow:hidden}
+.ph-prog i{display:block;height:100%;background:var(--ph-gold)}
+.ph-note{font-size:11.5px;color:var(--ph-muted)}
+.ph-sheet{position:absolute;inset:auto 0 0 0;background:#0E2433;border-top:1px solid var(--ph-line);border-radius:22px 22px 0 0;padding:14px 16px 18px;display:grid;gap:10px;box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+.ph-sheet .hd{display:flex;gap:12px;align-items:center}
+.ph-sheet h5{margin:0;font-size:17px;font-weight:900}
+.ph-sheet p{font-size:12.5px;color:var(--ph-muted)}
+.ph-sheet .acts{display:flex;gap:8px}
+.ph-sheet .acts button{flex:1;border:0;border-radius:12px;padding:10px;cursor:pointer;font:inherit;font-weight:900}
+.ph-sheet .buy{background:var(--ph-gold);color:#2A1E00}
+.ph-sheet .alt{background:rgba(255,255,255,.12);color:var(--ph-fg)}
+.ph-sheet .x{position:absolute;right:10px;top:8px;background:transparent;border:0;color:var(--ph-fg);font-size:20px;padding:4px 8px;cursor:pointer}
+.ph-msg{font-size:12.5px;font-weight:800;color:var(--ph-gold)}
+.ph-toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:rgba(0,0,0,.78);color:#fff;padding:7px 12px;border-radius:10px;font-size:12.5px;font-weight:800;white-space:nowrap}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.nopt{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;display:grid;gap:2px}
+.nopt b{font-size:16px} .nopt span{font-size:12.5px;color:var(--muted)}
+.nopt[aria-pressed="true"]{border-color:var(--accent)}
+.lay{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:860px){.mk{grid-template-columns:1fr}.phone{margin:0 auto}}
+@media (max-width:860px){.calc{grid-template-columns:1fr}.chartbox{position:static}header.top{grid-template-columns:1fr}.coinmark{display:none}}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s ease,box-shadow .15s ease}.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(60,40,0,.10)}}
+</style>
+
+<div class="wrap">
+  <div class="jsstate" id="jsState" role="status">Sayfanın betiği çalışmadı. Bu görüntüleyici JavaScript çalıştırmıyor olabilir (VS Code önizlemesi, Explorer önizleme bölmesi gibi). Dosyayı Chrome ya da Edge'de açın.<span id="jsErr"></span></div>
+  <script>window.addEventListener("error",function(e){var b=document.getElementById("jsState"),x=document.getElementById("jsErr");if(b){b.hidden=false;b.firstChild.textContent="Sayfada bir hata oluştu, bu metni Claude'a gönderin: ";}if(x)x.textContent=(e.message||"")+" (satır "+(e.lineno||"?")+")";});</script>
+  <header class="top">
+    <svg class="coinmark" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="32" fill="var(--coin)"/><circle cx="36" cy="36" r="25" fill="none" stroke="var(--accent-ink)" stroke-opacity=".55" stroke-width="2.5"/><path d="M24 42H48A7 7 0 0 0 48.4 28A10.5 10.5 0 0 0 28.6 29.6A6.2 6.2 0 0 0 24 42Z" fill="none" stroke="var(--accent-ink)" stroke-width="3" stroke-linejoin="round"/></svg>
+    <div><h1>Cloudora Coin Ekonomisi</h1>
+    <p class="sub">Oyunda kazanılan coin'in nerelerde harcanabileceği: 43 seçenek, kazanç tarafı önerileri, coin'le alışveriş yapılan bir pazar için fikirler ve canlı önizleme, gerçek para için kısa notlar ve fiyatları deneyebileceğin bir denge hesaplayıcısı. Reklamla alınanlar bugünkü gibi kalıyor. Taslak, 2026-10-24.</p></div>
+  </header>
+  <div class="facts" id="facts"></div>
+
+  <nav class="tabs" aria-label="Bölümler">
+    <a href="#ozet" data-tab="ozet">Özet</a>
+    <a href="#harcama" data-tab="harcama">Harcama yerleri</a>
+    <a href="#market" data-tab="market">Pazar</a>
+    <a href="#hesap" data-tab="hesap">Denge hesaplayıcı</a>
+    <a href="#kazanc" data-tab="kazanc">Kazanç tarafı</a>
+    <a href="#para" data-tab="para">Gerçek para</a>
+    <a href="#kurallar" data-tab="kurallar">Kurallar ve çakışmalar</a>
+    <a href="#secimler" data-tab="secimler">Seçimlerim</a>
+  </nav>
+
+  <section class="view" id="v-ozet" data-view="ozet"></section>
+
+  <section class="view" id="v-harcama" data-view="harcama" hidden>
+    <p class="intro">Her kartta: nasıl çalıştığı, önerilen fiyat ve kaç bölümlük kazanca denk geldiği, zorluğa etkisi, yapım eforu (S küçük, M orta, L büyük), koddaki bağlantısı ve riski. Kesikli çerçeveli kartlar mevcut reklam/coin düzenine dokunur; senin onayın olmadan önerilmiyor. "Hesaba kat" kutusu seçeneği denge hesaplayıcısına ekler.</p>
+    <div class="controls"><span class="lbl">Grup</span><span id="fGrp"></span></div>
+    <div class="controls"><span class="lbl">Zorluğa etkisi</span><span id="fZ"></span><span class="lbl">Efor</span><span id="fE"></span><input type="search" id="q" placeholder="Ara: ipucu, kaplama…" aria-label="Seçeneklerde ara"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="view" id="v-market" data-view="market" hidden></section>
+
+  <section class="view" id="v-hesap" data-view="hesap" hidden>
+    <p class="intro">Ortalama bir oyuncunun 1–500 boyunca ne kadar coin kazanıp harcayacağını gösterir. Kazanç bugünkü kuraldan (Orta 100, Zor 200, Çok zor 300) ve açtığın bonuslardan gelir. Harcama, seçtiğin yerlerin fiyatı ve kullanım sıklığıyla hesaplanır: tek seferlik alımlar açıldığı bölümden 500'e kadar eşit dağıtılır. Sayılar tahmin; amaç oranları karşılaştırmak.</p>
+    <div class="controls"><span class="lbl">Hazır</span><button class="btn" type="button" data-preset="bugun">Bugünkü oyun</button><button class="btn primary" type="button" data-preset="oneri">Önerilen set</button><button class="btn" type="button" data-preset="hepsi">Onay gerekmeyenlerin hepsi</button><button class="btn" type="button" data-preset="bos">Temizle</button></div>
+    <div class="calc">
+      <div class="list" id="calcList"></div>
+      <div class="chartbox">
+        <div class="legend" id="legend"></div>
+        <div class="chart" id="chart"></div>
+        <div class="kpis" id="kpis"></div>
+        <div class="verdict" id="verdict"></div>
+        <details><summary>Tablo görünümü</summary><div class="tbl" id="table"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-kazanc" data-view="kazanc" hidden></section>
+  <section class="view" id="v-para" data-view="para" hidden></section>
+  <section class="view" id="v-kurallar" data-view="kurallar" hidden></section>
+  <section class="view" id="v-secimler" data-view="secimler" hidden>
+    <p class="intro">Seçimlerin bu tarayıcıda saklanır. Bana göndermek için metni kopyalayıp sohbete yapıştır.</p>
+    <div class="controls"><button class="btn primary" id="copyBtn" type="button">Seçimlerimi kopyala</button><button class="btn" id="resetAll" type="button">Tüm seçimleri sıfırla</button><span id="resetAsk" class="muted" hidden></span></div>
+    <pre class="export" id="export"></pre>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+document.getElementById("jsState").hidden=true;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=v=>Math.round(v).toLocaleString("tr-TR");
+const PER_LEVEL=160; /* döngü başına 800 / 5 */
+
+/* ---------- Gruplar ---------- */
+const GR={meta:"Dünya ve ilerleme",koz:"Kozmetik",yard:"Oyun yardımı",mod:"Modlar ve içerik",etk:"Etkinlik ve sosyal",kol:"Koleksiyon ve şans",eko:"Ekonomi araçları",onay:"Onay gerekir"};
+const ZL=["Yok","Az","Orta","Yüksek"];
+const EF={S:"S · küçük",M:"M · orta",L:"L · büyük"};
+
+/* ---------- Seçenekler ----------
+ m: tek = adet × fiyat, bas'tan 500'e dağıtılır; tekrar = 100 bölümde kez × fiyat, bas'tan itibaren */
+const OP=[
+{id:"onar",g:"meta",ad:"Dünyayı Onar",fiyat:600,m:"tek",adet:52,bas:15,z:0,e:"L",kod:"RestorationManager (kurtuluş aşaması 0–4 hazır, harcamaya bağlı değil)",
+ nasil:"Her dünyanın kurtuluş sahnesinde 4 parça var (köprü, fener, bahçe, gökkuşağı). Bölümler parçayı açar, coin parçayı yerine koyar. Parça konunca sahne canlanır.",
+ neden:"En güçlü uzun vadeli harcama: oyuncu ilerlemesini görür, coin bir amaca gider. Dünya resimleri yenilenirken birlikte tasarlanabilir.",risk:"Her dünya için çizim gerekir (temalar 'daha sonra' notu). Fiyat dünya ilerledikçe artmalı."},
+{id:"evim",g:"meta",ad:"Gök Adası",fiyat:800,m:"tek",adet:30,bas:30,z:0,e:"L",kod:"",
+ nasil:"Oyuncunun kendi küçük gökyüzü adası. Rüzgâr çanı, fener, bulut çiçekleri, element heykelleri gibi süsler alınıp yerleştirilir.",
+ neden:"Kişiselleştirme; dünyalar bittikten sonra da coin'in gideceği yer.",risk:"Yeni ekran ve çok sayıda çizim; ana sayfada yer gerekir."},
+{id:"kart",g:"meta",ad:"Dünya Kartpostalı",fiyat:300,m:"tek",adet:13,bas:30,z:0,e:"S",kod:"",
+ nasil:"Dünya bitince o dünyanın özel bir çizimi kartpostal olarak alınabilir; albümde durur, duvar kâğıdı olarak paylaşılabilir.",
+ neden:"Ucuz, küçük, her dünyada bir kez; ilk harcama alışkanlığını kurar.",risk:"Paylaşım için Android paylaşım menüsü gerekir."},
+{id:"ansik",g:"meta",ad:"Hava Ansiklopedisi",fiyat:200,m:"tek",adet:40,bas:6,z:0,e:"M",kod:"WeatherType (elementler)",
+ nasil:"Her element ve her feature için bir bilgi kartı: şimşek nasıl oluşur, kar tanesi neden altıgendir. Kart, element ilk görüldüğünde açılabilir hale gelir.",
+ neden:"Eğitici ve aile dostu; oyunun hava temasını derinleştirir.",risk:"Metinlerin doğruluğu kontrol edilmeli; Türkçe ve İngilizce yazılmalı."},
+{id:"onizle",g:"meta",ad:"Dünya Önizlemesi",fiyat:400,m:"tek",adet:12,bas:30,z:0,e:"S",kod:"WorldScreenController",
+ nasil:"Bir sonraki dünyanın sahnesine ve yeni elementine önceden bakmak (oynamadan).",
+ neden:"Merak uyandırır; ucuz bir 'yakında' tanıtımı.",risk:"Sürprizi bozabilir; isteğe bağlı kalmalı."},
+
+{id:"kaplama",g:"koz",ad:"Hazne Kaplamaları",fiyat:1500,m:"tek",adet:6,bas:20,z:0,e:"M",kod:"CloudContainerView (cam hazne)",
+ nasil:"Haznelerin görünümü: buzlu cam, kristal, ahşap çerçeve, seramik, neon kenar, altın kenar.",
+ neden:"Her bölümde görünen kozmetik; oyuncu alımını sürekli görür.",risk:"Renk ve simge okunabilirliği bozulmamalı; her kaplama tasarım testinden geçmeli."},
+{id:"elset",g:"koz",ad:"Element Çizim Setleri",fiyat:1200,m:"tek",adet:5,bas:20,z:0,e:"M",kod:"WeatherGlyph (24'lük ızgara çizimleri)",
+ nasil:"Elementlerin simgeleri için alternatif setler (Dünya Atlası'ndaki 4 çizim varyasyonu gibi): yuvarlak, keskin, el çizimi, piksel.",
+ neden:"Atlas'ta hazırlanan çizimleri yeniden kullanır.",risk:"Şekiller birbirinden ayırt edilebilir kalmalı; varsayılan set renk körü dostu olmalı."},
+{id:"palet",g:"koz",ad:"Renk Paletleri",fiyat:1000,m:"tek",adet:3,bas:30,z:0,e:"S",kod:"CloudContainerView renkleri",
+ nasil:"Pastel, gece, canlı gibi elementlerin renk temaları.",
+ neden:"Ucuz yapım, belirgin değişiklik.",risk:"Renk körü / yüksek kontrast paleti erişilebilirlik ayarıdır, ücretsiz olmalı. Ücretli paletler çakışma kontrolünden geçmeli."},
+{id:"arka",g:"koz",ad:"Gökyüzü Arka Planları",fiyat:1200,m:"tek",adet:5,bas:30,z:0,e:"M",kod:"Arka plan / dünya görselleri",
+ nasil:"Bölüm arka planı: gün batımı, yıldızlı gece, kuzey ışığı, pastel sabah, fırtına.",
+ neden:"Oyunun havasını değiştirir; temalarla uyumlu.",risk:"Dünya kimliğini zayıflatabilir; belki yalnızca bitmiş dünyalarda ya da ayrı bir modda."},
+{id:"bitir",g:"koz",ad:"Bitiş Efektleri",fiyat:900,m:"tek",adet:5,bas:20,z:0,e:"M",kod:"7 element bitiriş sahnesi (v4)",
+ nasil:"Bölüm bitince oynayan efekt: konfeti bulutu, gökkuşağı patlaması, kar fırtınası, havai fişek.",
+ neden:"Kazanma anını ödüllendirir; her bölümde görünür.",risk:"1,78 sn'lik bitiriş süresini uzatmamalı; Azaltılmış hareket'te sade."},
+{id:"iz",g:"koz",ad:"Taşıma İzleri",fiyat:700,m:"tek",adet:5,bas:20,z:0,e:"M",kod:"MoveAnimator (element aktarımı)",
+ nasil:"Parça taşınırken arkasında kalan iz: parıltı, yaprak, kıvılcım, kar tozu.",
+ neden:"Her hamlede küçük bir keyif.",risk:"Performans (nesne havuzu var); Azaltılmış hareket'te kapalı."},
+{id:"ses",g:"koz",ad:"Ses ve Müzik Paketleri",fiyat:1000,m:"tek",adet:4,bas:30,z:0,e:"M",kod:"Ayarlarda ses tercihi var",
+ nasil:"Arka plan sesi: hafif yağmur, rüzgâr, gece cırcır böcekleri, lo-fi müzik.",
+ neden:"Rahatlatıcı bulmaca oyunlarında sevilen bir içerik.",risk:"Ses içeriği üretimi ve lisansı gerekir."},
+{id:"maskot",g:"koz",ad:"Bulut Maskotu ve Kostümleri",fiyat:800,m:"tek",adet:10,bas:30,z:0,e:"L",kod:"",
+ nasil:"Ana sayfada ve bölüm sonunda görünen küçük bir bulut karakteri; şapka, şemsiye, atkı gibi kostümler.",
+ neden:"Oyuna karakter katar; koleksiyon isteği uyandırır.",risk:"Oyunda bugün karakter yok; karakter tasarımı gerekir."},
+{id:"rozet",g:"koz",ad:"Profil Rozeti ve Çerçeve",fiyat:400,m:"tek",adet:10,bas:30,z:0,e:"M",kod:"",
+ nasil:"Profil kartı için rozetler ve çerçeveler (dünya bitirme rozetleri ücretsiz, süslü olanları coin'le).",
+ neden:"Ucuz, çok sayıda.",risk:"Profil ekranı yok; sosyal özellik olmadan değeri düşük."},
+{id:"ikon",g:"koz",ad:"Uygulama İkonu Seçenekleri",fiyat:500,m:"tek",adet:4,bas:50,z:0,e:"M",kod:"Android manifest işleyicisi",
+ nasil:"Telefondaki uygulama simgesi için alternatifler (gece, kar, gökkuşağı).",
+ neden:"Oyunun dışında da görünen kişiselleştirme.",risk:"Android'de activity-alias ile yapılır; bazı başlatıcılarda simge geç güncellenir."},
+
+{id:"kontrol",g:"yard",ad:"Hâlâ Çözülebilir mi?",fiyat:100,m:"tekrar",kez:8,bas:15,z:1,e:"S",kod:"PuzzleSolver.CheckSolvable (oyunda çalışıyor)",
+ nasil:"Düğmeye basınca oyun tahtanın hâlâ çözülebilir olup olmadığını söyler. Çözüm göstermez, yalnızca evet ya da hayır.",
+ neden:"v4.1 testinde görülen sorunu çözer: oyuncu çıkmazda olduğunu anlamakta zorlanıyordu (V41_TASARIM §11). Ucuz ve tasarımı bozmaz.",risk:"Ücretsiz 'çıkmaz parlaması' fikriyle örtüşür; ikisinden biri seçilmeli."},
+{id:"ipucu",g:"yard",ad:"İpucu",fiyat:150,m:"tekrar",kez:6,bas:15,z:2,e:"M",kod:"PuzzleSolver (en kısa çözüm)",
+ nasil:"Sıradaki iyi hamlenin kaynak ve hedef haznesi kısa süre parlar. Bölüm başına en çok 2; Çok zor bölümlerde fiyat iki kat.",
+ neden:"Takılan oyuncu bırakmak yerine coin harcar.",risk:"v4.1'in amacı 'düşünerek oynayan geçsin'; ipucu tuzakları boşa çıkarabilir. Sınır ve fiyat bunun için."},
+{id:"nokta",g:"yard",ad:"Kontrol Noktası",fiyat:200,m:"tekrar",kez:4,bas:31,z:1,e:"M",kod:"FailRecord (tahta + geçmiş kaydı var)",
+ nasil:"Oyuncu bir anı işaretler; sonra tek dokunuşla o ana döner. Geri Al haklarından bağımsız.",
+ neden:"Deneme yanılmayı rahatlatır, uzun bölümlerde işe yarar.",risk:"Geri Al'ın değerini düşürebilir (Geri Al reklamla yenileniyor); bölüm başına 1."},
+{id:"izle",g:"yard",ad:"Çözümü İzle",fiyat:300,m:"tekrar",kez:2,bas:15,z:0,e:"M",kod:"V3LevelData (en kısa çözüm uzunluğu), PuzzleSolver",
+ nasil:"Bitmiş bölümün ya da 3 kez başarısız olunan bölümün en kısa çözümü animasyonla oynatılır.",
+ neden:"Öğretici; oyuncu 'nasıl olacaktı' merakını giderir.",risk:"Başarısızlıktan sonra izlemek bölümü kolaylaştırır; çözüm izlendikten sonra o bölümün coin ödülü yarıya inebilir."},
+{id:"renkgoz",g:"yard",ad:"Renk Sayacı",fiyat:80,m:"tekrar",kez:5,bas:31,z:1,e:"S",kod:"",
+ nasil:"Bölüm boyunca her rengin tahtada kaç parçası kaldığını gösteren küçük bir sayaç açılır.",
+ neden:"5 renkli büyük tahtalarda planlamaya yardım eder; çözümü vermez.",risk:"Bilgi zaten tahtada; değeri az olabilir."},
+
+{id:"gunluk",g:"mod",ad:"Günlük Bulmaca",fiyat:200,m:"tekrar",kez:3,bas:15,z:0,e:"M",kod:"Bölüm aracı tek tahta üretebilir",
+ nasil:"Her gün herkese aynı bir tahta; ücretsiz oynanır ve coin verir. Kaçırılan günler takvimden coin'le oynanabilir.",
+ neden:"Günlük dönüş alışkanlığı; harcama isteğe bağlı.",risk:"Herkese aynı tahta için tarih tabanlı tohum yeterli; sunucu gerekmez."},
+{id:"usta",g:"mod",ad:"Usta Bölümleri",fiyat:1000,m:"tek",adet:12,bas:30,z:0,e:"M",kod:"V41LevelBuilder (yeni bölüm üretebilir)",
+ nasil:"Her dünyanın sonunda 5 ek, daha zor bölüm. Dünya bitince coin'le açılır; ana ilerlemeyi engellemez.",
+ neden:"Usta oyunculara içerik, coin'e anlamlı hedef. Bölüm aracımız bunu üretebilir.",risk:"Her paket ölçülüp test edilmeli; ödülleri normal bölümden yüksek olmamalı (coin döngüsü)."},
+{id:"meydan",g:"mod",ad:"Meydan Okuma",fiyat:100,m:"tekrar",kez:10,bas:31,z:0,e:"S",kod:"V3LevelData (her bölümün en kısa çözümü biliniyor)",
+ nasil:"Bitmiş bir bölümü en kısa hamle sayısıyla bitirmeyi dene. Giriş 100; başarırsan 250 ve bölüme bir yıldız.",
+ neden:"Eski bölümlere değer katar; ölçüm verisi hazır.",risk:"Yeniden oynamayla coin kasma olmamalı: her bölüm için ödül bir kez."},
+{id:"zen",g:"mod",ad:"Zen Modu",fiyat:3000,m:"tek",adet:1,bas:60,z:0,e:"M",kod:"Bölüm aracı",
+ nasil:"Can, süre ve başarısızlık olmadan rastgele rahat tahtalar. Bir kez açılır.",
+ neden:"Rahatlamak isteyen oyuncu için; büyük tek seferlik hedef.",risk:"Ana ilerlemeden oyuncu çalabilir; ödül vermemeli."},
+{id:"yaris",g:"mod",ad:"Zaman Yarışı",fiyat:200,m:"tekrar",kez:3,bas:60,z:0,e:"M",kod:"",
+ nasil:"3 dakikada olabildiğince çok küçük tahta çöz. Giriş 200; rekor kırarsan ödül.",
+ neden:"Farklı bir ritim; süre feature'larını tanıtmak için iyi bir yer.",risk:"Oyunun sakin havasından farklı; ayrı mod olarak kalmalı."},
+{id:"paket",g:"mod",ad:"Tema Paketleri",fiyat:2000,m:"tek",adet:5,bas:100,z:0,e:"L",kod:"Dünya Atlası feature'ları",
+ nasil:"Bir feature'ı (lav, sis, solucan deliği) derinlemesine işleyen 20 ek bölüm.",
+ neden:"Atlas'ta seçilmeyen feature'lara yer açar.",risk:"Yapımı büyük; ana içerikle yarışmamalı."},
+{id:"editor",g:"mod",ad:"Tahta Atölyesi",fiyat:5000,m:"tek",adet:1,bas:100,z:0,e:"L",kod:"PuzzleSolver (çözülebilirlik doğrulaması)",
+ nasil:"Oyuncu kendi tahtasını kurar, çözücü çözülebilir olduğunu doğrular, oyuncu kendi tahtasını oynar.",
+ neden:"Uzun ömürlü içerik; büyük tek seferlik hedef.",risk:"Paylaşım olmadan sınırlı; arayüzü büyük iş."},
+
+{id:"etkinlik",g:"etk",ad:"Sezon Etkinliği",fiyat:500,m:"tekrar",kez:1,bas:60,z:0,e:"L",kod:"",
+ nasil:"Örneğin 'Fırtına Haftası': 7 gün boyunca özel tahtalar ve ödüller. Giriş bileti coin'le.",
+ neden:"Dönemsel heyecan; feature'ları denemek için iyi bir yer.",risk:"Zamanlı içerik için güncelleme ya da uzaktan yapılandırma gerekir."},
+{id:"hediye",g:"etk",ad:"Arkadaşa Hediye",fiyat:300,m:"tekrar",kez:1,bas:30,z:0,e:"L",kod:"",
+ nasil:"Arkadaşına kozmetik ya da ipucu hediye et.",
+ neden:"Sosyal bağ.",risk:"Sunucu ve hesap sistemi gerekir; oyun şu an tamamen çevrimdışı kayıtla çalışıyor."},
+{id:"turnuva",g:"etk",ad:"Haftalık Turnuva",fiyat:300,m:"tekrar",kez:2,bas:60,z:0,e:"L",kod:"",
+ nasil:"Herkese aynı 5 tahta; en az hamleyle bitiren üstte. Giriş coin'le, ödül sıralamaya göre.",
+ neden:"Rekabetçi oyuncular için.",risk:"Lider tablosu (Google Play Games) ve hile koruması gerekir."},
+{id:"topluluk",g:"etk",ad:"Topluluk Hedefi",fiyat:250,m:"tekrar",kez:2,bas:30,z:0,e:"L",kod:"",
+ nasil:"Bütün oyuncuların coin bağışıyla dolan ortak bir 'gökyüzünü onar' çubuğu; dolunca herkese ödül.",
+ neden:"Birlikte bir şey başarma hissi.",risk:"Sunucu gerekir."},
+{id:"agac",g:"etk",ad:"Gerçek Dünya Kampanyası",fiyat:1000,m:"tekrar",kez:.5,bas:30,z:0,e:"L",kod:"",
+ nasil:"Belirli miktar coin toplanınca bir sponsorla gerçek bir fidan dikilir ya da iklim projesine destek verilir.",
+ neden:"Hava teması ile anlamlı bağ; iyi bir hikâye.",risk:"Ortak kurum ve şeffaflık gerekir."},
+
+{id:"album",g:"kol",ad:"Çıkartma Albümü",fiyat:400,m:"tekrar",kez:4,bas:15,z:0,e:"M",kod:"",
+ nasil:"Her dünyanın çıkartmaları; paket alınca albümde olmayan bir çıkartma gelir (şans yok, sıra garantili). Sayfa dolunca ödül.",
+ neden:"Koleksiyon zevki, kumar olmadan.",risk:"Çok çıkartma çizimi gerekir."},
+{id:"kutu",g:"kol",ad:"Sürpriz Kutusu",fiyat:500,m:"tekrar",kez:3,bas:30,z:0,e:"M",kod:"",
+ nasil:"Rastgele kozmetik içeren kutu.",
+ neden:"Yaygın ve çekici.",risk:"Önerilmez: ganimet kutusu bazı ülkelerde düzenlemeye tabi, Google Play olasılıkları açıklamayı ister, çocuk oyuncular için uygun değil. Yerine Çıkartma Albümü."},
+{id:"cark",g:"kol",ad:"Şans Çarkı",fiyat:150,m:"tekrar",kez:5,bas:15,z:0,e:"S",kod:"",
+ nasil:"Günde 1 ücretsiz çevirme, ek çevirmeler coin'le.",
+ neden:"Basit, günlük dönüş.",risk:"Sürpriz Kutusu ile aynı risk; ücretli çevirme yerine 'giriş takvimi' (her gün belli ödül) daha güvenli."},
+
+{id:"tohum",g:"eko",ad:"Bulut Tohumu",fiyat:500,m:"tekrar",kez:3,bas:30,z:0,e:"S",kod:"",
+ nasil:"Coin'i bir tohuma ek; 10 bölüm sonra %30 fazlasıyla bulut olarak topla.",
+ neden:"Sabrı ödüllendirir, oyuncuyu ileriye bağlar. Net olarak coin kaynağıdır (hesaplayıcıda harcama gibi görünür).",risk:"Toplamayı unutan oyuncu için bildirim gerekebilir."},
+{id:"sigorta",g:"eko",ad:"Seri Kalkanı",fiyat:250,m:"tekrar",kez:2,bas:60,z:0,e:"S",kod:"",
+ nasil:"İlk denemede bitirme serisi (bonus veren) bir başarısızlıkta bozulmasın.",
+ neden:"Seri bonusu varsa ona bağlı küçük bir harcama.",risk:"Yalnızca 'ilk deneme serisi' bonusu eklenirse anlamlı."},
+{id:"bagis",g:"eko",ad:"Dünya Bağışı",fiyat:100,m:"tekrar",kez:3,bas:15,z:0,e:"S",kod:"RestorationManager",
+ nasil:"Kurtarılmış bir dünyaya coin bağışla; dünya sahnesinde küçük süsler artar (sınırsız, kozmetik).",
+ neden:"Her şeyi almış oyuncu için de bir coin yeri.",risk:"Anlamsız birikim gibi görünmemeli; görünür karşılığı olmalı."},
+
+{id:"cBooster",g:"onay",ad:"Coin ile Yardımcı Paketi",fiyat:250,m:"tekrar",kez:6,bas:15,z:2,e:"S",kod:"BoosterManager (bugün yalnızca reklamla yenileniyor)",
+ nasil:"Geri Al ×3, Ek Bulut ×1 ya da Karıştır ×1 coin'le alınır.",
+ neden:"En doğrudan harcama yeri.",risk:"Kararın: 'reklamla alınanlar bugünkü gibi kalsın'. Bu yüzden önerilmiyor; yalnızca kayıt için."},
+{id:"cCan",g:"onay",ad:"Coin ile Can",fiyat:900,m:"tekrar",kez:2,bas:15,z:1,e:"S",kod:"LifeManager (reklamla +1 can)",
+ nasil:"Canları coin'le doldur ya da 30 dakika sınırsız can.",
+ neden:"Bekleme yerine harcama.",risk:"Can düzenine coin ekler; kararınla çelişir."},
+{id:"hazirlik",g:"onay",ad:"Bölüm Başı Hazırlık",fiyat:300,m:"tekrar",kez:5,bas:31,z:2,e:"M",kod:"",
+ nasil:"Bölüme bir ek hazneyle ya da Karıştır hakkıyla başla.",
+ neden:"Zor bölüm öncesi güvence.",risk:"Yardımcı ekonomisine coin sokar; zorluk ölçümünü (No Moves, takılma) bozar."},
+{id:"devamFiyat",g:"onay",ad:"Değişen Devam Fiyatı",fiyat:0,m:"tekrar",kez:0,bas:1,z:1,e:"S",kod:"CoinEconomy.ContinueCost = 500",
+ nasil:"Devam fiyatı bölüm türüne göre (Orta 300, Zor 500, Çok zor 700) ya da aynı bölümde ikinci devam daha pahalı.",
+ neden:"Fiyat zorlukla orantılı olur.",risk:"Bugünkü devam düzenini değiştirir; hesaplayıcıda etkisi yok (sabit devam satırı)."},
+{id:"atla",g:"onay",ad:"Bölüm Atlama",fiyat:1500,m:"tekrar",kez:1,bas:15,z:3,e:"S",kod:"",
+ nasil:"Bir bölümde 3 kez başarısız olunca coin'le atla.",
+ neden:"Takılıp oyunu bırakmayı önler.",risk:"Zorluk eğrisini ve 'her bölüm bir şey öğretir' düzenini bozar; final bölümlerinde asla."}
+];
+const OP_BY=Object.fromEntries(OP.map(o=>[o.id,o]));
+const ONERI=["onar","kontrol","ipucu","usta","meydan","kaplama","elset","gunluk"];
+
+/* ---------- Kazanç bonusları ---------- */
+const EARN=[
+ {id:"kusursuz",ad:"Kusursuz çözüm bonusu",acik:"En kısa hamle sayısıyla bitirince +50 (bölümlerin ~%30'unda).",pl:15,on:true},
+ {id:"dunya",ad:"Dünya bitirme ödülü",acik:"Her dünya bitince +1000 (30, 60, 100 ve sonraki her dünya).",dunya:1000,on:true},
+ {id:"ilk",ad:"İlk deneme bonusu",acik:"Başarısız olmadan bitirince +25 (~%70).",pl:17.5,on:false},
+ {id:"gunlukGiris",ad:"Günlük giriş ödülü",acik:"Günde +100; günde ~8 bölüm varsayımıyla bölüm başına 12,5.",pl:12.5,on:false},
+ {id:"basarim",ad:"Başarımlar",acik:"'100 kez Karıştır', 'bir dünyayı Geri Al'sız bitir' gibi; toplam ~5000, 15–500'e dağılır.",toplam:5000,on:false},
+ {id:"reklam2",ad:"Reklamla ödülü ikiye katla",acik:"Bölüm sonunda reklam izleyip ödülü 2 katına çıkarma (~%25 kullanım).",pl:40,on:false,onay:true}
+];
+
+/* ---------- Kayıt ---------- */
+const KEY="cloudora-coin-v1";
+const S0={on:Object.fromEntries(ONERI.map(x=>[x,true])),fiyat:{},miktar:{},earn:Object.fromEntries(EARN.map(e=>[e.id,e.on])),devamKez:2,fav:[]};
+let st=JSON.parse(JSON.stringify(S0));
+try{const raw=localStorage.getItem(KEY);if(raw)st=Object.assign(st,JSON.parse(raw));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+const priceOf=o=>st.fiyat[o.id]!=null?st.fiyat[o.id]:o.fiyat;
+const qtyOf=o=>st.miktar[o.id]!=null?st.miktar[o.id]:(o.m==="tek"?o.adet:o.kez);
+
+/* ---------- Hesap ---------- */
+function reward(L){const k=(L-1)%5+1;return k===3?200:k===5?300:100;}
+const WORLD_ENDS=[30,60,100,140,180,220,260,300,340,380,420,460,500];
+function compute(){const N=500,earn=new Array(N+1).fill(0),spend=new Array(N+1).fill(0),spendBy={};
+ for(let L=1;L<=N;L++)earn[L]=reward(L);
+ EARN.forEach(e=>{if(!st.earn[e.id])return;if(e.pl)for(let L=1;L<=N;L++)earn[L]+=e.pl;if(e.dunya)WORLD_ENDS.forEach(L=>earn[L]+=e.dunya);if(e.toplam)for(let L=15;L<=N;L++)earn[L]+=e.toplam/(N-14);});
+ const add=(id,L,v)=>{spend[L]+=v;spendBy[id]=(spendBy[id]||0)+v;};
+ const dk=+st.devamKez||0;for(let L=1;L<=N;L++)add("devam",L,500*dk/100);
+ OP.forEach(o=>{if(!st.on[o.id])return;const p=+priceOf(o)||0,q=+qtyOf(o)||0,b=Math.max(1,Math.min(N,o.bas));
+  if(o.m==="tek"){const tot=p*q,span=N-b+1;for(let L=b;L<=N;L++)add(o.id,L,tot/span);}else{for(let L=b;L<=N;L++)add(o.id,L,p*q/100);}});
+ const cE=[0],cS=[0],bal=[0];for(let L=1;L<=N;L++){cE[L]=cE[L-1]+earn[L];cS[L]=cS[L-1]+spend[L];bal[L]=cE[L]-cS[L];}
+ let minB=Infinity,minL=0;for(let L=1;L<=N;L++)if(bal[L]<minB){minB=bal[L];minL=L;}
+ return {cE,cS,bal,minB,minL,spendBy};}
+
+/* ---------- Grafik ---------- */
+const SER=[["cE","Toplam kazanç","--s1"],["cS","Toplam harcama","--s2"],["bal","Bakiye","--s3"]];
+let lastRes=null;
+function niceStep(v){const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1))));const m=v/p;return (m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*p;}
+function renderChart(res){lastRes=res;const box=$("#chart");const W=Math.max(300,box.clientWidth||640),H=Math.round(Math.min(380,Math.max(240,W*.52)));
+ const padL=58,padR=104,padT=14,padB=34,iw=W-padL-padR,ih=H-padT-padB;
+ const mx=Math.max(res.cE[500],res.cS[500],1),mn=Math.min(0,res.minB),step=niceStep((mx-mn)/5),hi=Math.ceil(mx/step)*step,lo=Math.floor(mn/step)*step;
+ const ticks=[];for(let v=Math.ceil(lo/step)*step;v<=hi+1;v+=step)ticks.push(v);
+ const x=L=>padL+(L-1)/499*iw,y=v=>padT+(hi-v)/(hi-lo)*ih;
+ let g="";ticks.forEach(v=>{g+=`<line x1="${padL}" x2="${padL+iw}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${padL-8}" y="${y(v)+4}" text-anchor="end" font-size="11.5" fill="var(--muted)" font-family="var(--font-m)">${fmt(v)}</text>`;});
+ [1,100,200,300,400,500].forEach(L=>{g+=`<text x="${x(L)}" y="${H-12}" text-anchor="middle" font-size="11.5" fill="var(--muted)" font-family="var(--font-m)">${L}</text>`;});
+ if(lo<0)g+=`<line x1="${padL}" x2="${padL+iw}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1"/>`;
+ const path=k=>{let d="";for(let L=1;L<=500;L+=1)d+=(L===1?"M":"L")+x(L).toFixed(1)+" "+y(res[k][L]).toFixed(1);return d;};
+ let lines="",labels=[];SER.forEach(([k,nm,c])=>{lines+=`<path d="${path(k)}" fill="none" stroke="var(${c})" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;labels.push({y:y(res[k][500]),t:nm,c,v:res[k][500]});});
+ labels.sort((a,b)=>a.y-b.y);for(let i=1;i<labels.length;i++)if(labels[i].y-labels[i-1].y<28)labels[i].y=labels[i-1].y+28;
+ const lab=labels.map(l=>`<circle cx="${x(500)}" cy="${y(l.v)}" r="4" fill="var(${l.c})" stroke="var(--chart-bg)" stroke-width="2"/><text x="${x(500)+10}" y="${l.y-1}" font-size="12" font-weight="800" fill="var(--fg)">${l.t}</text><text x="${x(500)+10}" y="${l.y+13}" font-size="11.5" fill="var(--muted)" font-family="var(--font-m)">${fmt(l.v)}</text>`).join("");
+ box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="1–500 bölüm boyunca toplam kazanç, toplam harcama ve bakiye"><rect width="${W}" height="${H}" fill="var(--chart-bg)"/>${g}${lines}${lab}<line id="cx" x1="0" x2="0" y1="${padT}" y2="${padT+ih}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/><g id="cdots"></g><rect id="hit" x="${padL}" y="${padT}" width="${iw}" height="${ih}" fill="transparent"/></svg><div class="tip" id="tip" hidden></div>`;
+ const svg=box.querySelector("svg"),hit=box.querySelector("#hit"),cx=box.querySelector("#cx"),dots=box.querySelector("#cdots"),tip=box.querySelector("#tip");
+ const move=ev=>{const r=svg.getBoundingClientRect();const px=(ev.clientX-r.left)*W/r.width;let L=Math.round((px-padL)/iw*499)+1;L=Math.max(1,Math.min(500,L));
+  cx.setAttribute("x1",x(L));cx.setAttribute("x2",x(L));cx.setAttribute("visibility","visible");
+  dots.innerHTML=SER.map(([k,,c])=>`<circle cx="${x(L)}" cy="${y(res[k][L])}" r="4.5" fill="var(${c})" stroke="var(--chart-bg)" stroke-width="2"/>`).join("");
+  tip.hidden=false;tip.textContent="";const t=document.createElement("div");t.className="t";t.textContent=L+". bölüm";tip.appendChild(t);
+  SER.forEach(([k,nm,c])=>{const row=document.createElement("div");row.className="r";const s=document.createElement("span");const i=document.createElement("i");i.style.background=`var(${c})`;s.appendChild(i);s.appendChild(document.createTextNode(nm));const b=document.createElement("b");b.textContent=fmt(res[k][L]);row.appendChild(s);row.appendChild(b);tip.appendChild(row);});
+  const tx=x(L)*r.width/W,left=tx>r.width/2?tx-190:tx+14;tip.style.left=Math.max(0,left)+"px";tip.style.top="10px";};
+ hit.addEventListener("pointermove",move);hit.addEventListener("pointerdown",move);
+ hit.addEventListener("pointerleave",()=>{cx.setAttribute("visibility","hidden");dots.innerHTML="";tip.hidden=true;});}
+
+/* ---------- Hesaplayıcı arayüzü ---------- */
+function renderCalc(){
+ const groups=Object.keys(GR).filter(g=>g!=="onay");
+ let h=`<h4>Mevcut</h4><div class="row"><span class="chk"><input type="checkbox" checked disabled aria-label="Devam (mevcut)"></span><span class="nm">Devam · 500 jeton</span><span class="inp"><label>100 bölümde <input type="number" id="devamKez" min="0" step="0.5" value="${st.devamKez}"> kez</label></span></div>`;
+ groups.forEach(g=>{h+=`<h4>${GR[g]}</h4>`;OP.filter(o=>o.g===g).forEach(o=>{const on=!!st.on[o.id];
+  h+=`<div class="row${on?"":" off"}"><label class="chk"><input type="checkbox" data-on="${o.id}"${on?" checked":""}><span class="nm">${esc(o.ad)}</span></label><span></span>
+  <span class="inp"><label>fiyat <input type="number" min="0" step="50" data-f="${o.id}" value="${priceOf(o)}"></label><label>${o.m==="tek"?"adet":"100 bölümde kez"} <input type="number" min="0" step="${o.m==="tek"?1:.5}" data-q="${o.id}" value="${qtyOf(o)}"></label><span>${o.bas}'ten</span></span></div>`;});});
+ $("#calcList").innerHTML=h;
+ $("#calcList").querySelectorAll("[data-on]").forEach(c=>c.onchange=()=>{st.on[c.dataset.on]=c.checked;save();renderCalc();renderCards();renderExport();});
+ $("#calcList").querySelectorAll("[data-f]").forEach(i=>i.oninput=()=>{st.fiyat[i.dataset.f]=Math.max(0,+i.value||0);save();renderResults();renderCards();renderMarket();});
+ $("#calcList").querySelectorAll("[data-q]").forEach(i=>i.oninput=()=>{st.miktar[i.dataset.q]=Math.max(0,+i.value||0);save();renderResults();});
+ $("#devamKez").oninput=e=>{st.devamKez=Math.max(0,+e.target.value||0);save();renderResults();};
+ renderResults();}
+function renderResults(){const r=compute();
+ $("#legend").innerHTML=SER.map(([,nm,c])=>`<span><i style="background:var(${c})"></i>${nm}</span>`).join("");
+ renderChart(r);
+ const E=r.cE[500],S=r.cS[500],ratio=E?S/E*100:0;
+ $("#kpis").innerHTML=[[fmt(E),"toplam kazanç (1–500)"],[fmt(S),"toplam harcama"],["%"+Math.round(ratio),"harcama / kazanç"],[fmt(r.bal[100]),"bakiye, 100. bölüm"],[fmt(r.bal[500]),"bakiye, 500. bölüm"],[fmt(r.minB),"en düşük bakiye ("+r.minL+")"]].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+ let v,cls="";if(ratio<50){v="Coin birikiyor: harcanacak yer yetmiyor. Bugünkü oyun bu durumda.";cls="bad";}
+ else if(ratio<70)v="Hafif birikim: oyuncu çoğu şeyi alır, yine de coin artar.";
+ else if(ratio<=90){v="Dengeli: oyuncu harcar ama seçim yapmak zorunda kalır. Hedef aralık bu (%70–90).";cls="good";}
+ else if(ratio<=100)v="Sıkı: her şeyi almak için hemen hemen bütün coin gerekir.";
+ else {v="Talep kazancı aşıyor: oyuncu her şeyi alamaz, seçmek zorunda. Bilinçli olabilir ama fiyatlar düşünülmeli.";cls="bad";}
+ if(r.minB<0)v+=` Bakiye ${r.minL}. bölüm civarında eksiye düşüyor: o noktaya kadar açılan harcamalar kazançtan hızlı.`;
+ const vd=$("#verdict");vd.textContent=v;vd.className="verdict"+(cls?" "+cls:"");
+ const rows=[25,50,100,150,200,250,300,350,400,450,500];
+ $("#table").innerHTML=`<table><thead><tr><th>Bölüm</th><th>Toplam kazanç</th><th>Toplam harcama</th><th>Bakiye</th></tr></thead><tbody>${rows.map(L=>`<tr><td>${L}</td><td>${fmt(r.cE[L])}</td><td>${fmt(r.cS[L])}</td><td>${fmt(r.bal[L])}</td></tr>`).join("")}</tbody></table>
+ <table style="margin-top:0"><thead><tr><th>Harcama yeri</th><th>1–500 toplamı</th><th>Payı</th><th></th></tr></thead><tbody>${Object.entries(r.spendBy).sort((a,b)=>b[1]-a[1]).map(([k,val])=>`<tr><td>${k==="devam"?"Devam (mevcut)":esc(OP_BY[k].ad)}</td><td>${fmt(val)}</td><td>%${S?Math.round(val/S*100):0}</td><td></td></tr>`).join("")}</tbody></table>`;
+ renderExport();}
+document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>{const p=b.dataset.preset;st.on={};
+ if(p==="oneri")ONERI.forEach(x=>st.on[x]=true);if(p==="hepsi")OP.filter(o=>o.g!=="onay").forEach(o=>st.on[o.id]=true);
+ if(p==="bugun")EARN.forEach(e=>st.earn[e.id]=false);else if(p==="oneri")EARN.forEach(e=>st.earn[e.id]=e.on);
+ save();renderCalc();renderCards();renderKazanc();});
+let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(lastRes&&!$("#v-hesap").hidden)renderChart(lastRes);},120);});
+
+/* ---------- Kartlar ---------- */
+let fG=null,fZ=null,fE=null,q="";
+const starSvg=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9-4.4-4.1 6-.8z" fill="currentColor"/></svg>`;
+function costLine(o){const p=priceOf(o);if(!p)return "fiyat yok";const lv=p/PER_LEVEL;return "≈ "+(lv<1?"1 bölümden az":(Math.round(lv*10)/10).toLocaleString("tr-TR")+" bölüm");}
+function modelLine(o){return o.m==="tek"?`tek sefer · ${o.adet} adet · ${o.bas}. bölümden`:`tekrarlı · 100 bölümde ~${String(o.kez).replace(".",",")} kez · ${o.bas}. bölümden`;}
+function renderCards(){
+ $("#fGrp").innerHTML=Object.entries(GR).map(([k,v])=>`<button class="fchip" type="button" data-g="${k}" aria-pressed="${fG===k}">${v} · ${OP.filter(o=>o.g===k).length}</button>`).join(" ");
+ $("#fZ").innerHTML=ZL.map((v,i)=>`<button class="fchip" type="button" data-z="${i}" aria-pressed="${fZ===i}">${v}</button>`).join(" ");
+ $("#fE").innerHTML=Object.keys(EF).map(k=>`<button class="fchip" type="button" data-e="${k}" aria-pressed="${fE===k}">${k}</button>`).join(" ");
+ const list=OP.filter(o=>(fG===null||o.g===fG)&&(fZ===null||o.z===fZ)&&(fE===null||o.e===fE)&&(!q||(o.ad+" "+o.nasil+" "+o.neden+" "+o.risk).toLocaleLowerCase("tr").includes(q)));
+ $("#grid").innerHTML=list.length?list.map(o=>`<article class="card${o.g==="onay"?" onay":""}"><div class="top"><div><div class="grp">${GR[o.g]}</div><h3>${esc(o.ad)}</h3></div><div class="price">${priceOf(o)?fmt(priceOf(o)):"—"}<small>${costLine(o)}</small></div></div>
+  <div class="meta"><span class="pill">${modelLine(o)}</span><span class="pill z${o.z}">zorluğa etkisi: ${ZL[o.z]}</span><span class="pill">efor ${EF[o.e]}</span></div>
+  <dl><dt>Nasıl</dt><dd>${esc(o.nasil)}</dd><dt>Neden</dt><dd>${esc(o.neden)}</dd>${o.kod?`<dt>Kodda</dt><dd class="mono" style="font-size:12.5px">${esc(o.kod)}</dd>`:""}<dt>Risk</dt><dd class="risk">${esc(o.risk)}</dd></dl>
+  <div class="foot">${o.g==="onay"?`<span class="muted" style="font-size:12.5px">Hesaplayıcıda yok</span>`:`<label class="chk"><input type="checkbox" data-con="${o.id}"${st.on[o.id]?" checked":""}> Hesaba kat</label>`}<button class="star" type="button" data-fav="${o.id}" aria-pressed="${st.fav.includes(o.id)}" aria-label="${esc(o.ad)} favori">${starSvg}</button></div></article>`).join(""):`<p class="muted">Bu filtreyle seçenek yok.</p>`;
+ $("#fGrp").querySelectorAll("button").forEach(b=>b.onclick=()=>{fG=fG===b.dataset.g?null:b.dataset.g;renderCards();});
+ $("#fZ").querySelectorAll("button").forEach(b=>b.onclick=()=>{const z=+b.dataset.z;fZ=fZ===z?null:z;renderCards();});
+ $("#fE").querySelectorAll("button").forEach(b=>b.onclick=()=>{fE=fE===b.dataset.e?null:b.dataset.e;renderCards();});
+ $("#grid").querySelectorAll("[data-con]").forEach(c=>c.onchange=()=>{st.on[c.dataset.con]=c.checked;save();renderCalc();renderExport();});
+ $("#grid").querySelectorAll("[data-fav]").forEach(b=>b.onclick=()=>{const id=b.dataset.fav;st.fav=st.fav.includes(id)?st.fav.filter(x=>x!==id):st.fav.concat(id);save();renderCards();renderExport();});}
+$("#q").addEventListener("input",e=>{q=e.target.value.trim().toLocaleLowerCase("tr");renderCards();});
+
+/* ---------- Özet ---------- */
+function renderOzet(){const r0=(()=>{const keep=st;st=Object.assign({},keep,{on:{},earn:{}});const res=compute();st=keep;return res;})();
+ const why={onar:"coin'e uzun vadeli amaç verir; kurtuluş aşaması kodda hazır",kontrol:"v4.1 testindeki 'çıkmazı fark edememe' sorununa ucuz çözüm",ipucu:"takılan oyuncuya bırakmadan önce bir seçenek (sınırlı)",usta:"bölüm aracımızla üretilir, usta oyuncuya içerik",meydan:"en kısa çözüm verisi hazır, eski bölümlere değer katar",kaplama:"her bölümde görünen kozmetik",elset:"Atlas'taki çizimleri yeniden kullanır",gunluk:"günlük dönüş, sunucusuz"};
+ $("#v-ozet").innerHTML=`<div class="cols">
+ <div class="panel"><h3>Bugün oyunda</h3><ul>
+  <li>Kazanç: bölüm sonunda Orta 100, Zor 200, Çok zor 300. Her 5 bölümde 800, ortalama bölüm başına 160.</li>
+  <li>1–100 toplamı 16.000; aynı kuralla 1–500 toplamı ${fmt(r0.cE[500])}.</li>
+  <li>Tek harcama: başarısızlık ekranında "Devam Et · 500 jeton" (yaklaşık 3 bölümlük kazanç).</li>
+  <li>Geri Al, Ek Bulut, Karıştır ve can yalnızca reklamla yenileniyor; bu düzen aynen kalıyor.</li>
+  <li>Başlangıç coin'i 0 ("ileride öğretici görevinde verilecek").</li>
+  <li>Hesaplayıcıya göre bugünkü oyunda kazancın yalnızca %${Math.round(r0.cS[500]/r0.cE[500]*100)}'i harcanıyor (100 bölümde 2 devam varsayımıyla).</li></ul></div>
+ <div class="panel"><h3>Önerilen ilk set</h3><p class="muted" style="font-size:13.5px">Zorluğu satın aldırmayan, mevcut kodla bağlantısı olan ve farklı oyuncu tiplerine hitap eden 8 seçenek. Hesaplayıcıda "Önerilen set" ile dene.</p>
+  ${ONERI.map((id,i)=>`<div class="pick"><span class="n">${i+1}</span><span><b>${esc(OP_BY[id].ad)}</b> · <span class="muted">${esc(why[id])}</span></span></div>`).join("")}</div>
+ <div class="panel"><h3>Fiyatı nasıl düşünmeli</h3><ul>
+  <li>Ortak birim "kaç bölümlük kazanç": 160 coin ≈ 1 bölüm. Kartlarda her fiyatın yanında yazıyor.</li>
+  <li>Küçük yardımlar 0,5–1 bölüm, kozmetik 4–10 bölüm, büyük hedefler (Zen, Tahta Atölyesi) 20–30 bölüm.</li>
+  <li>Hedef: 1–500 boyunca kazancın %70–90'ı harcanabilsin. Oyuncu biriktirmek ve seçmek zorunda kalsın.</li>
+  <li>Zorluğu doğrudan azaltan şeyler pahalı ve sınırlı; kozmetik sınırsız.</li></ul></div>
+ <div class="panel"><h3>Bu sayfada</h3><ul><li><b>${OP.length}</b> harcama seçeneği, 8 grupta (${OP.filter(o=>o.g==="onay").length}'i mevcut düzene dokunduğu için "onay gerekir").</li><li><b>${EARN.length}</b> kazanç tarafı önerisi.</li><li>Gerçek parayla satın alma için kısa notlar.</li><li>Fiyat ve sıklıkları değiştirebildiğin denge hesaplayıcısı.</li></ul></div></div>`;}
+
+/* ---------- Kazanç tarafı ---------- */
+function renderKazanc(){$("#v-kazanc").innerHTML=`<p class="intro">Harcama yerleri artınca kazanç da biraz artmalı; yoksa oyuncu hiçbir şeye yetiştiremez. Bunlar coin kaynağı önerileri. Açtıkların hesaplayıcıya eklenir.</p>
+ <div class="cols">${EARN.map(e=>`<div class="panel"${e.onay?' style="border-style:dashed"':""}><label class="chk"><input type="checkbox" data-earn="${e.id}"${st.earn[e.id]?" checked":""}><h3>${esc(e.ad)}</h3></label><p>${esc(e.acik)}</p>${e.onay?`<p class="muted" style="font-size:13px;color:var(--danger)">Yeni bir reklam yeri ekler; "reklam düzeni bugünkü gibi kalsın" kararınla çelişebilir.</p>`:""}</div>`).join("")}
+ <div class="panel"><h3>Diğer fikirler</h3><ul><li>Geri Al kullanmadan bitirme bonusu (+25).</li><li>Dünya kurtuluşunda sandık (sabit içerik: coin + kozmetik).</li><li>Öğretici görevi: başlangıç coin'i (kodda not var; ör. 15. bölümde +500).</li><li>Meydan Okuma ödülleri (hesaplayıcıda yalnızca giriş ücreti var).</li><li>Bulut Tohumu getirisi.</li></ul></div></div>`;
+ $("#v-kazanc").querySelectorAll("[data-earn]").forEach(c=>c.onchange=()=>{st.earn[c.dataset.earn]=c.checked;save();renderResults();});}
+
+/* ---------- Gerçek para ---------- */
+function renderPara(){const P=[["Coin paketleri","Küçük, orta, büyük paket; büyük pakette biraz daha çok coin. Fiyatı bölüm cinsinden düşün: en küçük paket ~10 bölümlük coin."],["Reklamsız paket","Geçiş reklamlarını kaldırır; ödüllü reklamlar isteğe bağlı kalır (reklamla yenilenen yardımcılar bozulmaz)."],["Başlangıç paketi","Bir kez, indirimli: coin + bir kaplama + birkaç ipucu. İlk dünyadan sonra gösterilir."],["Kozmetik paketleri","Bir tema setinin hepsi (kaplama + arka plan + iz) doğrudan para ile; coin ile tek tek de alınabilir."],["Sezon kartı","Etkinlik süresince ücretsiz ve ücretli iki ödül yolu. Etkinlik altyapısı gerektirir."],["Kumbara","Oynadıkça dolan kumbara; kırmak için küçük bir ödeme. Oyuncu kazandığını görür."],["Abonelik","Aylık: reklamsız + günlük coin + özel kozmetik. Küçük oyunlarda zor ama düzenli gelir."]];
+ $("#v-para").innerHTML=`<p class="intro">Asıl odak oyun içi coin; bu bölüm yalnızca fikir vermek için. Oyunda bugün satın alma kodu yok (yalnızca mağaza ayarı: Google Play).</p><div class="cols">${P.map(p=>`<div class="panel"><h3>${esc(p[0])}</h3><p>${esc(p[1])}</p></div>`).join("")}</div>
+ <div class="rules"><div class="rule"><h3>Dikkat edilecekler</h3><ul><li>Google Play Billing entegrasyonu ve sunucu tarafı doğrulama gerekir.</li><li>Oyun çocuklara da hitap ediyorsa Google Play Aileler politikası (satın alma ve reklam kuralları sıkı).</li><li>Satın alma oyunu kazanmak için zorunlu olmamalı; zorluk eğrisi parasız oyuncuya göre kurulu kalmalı.</li><li>Coin'in değeri sabitlenmeli: oyun içi fiyatlar değişirse paket fiyatları da değişir.</li></ul></div></div>`;}
+
+/* ---------- Kurallar ---------- */
+function renderKurallar(){const R=[["Coin neye gitmeli",["Önce görünür ilerleme ve kişiselleştirme (Dünyayı Onar, kozmetik), sonra içerik (Usta, modlar), en son sınırlı yardım.","Zorluğu doğrudan satın aldıran şeyler (bölüm atlama, bölüm başı güçlendirme) v4.1'in 'düşünerek oynayan geçsin' amacıyla çelişir."]],
+ ["Erişilebilirlik ücretsiz",["Renk körü paleti, yüksek kontrast, Azaltılmış hareket asla coin'le satılmaz.","Kozmetikler renk ve simge ayrımını bozmamalı; her biri tasarım kontrolünden geçmeli."]],
+ ["Kayıt ve güvenlik",["Satın alınanlar kayda eklenir (SaveData şeması 2 → 3, geçiş kodu).","Bitmiş bölümü yeniden oynayıp coin kasılamaz (bugün bitmiş bölümde Geri Al kapalı, aynı mantık).","Saat geri alınarak günlük ödül tekrarlanamamalı."]],
+ ["Çevrimdışı oyun",["Kayıt yerel (JSON). Hediye, turnuva, topluluk hedefi sunucu ister; ilk aşamada çevrimdışı seçenekler."]],
+ ["Fiyat ve test",["Fiyatlar bölüm cinsinden belirlenir, analytics ile (coins_earned / coins_spent zaten kayıtlı) ayarlanır.","Önce küçük bir set, sonra genişletme."]]];
+ const K=[["'Coin' mi 'jeton' mu?","Arayüzde 'jeton' (Devam Et · 500 jeton), kodda ve belgelerde 'coin'. Oyuncuya görünen ad karar ister; istersen seçenek sunarım."],
+ ["Başlangıç coin'i 0","Kodda 'ileride öğretici görevinde verilecek' notu var. Erken bölümlerde oyuncunun 500'ü olmadığı için coin'le devam fiilen yok (3. bölümde toplam 400)."],
+ ["İpucu ve çıkmaz parlaması","V41_TASARIM §11'deki ücretsiz 'çıkmazda mantıklı çözüm parlasın' fikri, ücretli İpucu ve 'Hâlâ Çözülebilir mi?' ile örtüşüyor. Hangisinin ücretsiz olacağı seçilmeli."],
+ ["Reklamla ödülü ikiye katlama","Yeni bir reklam yeri; 'reklam düzeni bugünkü gibi kalsın' kararınla çelişebilir. Varsayılan kapalı."],
+ ["Onay gerekenler","Coin ile yardımcı, can, bölüm başı hazırlık, devam fiyatı değişimi ve bölüm atlama bugünkü reklam/coin düzenine dokunuyor; hesaplayıcıya alınmadı."],
+ ["Usta ve Tema Paketleri Atlas'a bağlı","Usta bölümleri ve tema paketleri Dünya Atlası'ndaki feature seçimlerine göre üretilir; önce temalar netleşmeli."],
+ ["Dünyayı Onar ve görseller","Kurtuluş parçaları dünya çizimleri gerektiriyor; dünya resimlerinin yenilenmesi zaten 'daha sonra' listesinde."],
+ ["Şans mekanikleri","Sürpriz Kutusu ve ücretli çark önerilmez (düzenleme, çocuk oyuncular); kartlarda güvenli alternatifleri var."]];
+ $("#v-kurallar").innerHTML=`<div class="rules">${R.map(r=>`<div class="rule"><h3>${esc(r[0])}</h3><ul>${r[1].map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div><h2>Fark ettiğim çakışmalar</h2><div class="rules">${K.map(k=>`<div class="rule conflict"><h3>${esc(k[0])}</h3><p>${esc(k[1])}</p></div>`).join("")}</div>`;}
+
+/* ---------- Pazar ---------- */
+const MK_NAMES=[["Gök Pazarı","Sky Market","Dünyalarla uyumlu, sıcak."],["Bulut Dükkânı","Cloud Shop","Oyunun adına yakın, sevimli."],["Hazine","Treasury","Coin'le bağı güçlü, kısa."],["Market","Market","Düz ve herkesin anladığı."]];
+const MK_LAYOUTS=[["raf","Raflar","Her kategori yatay bir raf; kaydırarak gezilir. En tanıdık düzen."],["vitrin","Vitrin + ızgara","Üstte günün 3 ürünü ve geri sayım, altta kategoriye göre ızgara."],["dunya","Dünya dükkânları","Her dünyanın kendi tezgâhı; ürünler o dünyanın temasında, dünya bitince açılır."],["defter","Koleksiyon defteri","Albüm gibi: boş yuvalar ve ilerleme çubuğu; sayfa dolunca ödül."]];
+const MK_CAT=[
+ {id:"kaplama",ad:"Kaplamalar",op:"kaplama",it:[["Buzlu Cam","#BFE6F5"],["Kristal","#C8A8FF"],["Ahşap Çerçeve","#B0814F"],["Seramik","#F1E4D3"],["Neon Kenar","#39F0C8"],["Altın Kenar","#F2C14E"]]},
+ {id:"elset",ad:"Element setleri",op:"elset",it:[["Yuvarlak","#7FB6E8"],["Keskin","#5B6CF0"],["El Çizimi","#E79A7A"],["Piksel","#43B8A0"],["Gece","#5B49C9"]]},
+ {id:"arka",ad:"Arka planlar",op:"arka",it:[["Gün Batımı","grad:#FF8E7A:#FFC85A"],["Yıldızlı Gece","grad:#1D2150:#5E4F99"],["Kuzey Işığı","grad:#1F2C55:#36E39A"],["Pastel Sabah","grad:#FFD9E6:#D9ECFB"],["Fırtına","grad:#5F7890:#D9E1EE"]]},
+ {id:"bitir",ad:"Bitiş efektleri",op:"bitir",it:[["Konfeti Bulutu","#F49AC1"],["Gökkuşağı Patlaması","grad:#FF6B6B:#FFD93D:#4CC9F0"],["Kar Fırtınası","#7FE3F5"],["Havai Fişek","#FF9124"]]},
+ {id:"iz",ad:"Taşıma izleri",op:"iz",it:[["Parıltı","#FFE39A"],["Yaprak","#E8862A"],["Kıvılcım","#FF6A2B"],["Kar Tozu","#DCEAFF"]]},
+ {id:"icerik",ad:"İçerik",op:"usta",it:[["Yeşil Vadi Ustası","#84C98B",1000],["Rainy Coast Ustası","#65A8B8",1000],["Frost Peaks Ustası","#9CC9E0",1000],["Zen Modu","#A7B6CB",3000],["Tahta Atölyesi","#C98270",5000]]},
+ {id:"kol",ad:"Koleksiyon",op:"album",it:[["Çıkartma Paketi","#E2557A",400],["Yeşil Vadi Kartpostalı","#84C98B",300],["Şimşek Kartı","#7A5CFF",200],["Kar Tanesi Kartı","#7FE3F5",200]]}
+];
+const MK_WORLDS=[["Yeşil Vadi","15–30",30,"#84C98B"],["Rainy Coast","31–60",60,"#65A8B8"],["Frost Peaks","61–100",100,"#9CC9E0"],["Güneş Çölü","101–140",140,"#E2B36D"]];
+const MK_MECH=[
+ ["Günün vitrini","Her gün 3 ürün öne çıkar, geri sayımla değişir. Oyuncuya her gün bakacak bir şey verir.","tekrar"],
+ ["Haftalık indirim","Her hafta bir kategori %20–30 indirimli. Biriktiren oyuncuya hedef.","tekrar"],
+ ["Set indirimi","Bir setin hepsini birden almak %20 ucuz (ör. bir dünyanın kaplama + arka plan + izi).","fiyat"],
+ ["Önce dene","Her kozmetik bir sonraki bölümde ücretsiz denenebilir; bölüm sonunda 'satın al ya da bırak'.","his"],
+ ["Dünya kilidi","Ürün, dünyası bitince açılır. Pazar ilerlemeyle büyür, başta boğucu olmaz.","ilerleme"],
+ ["Yıldızla açılan ürünler","Bazı ürünler coin'e ek olarak Meydan Okuma yıldızı ister (ör. 10 yıldız + 1500). Usta oyuncuya özel.","ilerleme"],
+ ["İstek listesi","Ürünü listeye ekle; yeterli coin olunca pazar düğmesinde küçük bir işaret çıkar.","his"],
+ ["Yeni etiketi","Yeni açılan ürünlerde 'Yeni' rozeti; bir kez bakınca kaybolur. Kırmızı noktalar az kullanılmalı.","his"],
+ ["Fiyat merdiveni","Her kategorinin ilk ürünü ucuz (ör. 300), sonrakiler artar. İlk alım kolay olur.","fiyat"],
+ ["Değiştirme hakkı","Alınan kozmetik 24 saat içinde aynı fiyattaki başka bir ürünle değiştirilebilir.","his"],
+ ["Koleksiyon ödülü","Bir kategorinin hepsini toplayınca özel ürün (ör. altın hazne kenarı).","ilerleme"],
+ ["Sezon rafı","Etkinlik süresince açık özel raf; etkinlik bitince ürünler normal rafa daha pahalı geçer.","tekrar"],
+ ["Kaç bölüm kaldı","Parası yetmeyen ürünün altında 'yaklaşık 4 bölüm daha'. Hedefi somutlaştırır.","his"],
+ ["Bölüm sonu hatırlatması","Yeni ürün açıldığında sonuç panelinde küçük bir 'Pazarda yeni' satırı; zorla açılmaz.","giris"],
+ ["Kurtuluş ekranı bağlantısı","Dünya kurtarılınca o dünyanın tezgâhı açılır ve kurtuluş ekranından gidilir.","giris"],
+ ["Satın alma geçmişi","Sahip olunanlar ve kullanılanlar tek yerde; kayıt bozulursa geri yükleme için de gerekli.","guven"]
+];
+const MK_TAG={tekrar:"Tekrar ziyaret",fiyat:"Fiyat",his:"Oyuncu hissi",ilerleme:"İlerleme",giris:"Giriş yeri",guven:"Güven"};
+let mk={bal:4250,own:{},use:{},cat:"kaplama",world:0,sheet:null,msg:"",toast:""};
+let mkSeq=0;
+function mkItems(){return MK_CAT.flatMap(c=>c.it.map((x,i)=>({key:c.id+"-"+i,cat:c.id,ad:x[0],col:x[1],fiyat:x[2]||Math.round((priceOf(OP_BY[c.op])||300)*(.7+i*.15)/50)*50})));}
+function mkSw(col,size,cat){const id="mk"+(++mkSeq);let fill=col,defs="";
+ if(col.startsWith("grad:")){const s=col.split(":").slice(1);defs=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">${s.map((c,i)=>`<stop offset="${i/(s.length-1)}" stop-color="${c}"/>`).join("")}</linearGradient></defs>`;fill=`url(#${id})`;}
+ let shape;
+ switch(cat){
+ case"kaplama":shape=`<rect x="13" y="5" width="22" height="38" rx="10" fill="${fill}" stroke="#fff" stroke-opacity=".7" stroke-width="2"/><rect x="17" y="27" width="14" height="5" rx="2.5" fill="#fff" opacity=".55"/><rect x="17" y="34" width="14" height="5" rx="2.5" fill="#fff" opacity=".55"/>`;break;
+ case"arka":shape=`<rect x="4" y="8" width="40" height="32" rx="8" fill="${fill}"/><path d="M4 34C14 27 24 30 44 26V40H4Z" fill="#fff" opacity=".3"/>`;break;
+ case"bitir":shape=`<circle cx="24" cy="24" r="9" fill="${fill}"/>`+[0,45,90,135,180,225,270,315].map(a=>{const r=a*Math.PI/180;return `<circle cx="${(24+Math.cos(r)*16).toFixed(1)}" cy="${(24+Math.sin(r)*16).toFixed(1)}" r="2.6" fill="${fill}"/>`;}).join("");break;
+ case"iz":shape=`<path d="M8 36C16 30 22 28 30 20" stroke="${fill}" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="1 6"/><circle cx="34" cy="16" r="7" fill="${fill}"/>`;break;
+ case"elset":shape=`<rect x="8" y="8" width="32" height="32" rx="9" fill="${fill}"/><path d="M17 26H31A4.5 4.5 0 0 0 31.2 17A6.5 6.5 0 0 0 18.6 18A4 4 0 0 0 17 26Z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>`;break;
+ case"icerik":shape=`<rect x="7" y="9" width="34" height="30" rx="7" fill="${fill}"/><path d="M15 31V19M24 31V15M33 31V22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;break;
+ default:shape=`<rect x="10" y="6" width="28" height="36" rx="5" fill="${fill}" transform="rotate(-6 24 24)"/><rect x="15" y="12" width="18" height="12" rx="3" fill="#fff" opacity=".45" transform="rotate(-6 24 24)"/>`;}
+ return `<svg width="${size}" height="${size}" viewBox="0 0 48 48" aria-hidden="true">${defs}${shape}</svg>`;}
+function mkTile(it,opt){opt=opt||{};const own=mk.own[it.key],lock=opt.lock;
+ const pr=own?(mk.use[it.cat]===it.key?"Kullanılıyor":"Sahipsin"):lock?lock:fmt(opt.price||it.fiyat);
+ return `<button type="button" class="ph-item${own?" own":""}${lock?" lock":""}" data-mk="${it.key}"${lock?' data-lock="1"':""}${opt.price?` data-mkp="${opt.price}"`:""}>${opt.badge?`<span class="badge">${opt.badge}</span>`:""}${mkSw(it.col,44,it.cat)}<span class="nm">${esc(it.ad)}</span><span class="pr">${esc(pr)}</span></button>`;}
+function renderMarket(){const v=$("#v-market");if(!v)return;const name=MK_NAMES[st.mkName||0],lay=st.mkLay||"raf";const items=mkItems();
+ const cats=MK_CAT.map(c=>`<button type="button" data-mkcat="${c.id}" aria-pressed="${mk.cat===c.id}">${esc(c.ad)}</button>`).join("");
+ let tabs="",body="";
+ if(lay==="raf"){body=MK_CAT.map(c=>`<div class="ph-sec"><h5>${esc(c.ad)}</h5><div class="ph-shelf">${items.filter(i=>i.cat===c.id).map((it,ix)=>mkTile(it,{badge:ix===0&&c.id==="arka"?"Yeni":""})).join("")}</div></div>`).join("");}
+ else if(lay==="vitrin"){const day=[items[1],items[8],items[15]];tabs=cats;
+  body=`<div class="ph-hero"><div class="ttl">Günün vitrini <span>yenilenir 06:12:40</span></div><div class="row3">${day.map(it=>mkTile(it,{badge:"%20",price:Math.round(it.fiyat*.8/50)*50})).join("")}</div></div><div class="ph-grid">${items.filter(i=>i.cat===mk.cat).map(it=>mkTile(it)).join("")}</div>`;}
+ else if(lay==="dunya"){tabs=MK_WORLDS.map((w,i)=>`<button type="button" data-mkw="${i}" aria-pressed="${mk.world===i}">${esc(w[0])}</button>`).join("");const w=MK_WORLDS[mk.world];const reached=75;
+  const pick=items.filter((it,i)=>i%MK_WORLDS.length===mk.world).slice(0,9);const locked=reached<w[2];
+  body=`<div class="ph-hero" style="background:linear-gradient(135deg,${w[3]}cc,rgba(10,37,54,.72))"><div class="ttl">${esc(w[0])} tezgâhı <span>${w[1]}</span></div><div class="ph-note">${locked?`Bu dünya bitince açılır (örnek oyuncu ${reached}. bölümde).`:"Dünyanın temasında ürünler. Hepsini toplayınca özel hazne kenarı."}</div></div><div class="ph-grid">${pick.map(it=>mkTile(it,{lock:locked?w[1].split("–")[1]+" bitince":""})).join("")}</div>`;}
+ else{tabs=cats;const ci=items.filter(i=>i.cat===mk.cat);const owned=ci.filter(i=>mk.own[i.key]).length;
+  body=`<div class="ph-hero"><div class="ttl">${esc(MK_CAT.find(c=>c.id===mk.cat).ad)} <span>${owned}/${ci.length}</span></div><div class="ph-prog"><i style="width:${ci.length?owned/ci.length*100:0}%"></i></div><div class="ph-note">Sayfayı tamamlayınca: Altın hazne kenarı.</div></div><div class="ph-grid">${ci.map(it=>mkTile(it)).join("")}</div>`;}
+ let sheet="";
+ if(mk.sheet){const it=items.find(i=>i.key===mk.sheet.key);const price=mk.sheet.price||it.fiyat;const own=mk.own[it.key];const short=price-mk.bal;const tryable=it.cat!=="icerik"&&it.cat!=="kol";
+  sheet=`<div class="ph-sheet"><button type="button" class="x" data-mkx="1" aria-label="Kapat">×</button><div class="hd">${mkSw(it.col,64,it.cat)}<div><h5>${esc(it.ad)}</h5><p>${esc(MK_CAT.find(c=>c.id===it.cat).ad)} · ${own?"sahipsin":fmt(price)+" jeton"}</p></div></div>
+  <p>${it.cat==="icerik"?"Ana ilerlemeyi etkilemez; ek bölümler ya da mod açar.":it.cat==="kol"?"Koleksiyon albümüne eklenir.":"Yalnızca görünüm; zorluğu değiştirmez. Bir sonraki bölümde ücretsiz denenebilir."}</p>
+  ${mk.msg?`<div class="ph-msg">${esc(mk.msg)}</div>`:""}
+  <div class="acts">${own?`<button type="button" class="buy" data-mkuse="1">${mk.use[it.cat]===it.key?"Kullanılıyor":"Kullan"}</button>`:`${tryable?`<button type="button" class="alt" data-mktry="1">Dene</button>`:""}<button type="button" class="buy" data-mkbuy="1">${short>0?"Jeton yetmiyor":"Satın al"}</button>`}</div>
+  ${!own&&short>0?`<div class="ph-note">${fmt(short)} jeton eksik · yaklaşık ${Math.ceil(short/PER_LEVEL)} bölüm daha</div>`:""}</div>`;}
+ v.innerHTML=`<p class="intro">Coin'le alınabilecek her şeyin tek yerde toplandığı bir pazar için fikirler. Solda canlı bir önizleme var: düzeni değiştir, ürünlere dokun, örnek bakiyeyle dene ve satın al. Reklamla alınanlar (Geri Al, Ek Bulut, Karıştır, can) pazarda satılmıyor; kararın böyle.</p>
+ <div><div class="lbl" style="margin-bottom:6px">Oyuncuya görünen ad (seçim senin)</div><div class="names">${MK_NAMES.map((n,i)=>`<button type="button" class="nopt" data-mkname="${i}" aria-pressed="${(st.mkName||0)===i}"><b>${esc(n[0])}</b><span>İngilizce: ${esc(n[1])} · ${esc(n[2])}</span></button>`).join("")}</div></div>
+ <div class="mk"><div style="display:grid;gap:10px;justify-items:center">
+  <div class="phone" id="phone"><div class="ph-top"><span class="ph-title">${esc(name[0])}</span><span class="ph-coin"><i></i>${fmt(mk.bal)}</span></div><div class="ph-tabs">${tabs}</div><div class="ph-body">${body}</div>${sheet}${mk.toast?`<div class="ph-toast">${esc(mk.toast)}</div>`:""}</div>
+  <div class="controls"><button class="btn" type="button" id="mkReset">Örnek bakiyeyi sıfırla (4.250)</button></div></div>
+  <div style="display:grid;gap:14px;align-content:start;min-width:0"><div><div class="lbl" style="margin-bottom:6px">Düzen</div><div class="lay">${MK_LAYOUTS.map(l=>`<button type="button" class="fchip" data-mklay="${l[0]}" aria-pressed="${lay===l[0]}">${esc(l[1])}</button>`).join("")}</div><p class="muted" style="margin-top:8px">${esc(MK_LAYOUTS.find(l=>l[0]===lay)[2])}</p></div>
+  <div class="panel"><h3>Pazara nereden girilir</h3><ul><li>Ana sayfada coin göstergesinin yanında bir düğme (coin'e dokununca da açılır).</li><li>Bölüm sonu panelinde, yeni ürün açıldığında tek satır: "Pazarda yeni".</li><li>Dünyalar ekranında her dünyanın tezgâhı (Dünya dükkânları düzeni).</li><li>Kurtuluş ekranından o dünyanın ürünlerine.</li><li>Bölüm içinden girilmez; oyuncunun dikkati tahtada kalır.</li></ul></div>
+  <div class="panel"><h3>Pazarda satılmayanlar</h3><ul><li>Geri Al, Ek Bulut, Karıştır ve can: reklam düzeni bugünkü gibi kalıyor.</li><li>Erişilebilirlik ayarları (renk körü paleti, Azaltılmış hareket): ücretsiz.</li><li>Zorluğu düşüren şeyler (bölüm atlama, bölüm başı güçlendirme).</li><li>İpucu ve "Hâlâ Çözülebilir mi?" pazarda değil, bölüm içinde gerektiği an sunulur.</li></ul></div>
+  <div class="panel"><h3>Fiyatlar nereden geliyor</h3><p class="muted" style="font-size:13.5px">Önizlemedeki fiyatlar Harcama yerleri ve Denge hesaplayıcıdaki fiyatlardan türüyor (fiyat merdiveni: ilk ürün %70, sonrakiler artar). Hesaplayıcıda fiyatı değiştirirsen pazar da değişir.</p></div></div></div>
+ <h2>Pazar mekanikleri</h2><div class="grid">${MK_MECH.map((m,i)=>`<article class="card"><div class="top"><div><div class="grp">${MK_TAG[m[2]]}</div><h3>${esc(m[0])}</h3></div><button class="star" type="button" data-mkfav="${i}" aria-pressed="${(st.mkFav||[]).includes(i)}" aria-label="${esc(m[0])} favori">${starSvg}</button></div><p>${esc(m[1])}</p></article>`).join("")}</div>
+ <h2>Pazar için fark ettiğim çakışmalar</h2><div class="rules">
+  <div class="rule conflict"><h3>Pazar ekranı yok</h3><p>Ana sayfa, dünyalar ve duraklatma ekranları iOS'tan gelen Figma tasarımıyla kodda çiziliyor; pazar için yeni bir Figma ekranı gerekir (yigityvz).</p></div>
+  <div class="rule conflict"><h3>Kayıt</h3><p>SaveData'da sahip olunan ve kullanılan ürünler yok; şema 2 → 3 geçişi ve satın alma geçmişi gerekir.</p></div>
+  <div class="rule conflict"><h3>Para birimi adı</h3><p>Pazar adı seçilirken coin/jeton adı da birlikte seçilmeli; ikisi aynı dilde olmalı (ör. Gök Pazarı + jeton).</p></div>
+  <div class="rule conflict"><h3>"Kaç bölüm kaldı" yaklaşık</h3><p>Bonuslar eklenirse bölüm başı kazanç değişir; oyuncuya gösterilen sayı "yaklaşık" olmalı.</p></div>
+  <div class="rule conflict"><h3>Dünya görselleri</h3><p>Dünya dükkânları ve Dünyayı Onar aynı dünya çizimlerine dayanıyor; dünya resimleri yenilenmeden ikisi de tam olmaz.</p></div></div>`;
+ v.querySelectorAll("[data-mkname]").forEach(b=>b.onclick=()=>{st.mkName=+b.dataset.mkname;save();renderMarket();renderExport();});
+ v.querySelectorAll("[data-mklay]").forEach(b=>b.onclick=()=>{st.mkLay=b.dataset.mklay;mk.sheet=null;save();renderMarket();renderExport();});
+ v.querySelectorAll("[data-mkcat]").forEach(b=>b.onclick=()=>{mk.cat=b.dataset.mkcat;renderMarket();});
+ v.querySelectorAll("[data-mkw]").forEach(b=>b.onclick=()=>{mk.world=+b.dataset.mkw;renderMarket();});
+ v.querySelectorAll("[data-mk]").forEach(b=>b.onclick=()=>{if(b.dataset.lock){mkToast("Dünya bitince açılır");return;}mk.sheet={key:b.dataset.mk,price:b.dataset.mkp?+b.dataset.mkp:0};mk.msg="";renderMarket();});
+ v.querySelectorAll("[data-mkx]").forEach(b=>b.onclick=()=>{mk.sheet=null;renderMarket();});
+ v.querySelectorAll("[data-mktry]").forEach(b=>b.onclick=()=>{mk.msg="Bir sonraki bölümde ücretsiz denenecek.";renderMarket();});
+ v.querySelectorAll("[data-mkbuy]").forEach(b=>b.onclick=()=>{const it=items.find(i=>i.key===mk.sheet.key);const price=mk.sheet.price||it.fiyat;if(mk.bal<price){mk.msg="Jeton yetmiyor.";renderMarket();return;}mk.bal-=price;mk.own[it.key]=true;mk.use[it.cat]=it.key;mk.msg="";mk.sheet=null;mkToast(it.ad+" alındı");});
+ v.querySelectorAll("[data-mkuse]").forEach(b=>b.onclick=()=>{const it=items.find(i=>i.key===mk.sheet.key);mk.use[it.cat]=it.key;renderMarket();});
+ v.querySelectorAll("[data-mkfav]").forEach(b=>b.onclick=()=>{const i=+b.dataset.mkfav;let a=st.mkFav||[];a=a.includes(i)?a.filter(x=>x!==i):a.concat(i);st.mkFav=a;save();renderMarket();renderExport();});
+ const rs=$("#mkReset");if(rs)rs.onclick=()=>{mk={bal:4250,own:{},use:{},cat:mk.cat,world:mk.world,sheet:null,msg:"",toast:""};renderMarket();};}
+function mkToast(t){mk.toast=t;renderMarket();clearTimeout(mkToast.h);mkToast.h=setTimeout(()=>{mk.toast="";renderMarket();},1600);}
+
+/* ---------- Seçimler ---------- */
+function exportText(){const r=compute();const on=OP.filter(o=>st.on[o.id]);
+ let o=`Cloudora Coin Ekonomisi — seçimlerim\nHesaplayıcı (1–500): kazanç ${fmt(r.cE[500])}, harcama ${fmt(r.cS[500])}, oran %${Math.round(r.cS[500]/r.cE[500]*100)}, devam 100 bölümde ${st.devamKez} kez\n\nHesaba katılan harcama yerleri:\n`;
+ o+=on.length?on.map(x=>`- ${x.ad}: fiyat ${priceOf(x)}, ${x.m==="tek"?"adet "+qtyOf(x):"100 bölümde "+qtyOf(x)+" kez"}`).join("\n"):"—";
+ o+=`\n\nPazar: ad "${MK_NAMES[st.mkName||0][0]}", düzen "${MK_LAYOUTS.find(l=>l[0]===(st.mkLay||"raf"))[1]}", favori mekanikler: ${(st.mkFav||[]).map(i=>MK_MECH[i][0]).join(", ")||"—"}`;
+ o+=`\n\nKazanç bonusları: ${EARN.filter(e=>st.earn[e.id]).map(e=>e.ad).join(", ")||"—"}\nFavoriler: ${st.fav.map(x=>OP_BY[x].ad).join(", ")||"—"}`;return o;}
+function renderExport(){$("#export").textContent=exportText();}
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200);}
+$("#copyBtn").onclick=()=>{const txt=exportText();const fb=()=>{const rg=document.createRange();rg.selectNodeContents($("#export"));const s=getSelection();s.removeAllRanges();s.addRange(rg);toast("Metin seçildi, Ctrl+C ile kopyala");};try{navigator.clipboard.writeText(txt).then(()=>toast("Kopyalandı"),fb);}catch(e){fb();}};
+let armed=false;$("#resetAll").onclick=()=>{if(!armed){armed=true;$("#resetAsk").hidden=false;$("#resetAsk").textContent="Emin misin? Silmek için tekrar bas.";setTimeout(()=>{armed=false;$("#resetAsk").hidden=true;},4000);return;}
+ armed=false;$("#resetAsk").hidden=true;st=JSON.parse(JSON.stringify(S0));save();renderAll();toast("Seçimler sıfırlandı");};
+
+/* ---------- Üst bilgi ---------- */
+function renderFacts(){$("#facts").innerHTML=[["160","ortalama coin / bölüm"],["16.000","1–100 toplam kazanç"],["1","bugünkü harcama yeri (devam 500)"],[String(OP.length),"harcama seçeneği"],[String(EARN.length),"kazanç önerisi"]].map(([v,l])=>`<div class="fact"><b>${v}</b><span>${l}</span></div>`).join("");}
+
+/* ---------- Sekmeler ---------- */
+const TABS=["ozet","harcama","market","hesap","kazanc","para","kurallar","secimler"];
+function showTab(k){if(!TABS.includes(k))k="ozet";document.querySelectorAll("section.view").forEach(s=>s.hidden=s.dataset.view!==k);
+ document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.tab===k)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
+ if(k==="hesap"&&lastRes)renderChart(lastRes);}
+document.querySelectorAll("nav.tabs a").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();showTab(a.dataset.tab);try{history.replaceState(null,"","#"+a.dataset.tab);}catch(err){}}));
+window.addEventListener("hashchange",()=>showTab(location.hash.slice(1)));
+
+function renderAll(){renderFacts();renderOzet();renderCards();renderMarket();renderKazanc();renderPara();renderKurallar();renderCalc();renderExport();}
+renderAll();showTab(location.hash.slice(1));
+})();
+</script>
+
+</body>
+</html>

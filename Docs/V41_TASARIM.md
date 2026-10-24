@@ -76,4 +76,4 @@
 ## 11. İleride (kullanıcı fikirleri, şimdilik yapılmıyor)
 - **Çıkmazı fark ettirme:** oyuncu çözemediğini anlamakta zorlanabilir ("şimdilik kalsın, sevdim"); ileride birkaç hamle ilerleme yoksa o an mantıklı olan çözüm (Geri Al / Ek Bulut / Karıştır) parlasın.
 - **Hamle kaydı:** oyun hamleleri tek tek loga yazmıyor; yazarsa insan oyunu sanal oyuncularla hamle hamle karşılaştırılabilir.
-- Gevşetilen 6 bölüm için daha büyük havuzlar; ekip APK'sının v4.1'e güncellenmesi; temalar ve dünya resimleri.
+- Gevşetilen 6 bölüm için daha büyük havuzlar; temalar ve dünya resimleri. (Ekip APK'sı v4.1'e güncellendi, 23:04.)
